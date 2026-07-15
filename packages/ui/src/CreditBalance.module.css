@@ -1,0 +1,95 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.compact {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 0 0 auto;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  background: var(--color-muted-surface);
+}
+
+.tone_action {
+  color: var(--color-action);
+  background: var(--color-action-surface);
+}
+
+.tone_success {
+  color: var(--color-success);
+  background: var(--color-success-surface);
+}
+
+.tone_neutral {
+  color: var(--color-text-muted);
+  background: var(--color-muted-surface);
+}
+
+.label {
+  font-size: var(--font-xs);
+  line-height: var(--lh-xs);
+  font-weight: var(--fw-regular);
+  color: var(--color-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.compact .label {
+  font-weight: var(--fw-regular);
+}
+
+.valueSlot {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+}
+
+.value {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.root:not(.compact) .value {
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+}
+
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+}
+
+.errorText {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-error);
+}
+

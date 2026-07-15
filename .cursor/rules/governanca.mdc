@@ -1,0 +1,76 @@
+---
+description: Regras de governança de Perfis e Permissões (Workspace) — valem para TODA implementação de UI e API deste projeto
+alwaysApply: true
+---
+
+# Perfis e Permissões — Regras permanentes
+
+Spec completo por módulo em `docs/specs/`. Estas regras se aplicam a qualquer código gerado, mesmo quando a tarefa não mencionar permissões.
+
+## Funções (fixas — RBAC sem custom roles)
+
+| Função | Escopo |
+|---|---|
+| **Dono do Workspace** | Tudo. Sempre ≥ 1 ativo. Único que vê o Balanço do Workspace. Criado apenas via nível interno (nunca por convite). |
+| **Administrador** | Gerencia times e membros **dos times aos quais pertence**. Vê consumo (Financeiro) dos seus times. Nunca gerencia o Dono. |
+| **Editor** | Cria/executa estudos nos seus times. Vê Financeiro dos seus times. Sem acesso à Gestão do Workspace. |
+| **Observador** | Somente visualiza estudos/resultados dos seus times. **Zero visibilidade de créditos/carteira** (nenhum saldo, totalizador ou coluna financeira é renderizado). |
+
+## Matriz de permissões (resumo operacional)
+
+| Ação | Dono | Admin | Editor | Obs |
+|---|:-:|:-:|:-:|:-:|
+| Ver Estudos (seus times) | ✓ | ✓ | ✓ | ✓ |
+| Ver créditos do time (topo Estudos, Financeiro, lista Times) | ✓ | ✓ seus times | ✓ seus times | — |
+| Ver tela Time (membros do contexto) | ✓ | ✓ | ✓ | — |
+| Gestão do Workspace → Times, Membros | ✓ | ✓ (escopo: seus times) | — | — |
+| Gestão do Workspace → Balanço | ✓ | — | — | — |
+| Criar time | ✓ | ✓ | — | — |
+| Editar/inativar/excluir time | ✓ todos | ✓ seus times | — | — |
+| Convidar (faixa: mesma função ou abaixo) | Adm/Ed/Obs | Adm/Ed/Obs | Ed/Obs | Obs |
+| Editar/inativar/remover membro | ✓ | ✓ até Admin, nunca Dono | — | — |
+| Reenviar/revogar convite | ✓ | ✓ convites dos seus times | — | — |
+
+## Regras invioláveis
+
+1. **Sempre ≥ 1 Dono ativo.** Qualquer ação que zeraria isso (rebaixar, inativar, remover o último Dono) é bloqueada com mensagem explicativa.
+2. **Função é única e global por membro** — vale igual em todos os times dele. Não existe função por time.
+3. **Faixa de convite:** cada função convida na mesma função ou abaixo. Ninguém convida Dono. Observador convida apenas Observadores.
+4. **Enforcement no backend, sempre.** O front apenas oculta superfícies; toda API revalida a permissão do ator na requisição. Testes de permissão testam a API, não só o render.
+5. **Permissões aplicam no próximo request** — sem exigir relogin; sessão de membro inativado é derrubada no próximo request.
+6. **Log interno de auditoria:** toda ação de gestão (convidar, editar função, remover, ativar/inativar, criar/editar/excluir time) grava `ator, ação, alvo, timestamp`. Sem UI de log na v1.
+7. **Superfície financeira é read-only na v1.** Nenhum componente oferece alocar, transferir ou solicitar créditos.
+8. **Membro pertence a 1+ times.** Convite carrega função + time(s). Estudo pertence ao time (não à pessoa que criou).
+9. **Auto-inativação bloqueada** ("Peça a outro administrador").
+10. **Exclusão de time:** exige destino para os estudos; membros que pertencem SOMENTE ao time excluído são realocados no próprio fluxo; créditos retornam ao Balanço do Workspace com aviso explícito na modal.
+
+## Estados e ciclo de vida do convite
+
+`Pendente → Ativo` (aceite) · `Pendente → Expirado` (7 dias corridos) · `Pendente → Excluído` (revogado).
+- Reenvio gera novo link, **invalida o anterior** e reinicia o prazo.
+- Link é de uso único; convite já aceito redireciona para login.
+- Convites nunca ficam órfãos: qualquer Dono/Admin com escopo sobre o time gere o convite, independente de quem convidou.
+- Status de membro: `Ativo · Pendente · Inativo`. Pendentes aparecem na mesma lista de membros (sem aba separada); nome exibido = e-mail.
+- E-mail normalizado (trim + lowercase) antes de validar duplicidade. E-mail já vinculado a OUTRO workspace: convite bloqueado (restrição vigente — OQ1 do spec).
+
+## Nomenclatura (PT-BR, canônica)
+
+`Workspace` (nunca "organização") · `Time` · `Membro` · `Função` (nunca "papel"/"role" em UI) · `Dono do Workspace` · `Administrador` · `Editor` · `Observador` · `Estudo` · carteiras `B2B`/`B2C` · `Balanço do Workspace`.
+
+## Copy de erros e empty states
+
+Usar o catálogo em `docs/specs/99-camada-transversal.md` (seção "Catálogo de mensagens") — não inventar copy nova para os casos já cobertos.
+
+## Padrões de UI
+
+- Estados obrigatórios por tela: default, loading (skeleton), vazio (com CTA), erro (com retry), sem-permissão.
+- Ações destrutivas: confirmação com consequência explícita.
+- Componentes ocultos por permissão **não são renderizados** (sem placeholder "sem permissão" inline; a exceção é acesso por URL direta → tela de sem-permissão).
+
+## Componentes e design system (fonte única)
+
+1. **Todo componente de UI vive em `packages/ui`** e é importado de lá pelos apps. É PROIBIDO criar componente visual dentro de `apps/*` — se a tela precisa de algo novo, o componente nasce em `packages/ui` primeiro, com export no index único do pacote.
+2. **`design-system/` é spec, não código.** É a referência canônica de anatomia, variantes, estados e tokens ao CRIAR ou ALTERAR componente em `packages/ui`. Nunca importar nada de `design-system/`; nunca duplicar seus valores inline nos apps.
+3. **Construção incremental:** implementar em `packages/ui` apenas os componentes que a story atual exige. Nunca criar componente sem consumidor. Se a story exige um componente que não existe, listar o que falta ANTES de implementar.
+4. **Tokens como CSS variables** definidas uma única vez em `packages/ui` (a partir do spec do DS): Open Sans; ação primária roxo `#8f5cb8` (hover `#9b6ac9`); navy `#1b365d`; grid 4px (4/8/12/16/24); radius 4/8/12; borda de controles 1.5px `#d1d5db`. PROIBIDO hardcode de cor, espaçamento ou radius em app ou componente — sempre via token.
+5. **Alterou um componente existente?** A mudança vale para todos os consumidores — não criar variante paralela ("Button2", "TableV2") para escapar de um ajuste.

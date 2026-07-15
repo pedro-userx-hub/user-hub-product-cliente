@@ -1,0 +1,61 @@
+.table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  overflow: hidden;
+}
+
+.head {
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.row:hover {
+  background: var(--color-background);
+}
+
+.rowClickable {
+  cursor: pointer;
+}
+
+.rowClickable:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: -2px;
+}
+
+.headerCell {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  color: var(--color-text);
+  border-top: var(--border-width) solid var(--color-border-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.head .cell,
+.head .headerCell {
+  border-top: none;
+}
+
+.head + tbody .row:first-child .cell {
+  border-top: none;
+}

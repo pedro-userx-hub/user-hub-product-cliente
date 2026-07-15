@@ -1,0 +1,17 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-family: var(--font-family);
+}
+
+.navButton {
+  min-width: auto;
+}
+
+.indicator {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+}

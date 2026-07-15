@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+
+# build
+dist/
+*.tsbuildinfo
+
+# logs
+*.log
+
+# env
+.env
+.env.*
+
+# editor / OS
+.DS_Store

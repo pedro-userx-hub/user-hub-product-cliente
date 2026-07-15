@@ -1,0 +1,98 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.teamsBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.selectedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.selectedCard {
+  box-shadow: none;
+  padding: var(--space-3);
+}
+
+.selectedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.selectedName {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.removeBtn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.removeBtn:hover:not(:disabled) {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.removeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.removeBtn:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.formError {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-error);
+}
+
+.confirmBody {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+}

@@ -1,0 +1,116 @@
+/*
+ * GENERATED — do not edit by hand.
+ * Source: packages/ui/tokens/userx-tokens.json
+ * Run: npm run tokens:build --workspace @userx/ui
+ *
+ * Components must use ONLY semantic vars (--color-*, --space-*, …).
+ * Palette vars (--palette-*) are private — never use in components.
+ */
+:root {
+  /* ——— palette (private) ——— */
+  --palette-primary-50: #fdfbfe;
+  --palette-primary-100: #f6f0fd;
+  --palette-primary-200: #e4cefc;
+  --palette-primary-300: #d9b6f2;
+  --palette-primary-400: #c29ae6;
+  --palette-primary-500: #a97ed7;
+  --palette-primary-600: #8f5cb8;
+  --palette-primary-700: #9b6ac9;
+  --palette-primary-800: #7f4aa6;
+  --palette-primary-900: #6c3f8d;
+  --palette-primary-950: #5a3576;
+  --palette-gray-50: #fafafa;
+  --palette-gray-100: #f5f5f5;
+  --palette-gray-200: #ebebeb;
+  --palette-gray-300: #e0e0e0;
+  --palette-gray-400: #a3a3a3;
+  --palette-gray-500: #737373;
+  --palette-gray-600: #525252;
+  --palette-gray-700: #404040;
+  --palette-gray-800: #262626;
+  --palette-gray-900: #171717;
+  --palette-gray-950: #0a0a0a;
+  --palette-foreground-0: #ffffff;
+  --palette-foreground-50: #f5f9fe;
+  --palette-foreground-100: #f8fafc;
+  --palette-foreground-200: #f3f4f6;
+  --palette-red-50: #fef2f2;
+  --palette-red-100: #fee2e2;
+  --palette-red-200: #fecaca;
+  --palette-red-700: #b91c1c;
+  --palette-red-800: #991b1b;
+  --palette-red-900: #7f1d1d;
+  --palette-green-100: #dcfce7;
+  --palette-green-700: #15803d;
+  --palette-green-900: #14532d;
+  --palette-yellow-50: #fffcea;
+  --palette-yellow-100: #fff5c5;
+  --palette-yellow-700: #bb5502;
+  --palette-yellow-900: #7c360b;
+  --palette-blue-50: #eff4ff;
+  --palette-blue-100: #dbe6fe;
+  --palette-blue-600: #2563eb;
+  --palette-blue-700: #1d58d8;
+  --palette-blue-900: #1e408a;
+
+  /* ——— semantic (public) ——— */
+  --color-action: #8f5cb8;
+  --color-action-hover: #9b6ac9;
+  --color-action-active: #7f4aa6;
+  --color-action-subtle: #e4cefc;
+  --color-action-surface: #f6f0fd;
+  --color-action-on: #ffffff;
+  --color-action-emphasis: #6c3f8d;
+  --color-text: #262626;
+  --color-text-muted: #737373;
+  --color-text-disabled: #a3a3a3;
+  --color-border: #e0e0e0;
+  --color-border-subtle: #ebebeb;
+  --color-surface: #ffffff;
+  --color-background: #fafafa;
+  --color-muted-surface: #ebebeb;
+  --color-success: #15803d;
+  --color-success-surface: #dcfce7;
+  --color-success-emphasis: #14532d;
+  --color-error: #b91c1c;
+  --color-error-surface: #fee2e2;
+  --color-error-emphasis: #7f1d1d;
+  --color-warning: #bb5502;
+  --color-warning-surface: #fff5c5;
+  --color-warning-emphasis: #7c360b;
+  --color-info: #1d58d8;
+  --color-info-surface: #dbe6fe;
+  --color-info-emphasis: #1e408a;
+  --font-family: "Open Sans", sans-serif;
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-base: 16px;
+  --font-lg: 24px;
+  --font-xl: 28px;
+  --lh-xs: 16px;
+  --lh-sm: 20px;
+  --lh-base: 24px;
+  --lh-lg: 32px;
+  --lh-xl: 36px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+  --border-width: 1.5px;
+  --shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 1px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-error-ring: 0 0 0 2px #dc2626;
+}

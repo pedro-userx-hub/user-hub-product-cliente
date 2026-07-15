@@ -1,0 +1,27 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  flex-shrink: 0;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  box-sizing: border-box;
+  background: var(--color-background);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+  font-family: var(--font-family);
+}
+
+.label {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.control {
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}

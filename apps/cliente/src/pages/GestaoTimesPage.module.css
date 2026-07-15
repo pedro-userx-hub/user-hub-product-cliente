@@ -1,0 +1,175 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.clickableCard {
+  cursor: pointer;
+}
+
+.clickableCard:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.teamName {
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-semibold);
+  color: inherit;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sectionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-xs);
+  line-height: var(--lh-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.credits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.creditsValues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: inherit;
+}
+
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.memberCount {
+  font-weight: var(--fw-medium);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+
+.drawerBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.memberList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  width: 100%;
+}
+
+.memberCard {
+  box-shadow: none;
+  padding: var(--space-3);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.memberRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+  width: 100%;
+}
+
+.roleBadge {
+  flex-shrink: 0;
+  max-width: 9.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.memberIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.memberName {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memberEmail {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memberTrailing {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.confirmBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.confirmBody p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+}
+
+.confirmError {
+  color: var(--color-error) !important;
+}
+

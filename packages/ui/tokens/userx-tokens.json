@@ -1,0 +1,145 @@
+{
+  "$schema": "./userx-tokens.schema.json",
+  "meta": {
+    "name": "UserX Design System",
+    "source": "Figma userx - Design System Legado",
+    "note": "Components must consume only semantic.*; never palette ramps or raw hex."
+  },
+  "palette": {
+    "primary": {
+      "50": "#fdfbfe",
+      "100": "#f6f0fd",
+      "200": "#e4cefc",
+      "300": "#d9b6f2",
+      "400": "#c29ae6",
+      "500": "#a97ed7",
+      "600": "#8f5cb8",
+      "700": "#9b6ac9",
+      "800": "#7f4aa6",
+      "900": "#6c3f8d",
+      "950": "#5a3576"
+    },
+    "gray": {
+      "50": "#fafafa",
+      "100": "#f5f5f5",
+      "200": "#ebebeb",
+      "300": "#e0e0e0",
+      "400": "#a3a3a3",
+      "500": "#737373",
+      "600": "#525252",
+      "700": "#404040",
+      "800": "#262626",
+      "900": "#171717",
+      "950": "#0a0a0a"
+    },
+    "foreground": {
+      "0": "#ffffff",
+      "50": "#f5f9fe",
+      "100": "#f8fafc",
+      "200": "#f3f4f6"
+    },
+    "red": {
+      "50": "#fef2f2",
+      "100": "#fee2e2",
+      "200": "#fecaca",
+      "700": "#b91c1c",
+      "800": "#991b1b",
+      "900": "#7f1d1d"
+    },
+    "green": {
+      "100": "#dcfce7",
+      "700": "#15803d",
+      "900": "#14532d"
+    },
+    "yellow": {
+      "50": "#fffcea",
+      "100": "#fff5c5",
+      "700": "#bb5502",
+      "900": "#7c360b"
+    },
+    "blue": {
+      "50": "#eff4ff",
+      "100": "#dbe6fe",
+      "600": "#2563eb",
+      "700": "#1d58d8",
+      "900": "#1e408a"
+    }
+  },
+  "semantic": {
+    "color": {
+      "action": "{palette.primary.600}",
+      "action-hover": "{palette.primary.700}",
+      "action-active": "{palette.primary.800}",
+      "action-subtle": "{palette.primary.200}",
+      "action-surface": "{palette.primary.100}",
+      "action-on": "{palette.foreground.0}",
+      "action-emphasis": "{palette.primary.900}",
+      "text": "{palette.gray.800}",
+      "text-muted": "{palette.gray.500}",
+      "text-disabled": "{palette.gray.400}",
+      "border": "{palette.gray.300}",
+      "border-subtle": "{palette.gray.200}",
+      "surface": "{palette.foreground.0}",
+      "background": "{palette.gray.50}",
+      "muted-surface": "{palette.gray.200}",
+      "success": "{palette.green.700}",
+      "success-surface": "{palette.green.100}",
+      "success-emphasis": "{palette.green.900}",
+      "error": "{palette.red.700}",
+      "error-surface": "{palette.red.100}",
+      "error-emphasis": "{palette.red.900}",
+      "warning": "{palette.yellow.700}",
+      "warning-surface": "{palette.yellow.100}",
+      "warning-emphasis": "{palette.yellow.900}",
+      "info": "{palette.blue.700}",
+      "info-surface": "{palette.blue.100}",
+      "info-emphasis": "{palette.blue.900}"
+    },
+    "font": {
+      "family": "\"Open Sans\", sans-serif",
+      "xs": "12px",
+      "sm": "14px",
+      "base": "16px",
+      "lg": "24px",
+      "xl": "28px"
+    },
+    "lh": {
+      "xs": "16px",
+      "sm": "20px",
+      "base": "24px",
+      "lg": "32px",
+      "xl": "36px"
+    },
+    "fw": {
+      "regular": "400",
+      "medium": "500",
+      "semibold": "600",
+      "bold": "700"
+    },
+    "space": {
+      "0": "0",
+      "1": "4px",
+      "2": "8px",
+      "3": "12px",
+      "4": "16px",
+      "5": "20px",
+      "6": "24px",
+      "8": "32px",
+      "12": "48px"
+    },
+    "radius": {
+      "sm": "4px",
+      "md": "8px",
+      "lg": "12px",
+      "full": "999px"
+    },
+    "border": {
+      "width": "1.5px"
+    },
+    "shadow": {
+      "sm": "0 1px 1px rgba(0, 0, 0, 0.05), 0 0 1px rgba(0, 0, 0, 0.25)",
+      "md": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
+      "error-ring": "0 0 0 2px #dc2626"
+    }
+  }
+}

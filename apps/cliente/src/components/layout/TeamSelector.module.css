@@ -1,0 +1,215 @@
+.root {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: var(--space-2);
+
+  min-width: 0;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
+}
+
+
+
+.label {
+
+  padding: 0 var(--space-1);
+
+  font-size: var(--font-xs);
+
+  line-height: var(--lh-xs);
+
+  font-weight: var(--fw-semibold);
+
+  color: var(--color-text-muted);
+
+}
+
+
+
+.select {
+
+  min-width: 0;
+
+  max-width: 100%;
+
+}
+
+
+
+.framed,
+
+.single {
+
+  min-width: 0;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
+  border: var(--border-width) solid var(--color-border);
+
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface);
+
+  box-sizing: border-box;
+
+}
+
+
+
+/* Um único time: actions dentro da mesma moldura; Select sem borda dupla */
+
+.single .select button {
+
+  border-color: transparent;
+
+  border-radius: 0;
+
+}
+
+
+
+.actions {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: var(--space-1);
+
+  padding: var(--space-1);
+
+  border-top: var(--border-width) solid var(--color-border-subtle);
+
+  min-width: 0;
+
+  overflow: hidden;
+
+}
+
+
+
+.actions .createTeam {
+
+  color: var(--color-action);
+
+  font-weight: var(--fw-semibold);
+
+}
+
+
+
+.actions .createTeam:hover:not(:disabled):not([aria-disabled="true"]) {
+
+  color: var(--color-action-hover);
+
+  background: var(--color-action-subtle);
+
+}
+
+
+
+.loading {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: var(--space-2);
+
+  padding: var(--space-3);
+
+}
+
+
+
+.emptyHint {
+
+  padding: var(--space-3);
+
+  font-size: var(--font-sm);
+
+  line-height: var(--lh-sm);
+
+  color: var(--color-text-muted);
+
+  overflow: hidden;
+
+  word-break: break-word;
+
+}
+
+
+
+.errorBox {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: var(--space-2);
+
+  align-items: flex-start;
+
+  padding: var(--space-3);
+
+  font-size: var(--font-sm);
+
+  line-height: var(--lh-sm);
+
+  color: var(--color-error);
+
+  overflow: hidden;
+
+}
+
+
+
+.errorBox p {
+
+  margin: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+}
+
+
+
+.retry {
+
+  border: none;
+
+  background: transparent;
+
+  color: var(--color-action);
+
+  font-size: var(--font-sm);
+
+  line-height: var(--lh-sm);
+
+  font-weight: var(--fw-semibold);
+
+  cursor: pointer;
+
+  padding: 0;
+
+}
+
+
+
+.retry:hover {
+
+  color: var(--color-action-hover);
+
+}
+
+

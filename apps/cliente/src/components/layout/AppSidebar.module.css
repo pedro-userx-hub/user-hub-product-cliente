@@ -1,0 +1,85 @@
+.logo {
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.logoMark {
+  color: var(--color-action);
+}
+
+.navLink {
+  gap: var(--space-3);
+}
+
+.navIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.navLink[aria-current="page"] .navIcon,
+.navLink[aria-current="true"] .navIcon {
+  color: var(--color-action-active);
+}
+
+.navLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footerDivider {
+  width: 100%;
+  height: 0;
+  border: none;
+  border-top: var(--border-width) solid var(--color-border-subtle);
+  margin: var(--space-1) 0;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  overflow: hidden;
+}
+
+.profileIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.profileText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.profileName {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileRole {
+  font-size: var(--font-xs);
+  line-height: var(--lh-xs);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+

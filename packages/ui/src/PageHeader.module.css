@@ -1,0 +1,20 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+  font-family: var(--font-family);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.action {
+  flex-shrink: 0;
+}

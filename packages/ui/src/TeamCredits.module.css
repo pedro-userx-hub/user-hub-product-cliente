@@ -1,0 +1,32 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
+  width: 100%;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.compact {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-6);
+  width: auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 28px;
+  background: var(--color-border-subtle);
+  flex-shrink: 0;
+}
+

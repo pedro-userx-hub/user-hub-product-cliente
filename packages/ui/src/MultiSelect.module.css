@@ -1,0 +1,213 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-family: var(--font-family);
+}
+
+.label {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.wrap {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-regular);
+  cursor: pointer;
+  text-align: left;
+}
+
+.trigger:hover:not(:disabled) {
+  border-color: var(--color-text-muted);
+}
+
+.trigger:focus-visible,
+.trigger[data-open="true"] {
+  outline: none;
+  border-color: var(--color-action);
+}
+
+.trigger:disabled {
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.triggerLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--fw-semibold);
+}
+
+.triggerPlaceholder {
+  color: var(--color-text-muted);
+  font-weight: var(--fw-regular);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  display: inline-flex;
+}
+
+.panel {
+  position: fixed;
+  /* Portal: acima de Drawer (100); abaixo de Modal (200). */
+  z-index: 150;
+  min-width: 180px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-1);
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.searchIcon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  display: inline-flex;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.empty {
+  padding: var(--space-3);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.retry {
+  margin-top: var(--space-2);
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-action);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.retry:hover {
+  color: var(--color-action-hover);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-regular);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.option:hover:not(:disabled) {
+  background: var(--color-background);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: -2px;
+}
+
+.optionSelected {
+  background: var(--color-action-surface);
+}
+
+.optionSelected:hover:not(:disabled) {
+  background: var(--color-action-subtle);
+}
+
+.optionDisabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.optionLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.check {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: var(--color-action);
+}

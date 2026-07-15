@@ -1,0 +1,117 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  flex: 1;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+}
+
+.tone_action {
+  color: var(--color-action);
+  background: var(--color-action-surface);
+}
+
+.tone_success {
+  color: var(--color-success);
+  background: var(--color-success-surface);
+}
+
+.tone_neutral {
+  color: var(--color-text-muted);
+  background: var(--color-muted-surface);
+}
+
+.label {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.totalRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.totalCaption {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.totalValue {
+  font-size: var(--font-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  min-width: 0;
+}
+
+.row dt {
+  margin: 0;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row dd {
+  margin: 0;
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+

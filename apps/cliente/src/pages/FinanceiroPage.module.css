@@ -1,0 +1,20 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.subtitle {
+  margin: calc(var(--space-2) * -1) 0 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+

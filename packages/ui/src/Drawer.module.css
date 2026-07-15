@@ -1,0 +1,127 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  z-index: 100;
+  animation: overlay-in 0.15s ease;
+}
+
+.right {
+  margin-left: auto;
+}
+
+.left {
+  margin-right: auto;
+}
+
+.drawer {
+  width: 440px;
+  max-width: 100vw;
+  height: 100%;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-family);
+}
+
+.right.drawer {
+  animation: drawer-in-right 0.2s ease;
+}
+
+.left.drawer {
+  animation: drawer-in-left 0.2s ease;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.heading {
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.description {
+  margin-top: var(--space-1);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.close:hover {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  border-top: var(--border-width) solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes drawer-in-right {
+  from {
+    transform: translateX(24px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes drawer-in-left {
+  from {
+    transform: translateX(-24px);
+    opacity: 0.6;
+  }
+}

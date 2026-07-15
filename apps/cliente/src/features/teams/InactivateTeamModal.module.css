@@ -1,0 +1,12 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.body p {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text);
+}

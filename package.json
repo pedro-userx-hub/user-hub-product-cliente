@@ -1,0 +1,21 @@
+{
+  "name": "user-hub-product-cliente",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Monorepo do produto User Hub Cliente. Cada pasta em apps/ é uma parte do produto.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @userx/cliente",
+    "build": "npm run build --workspace @userx/cliente",
+    "preview": "npm run preview --workspace @userx/cliente",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev:cliente": "npm run dev --workspace @userx/cliente",
+    "build:cliente": "npm run build --workspace @userx/cliente"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

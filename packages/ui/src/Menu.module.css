@@ -1,0 +1,51 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.trigger:hover:not(:disabled) {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.panel {
+  position: fixed;
+  /* Acima de Drawer (100); abaixo de Modal (200). */
+  z-index: 150;
+  min-width: 180px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.destructive {
+  color: var(--color-error);
+}
+
+.destructive:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-error-surface);
+}
