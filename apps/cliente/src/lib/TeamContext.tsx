@@ -74,7 +74,9 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     return applyDemoPersona(persona);
   });
   const [teams, setTeams] = useState<Team[]>([]);
-  const [currentTeamId, setCurrentTeamIdState] = useState<string | null>(null);
+  const [currentTeamId, setCurrentTeamIdState] = useState<string | null>(() =>
+    readStoredTeamId(),
+  );
   const [loadState, setLoadState] = useState<TeamsLoadState>("idle");
 
   const currentTeamIdRef = useRef(currentTeamId);
