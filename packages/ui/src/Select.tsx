@@ -57,6 +57,11 @@ export interface SelectProps {
   className?: string;
   /** Threshold to auto-enable search. Default 8. */
   searchThreshold?: number;
+  /**
+   * `portal` (default): painel no body com position fixed.
+   * `inline`: painel absoluto dentro do campo (ex.: card de endereço).
+   */
+  placement?: "portal" | "inline";
 }
 
 /**
@@ -84,6 +89,7 @@ export function Select({
   "aria-label": ariaLabelProp,
   className,
   searchThreshold = 8,
+  placement = "portal",
 }: SelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -95,6 +101,7 @@ export function Select({
   const helperId = helperText || error ? `${fieldId}-helper` : undefined;
   const hasError = Boolean(error);
   const ariaLabel = ariaLabelProp ?? fieldLabel ?? "Selecionar";
+  const inline = placement === "inline";
 
   const selected = options.find((o) => o.value === value);
   const displayLabel = selected?.label ?? placeholder;
@@ -139,7 +146,8 @@ export function Select({
   }, [open, close]);
 
   useEffect(() => {
-    if (!open || !canExpand || !panelRef.current || !triggerRef.current) return;
+    if (!open || !canExpand || inline || !panelRef.current || !triggerRef.current)
+      return;
 
     const place = () => {
       const trigger = triggerRef.current;
@@ -158,11 +166,17 @@ export function Select({
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [open, canExpand, filtered.length, panelState, query, actions?.length]);
+  }, [open, canExpand, inline, filtered.length, panelState, query, actions?.length]);
 
   const panel =
     open && canExpand ? (
-      <div ref={panelRef} className={styles.panel} role="presentation">
+      <div
+        ref={panelRef}
+        className={[styles.panel, inline ? styles.panelInline : ""]
+          .filter(Boolean)
+          .join(" ")}
+        role="presentation"
+      >
         {panelState === "loading" && (
           <div className={styles.loading} aria-busy="true" aria-live="polite">
             <Skeleton height={16} />
@@ -247,27 +261,31 @@ export function Select({
                 })
               )}
             </div>
-            {actions && actions.length > 0 && (
-              <div className={styles.actions}>
-                {actions.map((action) => (
-                  <MenuItem
-                    key={action.id}
-                    icon={action.icon}
-                    className={
-                      action.tone === "action" ? styles.actionBrand : undefined
-                    }
-                    onClick={() => {
-                      close();
-                      action.onSelect();
-                    }}
-                  >
-                    {action.label}
-                  </MenuItem>
-                ))}
-              </div>
-            )}
           </>
         )}
+
+        {actions &&
+          actions.length > 0 &&
+          panelState !== "loading" &&
+          panelState !== "error" && (
+            <div className={styles.actions}>
+              {actions.map((action) => (
+                <MenuItem
+                  key={action.id}
+                  icon={action.icon}
+                  className={
+                    action.tone === "action" ? styles.actionBrand : undefined
+                  }
+                  onClick={() => {
+                    close();
+                    action.onSelect();
+                  }}
+                >
+                  {action.label}
+                </MenuItem>
+              ))}
+            </div>
+          )}
       </div>
     ) : null;
 
@@ -281,41 +299,44 @@ export function Select({
           {fieldLabel}
         </span>
       )}
-      <button
-        ref={triggerRef}
-        type="button"
-        className={[
-          styles.trigger,
-          !canExpand ? styles.triggerStatic : "",
-          hasError ? styles.triggerError : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        aria-labelledby={fieldLabel ? `${fieldId}-label` : undefined}
-        aria-invalid={hasError || undefined}
-        aria-describedby={helperId}
-        aria-haspopup={canExpand ? "listbox" : undefined}
-        aria-expanded={canExpand ? open : undefined}
-        aria-controls={canExpand && open ? listId : undefined}
-        data-open={open ? "true" : undefined}
-        title={displayLabel}
-        onClick={() => {
-          if (!canExpand || disabled) return;
-          setOpen((v) => !v);
-        }}
-      >
-        {leading != null && (
-          <span className={styles.triggerLeading}>{leading}</span>
-        )}
-        <span className={styles.triggerLabel}>{displayLabel}</span>
-        {canExpand && (
-          <span className={styles.chevron}>
-            <ChevronDownIcon size={24} />
-          </span>
-        )}
-      </button>
+      <div className={styles.triggerWrap}>
+        <button
+          ref={triggerRef}
+          type="button"
+          className={[
+            styles.trigger,
+            !canExpand ? styles.triggerStatic : "",
+            hasError ? styles.triggerError : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          disabled={disabled}
+          aria-label={ariaLabel}
+          aria-labelledby={fieldLabel ? `${fieldId}-label` : undefined}
+          aria-invalid={hasError || undefined}
+          aria-describedby={helperId}
+          aria-haspopup={canExpand ? "listbox" : undefined}
+          aria-expanded={canExpand ? open : undefined}
+          aria-controls={canExpand && open ? listId : undefined}
+          data-open={open ? "true" : undefined}
+          title={displayLabel}
+          onClick={() => {
+            if (!canExpand || disabled) return;
+            setOpen((v) => !v);
+          }}
+        >
+          {leading != null && (
+            <span className={styles.triggerLeading}>{leading}</span>
+          )}
+          <span className={styles.triggerLabel}>{displayLabel}</span>
+          {canExpand && (
+            <span className={styles.chevron}>
+              <ChevronDownIcon size={24} />
+            </span>
+          )}
+        </button>
+        {inline && panel}
+      </div>
       {(error || helperText) && (
         <p
           id={helperId}
@@ -327,7 +348,7 @@ export function Select({
         </p>
       )}
 
-      {panel && createPortal(panel, document.body)}
+      {!inline && panel && createPortal(panel, document.body)}
     </div>
   );
 }

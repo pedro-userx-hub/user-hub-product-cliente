@@ -776,13 +776,33 @@ export const STUDY_PROFILE_MAX = 1000;
 export const STUDY_CONSENT_MAX_BYTES = 5 * 1024 * 1024;
 export const STUDY_CONSENT_ACCEPT = ".pdf,.doc,.docx";
 
+export const STUDY_OWN_BASE_MAX_BYTES = 10 * 1024 * 1024;
+export const STUDY_OWN_BASE_ACCEPT = ".csv,.xlsx,.xls,.txt";
+
 export const STUDY_BRIEFING_MAX_BYTES = 10 * 1024 * 1024;
 export const STUDY_BRIEFING_ACCEPT = ".pdf,.doc,.docx,.ppt,.pptx";
 
+export type StudyAddressRequiredDoc = "id_card" | "cpf" | "other";
+
 export interface SavedStudyAddress {
   id: string;
+  /** Nome do local (exibido no select). */
   label: string;
+  /** Resumo do endereço (exibido no select). */
   detail: string;
+  street: string;
+  cep: string;
+  city: string;
+  state: string;
+  complement?: string;
+  parking?: boolean;
+  placeName: string;
+  department?: string;
+  room: string;
+  capacity?: string;
+  onSiteContact: string;
+  requiredDocs?: StudyAddressRequiredDoc[];
+  notes?: string;
 }
 
 export const STUDY_METHOD_LABELS: Record<StudyMethod, string> = {
@@ -844,6 +864,8 @@ export interface TeamStudy {
   exclusionEnabled?: boolean;
   exclusionProfile?: string;
   recruitmentSource?: StudyRecruitmentSource | "";
+  /** Arquivo da base própria (quando recruitmentSource = own). */
+  ownBaseFile?: StudyConsentFile | null;
   /** Passo 3 Story 4 — requisitos opcionais. */
   reqDevicesEnabled?: boolean;
   reqDevices?: string[];
@@ -1099,6 +1121,7 @@ export async function createStudyDraft(input: {
     exclusionEnabled: false,
     exclusionProfile: "",
     recruitmentSource: "",
+    ownBaseFile: null,
     reqDevicesEnabled: false,
     reqDevices: [],
     reqSessionEnabled: false,
@@ -1167,6 +1190,7 @@ export interface UpdateStudyDraftInput {
   exclusionEnabled?: boolean;
   exclusionProfile?: string;
   recruitmentSource?: StudyRecruitmentSource | "";
+  ownBaseFile?: StudyConsentFile | null;
   reqDevicesEnabled?: boolean;
   reqDevices?: string[];
   reqSessionEnabled?: boolean;
@@ -1288,6 +1312,13 @@ export async function updateStudyDraft(
       : {}),
     ...(patch.recruitmentSource !== undefined
       ? { recruitmentSource: patch.recruitmentSource }
+      : {}),
+    ...(patch.ownBaseFile !== undefined
+      ? {
+          ownBaseFile: patch.ownBaseFile
+            ? { ...patch.ownBaseFile }
+            : null,
+        }
       : {}),
     ...(patch.reqDevicesEnabled !== undefined
       ? { reqDevicesEnabled: patch.reqDevicesEnabled }
@@ -1433,11 +1464,28 @@ let mockSavedAddresses: SavedStudyAddress[] = [
     id: "addr-1",
     label: "Escritório SP — Paulista",
     detail: "Av. Paulista, 1000 — São Paulo, SP",
+    street: "Av. Paulista, 1000",
+    cep: "01310-100",
+    city: "São Paulo",
+    state: "SP",
+    placeName: "Escritório SP — Paulista",
+    room: "Sala 12",
+    onSiteContact: "Recepção UserX",
+    parking: true,
+    requiredDocs: ["id_card"],
   },
   {
     id: "addr-2",
     label: "Lab de usabilidade",
     detail: "Rua Augusta, 200 — São Paulo, SP",
+    street: "Rua Augusta, 200",
+    cep: "01305-000",
+    city: "São Paulo",
+    state: "SP",
+    placeName: "Lab de usabilidade",
+    room: "Lab 1",
+    onSiteContact: "Ana Costa",
+    parking: false,
   },
 ];
 
@@ -1447,21 +1495,54 @@ export async function listSavedStudyAddresses(): Promise<SavedStudyAddress[]> {
   return mockSavedAddresses.map((a) => ({ ...a }));
 }
 
-export async function addSavedStudyAddress(input: {
-  label: string;
-  detail: string;
-}): Promise<SavedStudyAddress> {
+export interface AddSavedStudyAddressInput {
+  street: string;
+  cep: string;
+  city: string;
+  state: string;
+  complement?: string;
+  parking?: boolean;
+  placeName: string;
+  department?: string;
+  room: string;
+  capacity?: string;
+  onSiteContact: string;
+  requiredDocs?: StudyAddressRequiredDoc[];
+  notes?: string;
+}
+
+export async function addSavedStudyAddress(
+  input: AddSavedStudyAddressInput,
+): Promise<SavedStudyAddress> {
   await delay(160);
   await fetchSessionUser();
-  const label = input.label.trim();
-  const detail = input.detail.trim();
-  if (!label || !detail) {
+  const street = input.street.trim();
+  const cep = input.cep.trim();
+  const city = input.city.trim();
+  const state = input.state.trim().toUpperCase();
+  const placeName = input.placeName.trim();
+  const room = input.room.trim();
+  const onSiteContact = input.onSiteContact.trim();
+  if (!street || !cep || !city || !state || !placeName || !room || !onSiteContact) {
     throw new Error("invalid_address");
   }
   const address: SavedStudyAddress = {
     id: `addr-${Date.now().toString(36)}`,
-    label,
-    detail,
+    label: placeName,
+    detail: `${street} — ${city}, ${state}`,
+    street,
+    cep,
+    city,
+    state,
+    complement: input.complement?.trim() || undefined,
+    parking: Boolean(input.parking),
+    placeName,
+    department: input.department?.trim() || undefined,
+    room,
+    capacity: input.capacity?.trim() || undefined,
+    onSiteContact,
+    requiredDocs: input.requiredDocs?.length ? [...input.requiredDocs] : [],
+    notes: input.notes?.trim() || undefined,
   };
   mockSavedAddresses = [address, ...mockSavedAddresses];
   return { ...address };

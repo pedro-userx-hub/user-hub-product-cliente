@@ -585,9 +585,21 @@ export const StudyStep1Form = forwardRef<
             onChange={(v) => {
               setOwnerId(v);
               const selected = owners.find((o) => o.id === v);
+              if (selected) {
+                setChannel("email");
+                setContact(selected.email);
+                setContactError(undefined);
+                persist({
+                  ownerId: v,
+                  owners: [selected.name],
+                  contactChannel: "email",
+                  contactValue: selected.email,
+                });
+                return;
+              }
               persist({
                 ownerId: v,
-                owners: selected ? [selected.name] : undefined,
+                owners: undefined,
               });
             }}
             searchable={owners.length >= 8}

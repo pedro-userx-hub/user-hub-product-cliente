@@ -16,15 +16,118 @@
   color: var(--color-text);
 }
 
-.config {
+.formatList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.formatCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle, #e5e7eb);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: visible;
+}
+
+.formatCardSelected {
+  border-color: var(--color-action);
+  background: var(--color-action-surface, #f3ebf8);
+}
+
+.formatCardBtn {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-family);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.formatCardBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.formatCardBtn:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.radio {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border-radius: 999px;
+  border: var(--border-width) solid var(--color-border);
+  box-sizing: border-box;
+  background: var(--color-surface);
+}
+
+.radioChecked {
+  border-color: var(--color-action);
+}
+
+.radioDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--color-action);
+}
+
+.formatCardCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.formatCardTitle {
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.formatCardDesc {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-regular);
+}
+
+.nestedFields {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  padding-left: 36px;
   min-width: 0;
-  padding: var(--space-4);
-  border: var(--border-width) solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
+  position: relative;
+  overflow: visible;
+}
+
+.formatError {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-error);
 }
 
 .inlineLink {
@@ -49,8 +152,8 @@
   color: var(--color-text);
 }
 
-.addForm {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+@media (max-width: 640px) {
+  .nestedFields {
+    padding-left: 0;
+  }
 }

@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { DateField, Input, Select, Toggle } from "@userx/ui";
+import { DateRangeField, Input, Select, Toggle } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import {
   daysBetweenISO,
@@ -66,8 +66,7 @@ export const StudyStep2Form = forwardRef<
   ref,
 ) {
   const today = todayISODate();
-  const startWrapRef = useRef<HTMLDivElement>(null);
-  const endWrapRef = useRef<HTMLDivElement>(null);
+  const periodWrapRef = useRef<HTMLDivElement>(null);
   const durationWrapRef = useRef<HTMLDivElement>(null);
   const gapWrapRef = useRef<HTMLDivElement>(null);
   const maxSessionsRef = useRef<HTMLInputElement>(null);
@@ -76,8 +75,7 @@ export const StudyStep2Form = forwardRef<
 
   const [start, setStart] = useState(study.scheduleStart ?? "");
   const [end, setEnd] = useState(study.scheduleEnd ?? "");
-  const [startError, setStartError] = useState<string | undefined>();
-  const [endError, setEndError] = useState<string | undefined>();
+  const [periodError, setPeriodError] = useState<string | undefined>();
 
   const [sessionDuration, setSessionDuration] = useState<string>(
     study.sessionDurationMin != null ? String(study.sessionDurationMin) : "",
@@ -153,6 +151,8 @@ export const StudyStep2Form = forwardRef<
       gap: string;
       limit: boolean;
       max: string;
+      scheduleStart: string;
+      scheduleEnd: string;
     }> = {},
   ): UpdateStudyDraftInput => {
     const duration = overrides.duration ?? sessionDuration;
@@ -161,8 +161,8 @@ export const StudyStep2Form = forwardRef<
     const max = overrides.max ?? maxPerDay;
     const maxNum = Number.parseInt(max, 10);
     return {
-      scheduleStart: start,
-      scheduleEnd: end,
+      scheduleStart: overrides.scheduleStart ?? start,
+      scheduleEnd: overrides.scheduleEnd ?? end,
       sessionDurationMin: duration ? Number(duration) : null,
       sessionGapMin: gap ? Number(gap) : null,
       limitSessionsPerDay: limit,
@@ -186,43 +186,31 @@ export const StudyStep2Form = forwardRef<
         let ok = true;
         let first: HTMLElement | null = null;
 
-        if (!start) {
-          setStartError(messages.estudosScheduleStartRequired);
+        if (!start || !end) {
+          setPeriodError(
+            !start
+              ? messages.estudosScheduleStartRequired
+              : messages.estudosScheduleEndRequired,
+          );
           ok = false;
-          first = startWrapRef.current?.querySelector("input") ?? null;
+          first = periodWrapRef.current?.querySelector("button") ?? null;
         } else if (start < today) {
-          setStartError(messages.estudosScheduleStartPast);
+          setPeriodError(messages.estudosScheduleStartPast);
           ok = false;
-          first = startWrapRef.current?.querySelector("input") ?? null;
+          first = periodWrapRef.current?.querySelector("button") ?? null;
         } else {
-          setStartError(undefined);
-        }
-
-        if (!end) {
-          setEndError(messages.estudosScheduleEndRequired);
-          ok = false;
-          if (!first) {
-            first = endWrapRef.current?.querySelector("input") ?? null;
-          }
-        } else if (start && end) {
           const span = daysBetweenISO(start, end);
           if (span != null && span <= 0) {
-            setEndError(messages.estudosScheduleEndBeforeStart);
+            setPeriodError(messages.estudosScheduleEndBeforeStart);
             ok = false;
-            if (!first) {
-              first = endWrapRef.current?.querySelector("input") ?? null;
-            }
+            first = periodWrapRef.current?.querySelector("button") ?? null;
           } else if (!deriveScheduleMilestones(start, end)) {
-            setEndError(messages.estudosScheduleInsufficient);
+            setPeriodError(messages.estudosScheduleInsufficient);
             ok = false;
-            if (!first) {
-              first = endWrapRef.current?.querySelector("input") ?? null;
-            }
+            first = periodWrapRef.current?.querySelector("button") ?? null;
           } else {
-            setEndError(undefined);
+            setPeriodError(undefined);
           }
-        } else {
-          setEndError(undefined);
         }
 
         if (!sessionDuration) {
@@ -299,79 +287,43 @@ export const StudyStep2Form = forwardRef<
         </h3>
 
         <div className={styles.fields}>
-          <div className={styles.period}>
-            <p className={styles.periodLabel}>
-              {messages.estudosSchedulePeriodLabel}
-            </p>
-            <div className={styles.dates}>
-              <div ref={startWrapRef}>
-                <DateField
-                  label={messages.estudosScheduleStartLabel}
-                  placeholder={messages.estudosScheduleDatePlaceholder}
-                  value={start}
-                  minDate={today}
-                  error={startError}
-                  disabled={disabled}
-                  onChange={(iso) => {
-                    setStart(iso);
-                    setStartError(undefined);
-                    const span = end && iso ? daysBetweenISO(iso, end) : null;
-                    const nextEndError =
-                      span != null && span <= 0
-                        ? messages.estudosScheduleEndBeforeStart
-                        : end && iso && !deriveScheduleMilestones(iso, end)
-                          ? messages.estudosScheduleInsufficient
-                          : undefined;
-                    setEndError(nextEndError);
-                    persist({
-                      ...sessionPatch(),
-                      scheduleStart: iso,
-                      scheduleEnd: end,
-                    });
-                  }}
-                />
-              </div>
-              <div ref={endWrapRef}>
-                <DateField
-                  label={messages.estudosScheduleEndLabel}
-                  placeholder={messages.estudosScheduleDatePlaceholder}
-                  value={end}
-                  minDate={start || today}
-                  error={
-                    endError ||
-                    (endBeforeStart
-                      ? messages.estudosScheduleEndBeforeStart
-                      : insufficient
-                        ? messages.estudosScheduleInsufficient
-                        : undefined)
-                  }
-                  disabled={disabled}
-                  onChange={(iso) => {
-                    setEnd(iso);
-                    const span = start && iso ? daysBetweenISO(start, iso) : null;
-                    if (span != null && span <= 0) {
-                      setEndError(messages.estudosScheduleEndBeforeStart);
-                    } else if (
-                      start &&
-                      iso &&
-                      !deriveScheduleMilestones(start, iso)
-                    ) {
-                      setEndError(messages.estudosScheduleInsufficient);
-                    } else {
-                      setEndError(undefined);
-                    }
-                    persist({
-                      ...sessionPatch(),
-                      scheduleStart: start,
-                      scheduleEnd: iso,
-                    });
-                  }}
-                />
-              </div>
-            </div>
-            <p className={styles.periodHelper}>
-              {messages.estudosSchedulePeriodHelper}
-            </p>
+          <div className={styles.period} ref={periodWrapRef}>
+            <DateRangeField
+              label={messages.estudosSchedulePeriodLabel}
+              helperText={messages.estudosSchedulePeriodHelper}
+              placeholder={messages.estudosScheduleRangePlaceholder}
+              start={start}
+              end={end}
+              minDate={today}
+              error={
+                periodError ||
+                (endBeforeStart
+                  ? messages.estudosScheduleEndBeforeStart
+                  : insufficient
+                    ? messages.estudosScheduleInsufficient
+                    : undefined)
+              }
+              disabled={disabled}
+              onChange={({ start: nextStart, end: nextEnd }) => {
+                setStart(nextStart);
+                setEnd(nextEnd);
+                setPeriodError(undefined);
+                const span = daysBetweenISO(nextStart, nextEnd);
+                if (span != null && span <= 0) {
+                  setPeriodError(messages.estudosScheduleEndBeforeStart);
+                } else if (!deriveScheduleMilestones(nextStart, nextEnd)) {
+                  setPeriodError(messages.estudosScheduleInsufficient);
+                }
+                persist({
+                  ...sessionPatch({
+                    scheduleStart: nextStart,
+                    scheduleEnd: nextEnd,
+                  }),
+                  scheduleStart: nextStart,
+                  scheduleEnd: nextEnd,
+                });
+              }}
+            />
           </div>
 
           <div className={styles.sessionRow}>

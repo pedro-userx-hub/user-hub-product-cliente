@@ -9,21 +9,21 @@ import {
 } from "react";
 import {
   Button,
-  ChoiceCards,
   Input,
   Modal,
+  PlusIcon,
   Select,
   type SelectOption,
 } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import {
-  addSavedStudyAddress,
   listSavedStudyAddresses,
   type SavedStudyAddress,
   type StudyRemotePlatform,
   type StudySessionFormat,
   type UpdateStudyDraftInput,
 } from "../../lib/teamApi";
+import { AddStudyAddressDrawer } from "./AddStudyAddressDrawer";
 import styles from "./SessionFormatSection.module.css";
 
 export interface SessionFormatSectionHandle {
@@ -134,10 +134,6 @@ export const SessionFormatSection = forwardRef<
     null,
   );
   const [addOpen, setAddOpen] = useState(false);
-  const [addLabel, setAddLabel] = useState("");
-  const [addDetail, setAddDetail] = useState("");
-  const [addError, setAddError] = useState<string | undefined>();
-  const [adding, setAdding] = useState(false);
 
   const loadAddresses = useCallback(async () => {
     setAddrState("loading");
@@ -293,35 +289,127 @@ export const SessionFormatSection = forwardRef<
     [format, addrId, platform, link, addresses, buildPatch],
   );
 
-  const showAddress = format === "in_person" || format === "hybrid";
-  const showRemote = format === "remote" || format === "hybrid";
+  const openAddAddress = () => setAddOpen(true);
 
-  const handleAddAddress = async () => {
-    if (!addLabel.trim() || !addDetail.trim()) {
-      setAddError("Preencha nome e endereço.");
-      return;
-    }
-    setAdding(true);
-    setAddError(undefined);
-    try {
-      const created = await addSavedStudyAddress({
-        label: addLabel,
-        detail: addDetail,
-      });
-      setAddresses((prev) => [created, ...prev]);
-      setAddrState("ready");
-      setAddrId(created.id);
-      setAddressError(undefined);
-      persist(buildPatch({ addressId: created.id }));
-      setAddOpen(false);
-      setAddLabel("");
-      setAddDetail("");
-    } catch {
-      setAddError("Não foi possível salvar o endereço.");
-    } finally {
-      setAdding(false);
-    }
-  };
+  const addressField = (
+    <div className={styles.nestedFields} ref={addressWrapRef}>
+      <Select
+        label={messages.estudosAddressLabel}
+        placeholder={messages.estudosAddressPlaceholder}
+        options={addressOptions}
+        value={addrId || undefined}
+        error={addressError}
+        disabled={disabled}
+        searchable={addresses.length >= 8}
+        searchPlaceholder={messages.estudosAddressSearch}
+        panelState={
+          addrState === "loading"
+            ? "loading"
+            : addrState === "empty"
+              ? "empty"
+              : addrState === "error"
+                ? "error"
+                : "default"
+        }
+        emptyMessage={
+          <span>
+            {messages.estudosAddressEmpty}
+            {" — "}
+            <button
+              type="button"
+              className={styles.inlineLink}
+              onClick={openAddAddress}
+            >
+              {messages.estudosAddressAddCta}
+            </button>
+          </span>
+        }
+        onRetry={() => void loadAddresses()}
+        expandable
+        placement="inline"
+        actions={[
+          {
+            id: "add-address",
+            label: messages.estudosAddressAddCta,
+            tone: "action",
+            icon: <PlusIcon size={20} />,
+            onSelect: openAddAddress,
+          },
+        ]}
+        onChange={(v) => {
+          setAddrId(v);
+          setAddressError(undefined);
+          persist(buildPatch({ addressId: v }));
+        }}
+      />
+      <Button
+        variant="clear"
+        size="medium"
+        disabled={disabled}
+        onClick={openAddAddress}
+      >
+        {messages.estudosAddressAddCta}
+      </Button>
+    </div>
+  );
+
+  const remoteFields = (
+    <div className={styles.nestedFields}>
+      <div ref={platformWrapRef}>
+        <Select
+          label={messages.estudosRemotePlatformLabel}
+          placeholder={messages.estudosRemotePlatformPlaceholder}
+          options={PLATFORM_OPTIONS}
+          value={platform || undefined}
+          error={platformError}
+          disabled={disabled}
+          expandable
+          placement="inline"
+          onChange={(v) => {
+            const next = v as StudyRemotePlatform;
+            setPlatform(next);
+            setPlatformError(undefined);
+            persist(buildPatch({ remotePlatform: next }));
+          }}
+        />
+      </div>
+      <Input
+        ref={linkRef}
+        label={messages.estudosRemoteLinkLabel}
+        placeholder={messages.estudosRemoteLinkPlaceholder}
+        value={link}
+        error={linkError}
+        disabled={disabled}
+        onChange={(e) => {
+          const next = e.target.value;
+          setLink(next);
+          if (linkError) {
+            setLinkError(
+              !next.trim()
+                ? messages.estudosRemoteLinkRequired
+                : isValidHttpUrl(next)
+                  ? undefined
+                  : messages.estudosRemoteLinkInvalid,
+            );
+          }
+          onChange(buildPatch({ remoteLink: next }));
+        }}
+        onBlur={() => {
+          if (!link.trim()) {
+            setLinkError(undefined);
+            persist(buildPatch({ remoteLink: link }));
+            return;
+          }
+          if (!isValidHttpUrl(link)) {
+            setLinkError(messages.estudosRemoteLinkInvalid);
+            return;
+          }
+          setLinkError(undefined);
+          persist(buildPatch({ remoteLink: link }));
+        }}
+      />
+    </div>
+  );
 
   return (
     <section className={styles.card} aria-labelledby="step2-format">
@@ -329,125 +417,72 @@ export const SessionFormatSection = forwardRef<
         {messages.estudosSessionFormatTitle}
       </h3>
 
-      <div ref={formatWrapRef}>
-        <ChoiceCards
-          layout="list"
-          aria-label={messages.estudosSessionFormatTitle}
-          options={FORMAT_OPTIONS}
-          value={format || undefined}
-          error={formatError}
-          disabled={disabled}
-          onChange={(id) => requestFormatChange(id as StudySessionFormat)}
-        />
-      </div>
+      <div
+        ref={formatWrapRef}
+        className={styles.formatList}
+        role="radiogroup"
+        aria-labelledby="step2-format"
+        aria-invalid={Boolean(formatError) || undefined}
+      >
+        {FORMAT_OPTIONS.map((opt) => {
+          const selected = format === opt.id;
+          const showAddrInCard =
+            selected && (opt.id === "in_person" || opt.id === "hybrid");
+          const showRemoteInCard =
+            selected && (opt.id === "remote" || opt.id === "hybrid");
 
-      {showAddress && (
-        <div className={styles.config} ref={addressWrapRef}>
-          <Select
-            label={messages.estudosAddressLabel}
-            placeholder={messages.estudosAddressPlaceholder}
-            options={addressOptions}
-            value={addrId || undefined}
-            error={addressError}
-            disabled={disabled}
-            searchable={addresses.length >= 8}
-            searchPlaceholder={messages.estudosAddressSearch}
-            panelState={
-              addrState === "loading"
-                ? "loading"
-                : addrState === "empty"
-                  ? "empty"
-                  : addrState === "error"
-                    ? "error"
-                    : "default"
-            }
-            emptyMessage={
-              <span>
-                {messages.estudosAddressEmpty}
-                {" — "}
-                <button
-                  type="button"
-                  className={styles.inlineLink}
-                  onClick={() => setAddOpen(true)}
+          return (
+            <div
+              key={opt.id}
+              className={[
+                styles.formatCard,
+                selected ? styles.formatCardSelected : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className={styles.formatCardBtn}
+                disabled={disabled}
+                onMouseDown={(e) => {
+                  if (e.button === 0) e.preventDefault();
+                }}
+                onClick={() =>
+                  requestFormatChange(opt.id as StudySessionFormat)
+                }
+              >
+                <span
+                  className={[
+                    styles.radio,
+                    selected ? styles.radioChecked : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-hidden
                 >
-                  {messages.estudosAddressAddCta}
-                </button>
-              </span>
-            }
-            onRetry={() => void loadAddresses()}
-            expandable
-            onChange={(v) => {
-              setAddrId(v);
-              setAddressError(undefined);
-              persist(buildPatch({ addressId: v }));
-            }}
-          />
-          <Button
-            variant="clear"
-            size="medium"
-            disabled={disabled}
-            onClick={() => setAddOpen(true)}
-          >
-            {messages.estudosAddressAddCta}
-          </Button>
-        </div>
-      )}
+                  {selected && <span className={styles.radioDot} />}
+                </span>
+                <span className={styles.formatCardCopy}>
+                  <span className={styles.formatCardTitle}>{opt.title}</span>
+                  <span className={styles.formatCardDesc}>
+                    {opt.description}
+                  </span>
+                </span>
+              </button>
 
-      {showRemote && (
-        <div className={styles.config}>
-          <div ref={platformWrapRef}>
-            <Select
-              label={messages.estudosRemotePlatformLabel}
-              placeholder={messages.estudosRemotePlatformPlaceholder}
-              options={PLATFORM_OPTIONS}
-              value={platform || undefined}
-              error={platformError}
-              disabled={disabled}
-              expandable
-              onChange={(v) => {
-                const next = v as StudyRemotePlatform;
-                setPlatform(next);
-                setPlatformError(undefined);
-                persist(buildPatch({ remotePlatform: next }));
-              }}
-            />
-          </div>
-          <Input
-            ref={linkRef}
-            label={messages.estudosRemoteLinkLabel}
-            placeholder={messages.estudosRemoteLinkPlaceholder}
-            value={link}
-            error={linkError}
-            disabled={disabled}
-            onChange={(e) => {
-              const next = e.target.value;
-              setLink(next);
-              if (linkError) {
-                setLinkError(
-                  !next.trim()
-                    ? messages.estudosRemoteLinkRequired
-                    : isValidHttpUrl(next)
-                      ? undefined
-                      : messages.estudosRemoteLinkInvalid,
-                );
-              }
-              onChange(buildPatch({ remoteLink: next }));
-            }}
-            onBlur={() => {
-              if (!link.trim()) {
-                setLinkError(undefined);
-                persist(buildPatch({ remoteLink: link }));
-                return;
-              }
-              if (!isValidHttpUrl(link)) {
-                setLinkError(messages.estudosRemoteLinkInvalid);
-                return;
-              }
-              setLinkError(undefined);
-              persist(buildPatch({ remoteLink: link }));
-            }}
-          />
-        </div>
+              {showAddrInCard && addressField}
+              {showRemoteInCard && remoteFields}
+            </div>
+          );
+        })}
+      </div>
+      {formatError && (
+        <p className={styles.formatError} role="alert">
+          {formatError}
+        </p>
       )}
 
       <Modal
@@ -487,52 +522,20 @@ export const SessionFormatSection = forwardRef<
         <p className={styles.modalCopy}>{messages.estudosFormatSwitchBody}</p>
       </Modal>
 
-      <Modal
+      <AddStudyAddressDrawer
         open={addOpen}
-        onClose={() => {
-          if (!adding) setAddOpen(false);
+        onClose={() => setAddOpen(false)}
+        onCreated={(created) => {
+          setAddresses((prev) => [
+            created,
+            ...prev.filter((a) => a.id !== created.id),
+          ]);
+          setAddrState("ready");
+          setAddrId(created.id);
+          setAddressError(undefined);
+          persist(buildPatch({ addressId: created.id }));
         }}
-        title={messages.estudosAddressAddTitle}
-        size="small"
-        footer={
-          <>
-            <Button
-              variant="clear"
-              size="medium"
-              disabled={adding}
-              onClick={() => setAddOpen(false)}
-            >
-              {messages.inviteCancel}
-            </Button>
-            <Button
-              variant="filled"
-              size="medium"
-              loading={adding}
-              onClick={() => void handleAddAddress()}
-            >
-              {messages.estudosAddressSave}
-            </Button>
-          </>
-        }
-      >
-        <div className={styles.addForm}>
-          <Input
-            label={messages.estudosAddressNameLabel}
-            placeholder={messages.estudosAddressNamePlaceholder}
-            value={addLabel}
-            onChange={(e) => setAddLabel(e.target.value)}
-            disabled={adding}
-          />
-          <Input
-            label={messages.estudosAddressDetailLabel}
-            placeholder={messages.estudosAddressDetailPlaceholder}
-            value={addDetail}
-            onChange={(e) => setAddDetail(e.target.value)}
-            disabled={adding}
-            error={addError}
-          />
-        </div>
-      </Modal>
+      />
     </section>
   );
 });

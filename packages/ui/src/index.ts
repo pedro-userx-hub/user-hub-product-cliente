@@ -80,6 +80,12 @@ export type { RadioGroupProps, RadioOption } from "./RadioGroup";
 export { DateField } from "./DateField";
 export type { DateFieldProps } from "./DateField";
 
+export { DateRangeField } from "./DateRangeField";
+export type {
+  DateRangeFieldProps,
+  DateRangeValue,
+} from "./DateRangeField";
+
 export { Toggle } from "./Toggle";
 export type { ToggleProps } from "./Toggle";
 

@@ -210,3 +210,43 @@
   outline: 2px solid var(--color-action);
   outline-offset: 1px;
 }
+
+.rangeTrigger {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: var(--space-3) 0;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-family);
+}
+
+.rangeTrigger:disabled {
+  cursor: not-allowed;
+}
+
+.rangeValue {
+  color: var(--color-text);
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+}
+
+.rangePlaceholder {
+  color: var(--color-text-muted);
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+}
+
+.rangeHint {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-xs, 12px);
+  line-height: 16px;
+  color: var(--color-text-muted);
+}
+
+.dayInRange {
+  background: var(--color-action-subtle, #f3ebf8);
+  color: var(--color-text);
+  border-radius: 0;
+}

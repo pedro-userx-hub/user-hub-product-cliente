@@ -14,13 +14,17 @@ import {
   Modal,
   TextArea,
   Toggle,
+  XIcon,
 } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import { canSeeTeamCredits } from "../../lib/permissions";
 import { useTeamContext } from "../../lib/TeamContext";
 import {
+  STUDY_OWN_BASE_ACCEPT,
+  STUDY_OWN_BASE_MAX_BYTES,
   STUDY_PROFILE_MAX,
   fetchCurrentTeamCredits,
+  type StudyConsentFile,
   type StudyParticipantType,
   type StudyRecruitmentSource,
   type TeamStudy,
@@ -98,6 +102,7 @@ export const StudyStep3Form = forwardRef<
   const qtyRef = useRef<HTMLInputElement>(null);
   const desiredRef = useRef<HTMLTextAreaElement>(null);
   const sourceWrapRef = useRef<HTMLDivElement>(null);
+  const ownBaseInputRef = useRef<HTMLInputElement>(null);
   const requirementsRef =
     useRef<ParticipationRequirementsSectionHandle>(null);
   const additionalRef = useRef<AdditionalSettingsSectionHandle>(null);
@@ -120,6 +125,12 @@ export const StudyStep3Form = forwardRef<
   const [recruitmentSource, setRecruitmentSource] = useState<
     StudyRecruitmentSource | ""
   >(study.recruitmentSource ?? "");
+  const [ownBaseFile, setOwnBaseFile] = useState<StudyConsentFile | null>(
+    study.ownBaseFile ?? null,
+  );
+  const [ownBaseUploading, setOwnBaseUploading] = useState(false);
+  const [ownBaseError, setOwnBaseError] = useState<string | undefined>();
+  const [ownBaseDragOver, setOwnBaseDragOver] = useState(false);
 
   const [typeError, setTypeError] = useState<string | undefined>();
   const [qtyError, setQtyError] = useState<string | undefined>();
@@ -165,6 +176,9 @@ export const StudyStep3Form = forwardRef<
     setExclusionEnabled(Boolean(study.exclusionEnabled));
     setExclusionProfile(study.exclusionProfile ?? "");
     setRecruitmentSource(study.recruitmentSource ?? "");
+    setOwnBaseFile(study.ownBaseFile ?? null);
+    setOwnBaseError(undefined);
+    setOwnBaseDragOver(false);
   }, [study.id]);
 
   const persist = (patch: UpdateStudyDraftInput) => {
@@ -181,9 +195,43 @@ export const StudyStep3Form = forwardRef<
       exclusionEnabled,
       exclusionProfile: exclusionEnabled ? exclusionProfile : "",
       recruitmentSource,
+      ownBaseFile: recruitmentSource === "own" ? ownBaseFile : null,
       ...(requirementsRef.current?.getPatch() ?? {}),
       ...(additionalRef.current?.getPatch() ?? {}),
     };
+  };
+
+  const isAllowedOwnBaseFile = (file: File): boolean => {
+    if (file.size > STUDY_OWN_BASE_MAX_BYTES) return false;
+    const name = file.name.toLowerCase();
+    return (
+      name.endsWith(".csv") ||
+      name.endsWith(".xlsx") ||
+      name.endsWith(".xls") ||
+      name.endsWith(".txt")
+    );
+  };
+
+  const onPickOwnBase = async (file: File | undefined) => {
+    if (!file || disabled || ownBaseUploading) return;
+    if (!isAllowedOwnBaseFile(file)) {
+      setOwnBaseError(messages.estudosOwnBaseInvalid);
+      if (ownBaseInputRef.current) ownBaseInputRef.current.value = "";
+      return;
+    }
+
+    setOwnBaseUploading(true);
+    setOwnBaseError(undefined);
+    await new Promise((r) => setTimeout(r, 400));
+    const next: StudyConsentFile = {
+      id: `own-base-${Date.now()}`,
+      name: file.name,
+      size: file.size,
+    };
+    setOwnBaseFile(next);
+    setOwnBaseUploading(false);
+    persist({ ownBaseFile: next, recruitmentSource: "own" });
+    if (ownBaseInputRef.current) ownBaseInputRef.current.value = "";
   };
 
   useImperativeHandle(
@@ -235,6 +283,20 @@ export const StudyStep3Form = forwardRef<
           }
         } else {
           setSourceError(undefined);
+          if (recruitmentSource === "own" && !ownBaseFile) {
+            setOwnBaseError(messages.estudosOwnBaseRequired);
+            ok = false;
+            if (!first) {
+              first =
+                (sourceWrapRef.current?.querySelector(
+                  `.${styles.dropzone} button`,
+                ) as HTMLElement | null) ??
+                (sourceWrapRef.current?.querySelector(
+                  "button",
+                ) as HTMLElement | null) ??
+                null;
+            }
+          }
         }
 
         const additionalOk = additionalRef.current?.validate() ?? true;
@@ -254,6 +316,7 @@ export const StudyStep3Form = forwardRef<
       exclusionEnabled,
       exclusionProfile,
       recruitmentSource,
+      ownBaseFile,
     ],
   );
 
@@ -552,9 +615,106 @@ export const StudyStep3Form = forwardRef<
               const next = id as StudyRecruitmentSource;
               setRecruitmentSource(next);
               setSourceError(undefined);
+              if (next !== "own") {
+                setOwnBaseFile(null);
+                setOwnBaseError(undefined);
+                setOwnBaseDragOver(false);
+                persist({ recruitmentSource: next, ownBaseFile: null });
+                return;
+              }
               persist({ recruitmentSource: next });
             }}
           />
+
+          {recruitmentSource === "own" && (
+            <div className={styles.ownBaseArea}>
+              {ownBaseFile ? (
+                <div className={styles.fileRow}>
+                  <div className={styles.fileMeta}>
+                    <span className={styles.fileName}>{ownBaseFile.name}</span>
+                    <span className={styles.fileSize}>
+                      {formatBytes(ownBaseFile.size)}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.removeBtn}
+                    disabled={disabled || ownBaseUploading}
+                    aria-label={messages.estudosOwnBaseRemove}
+                    onClick={() => {
+                      setOwnBaseFile(null);
+                      setOwnBaseError(undefined);
+                      persist({ ownBaseFile: null });
+                    }}
+                  >
+                    <XIcon size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className={`${styles.dropzone}${
+                    ownBaseDragOver ? ` ${styles.dropzoneActive}` : ""
+                  }`}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!disabled && !ownBaseUploading) setOwnBaseDragOver(true);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!disabled && !ownBaseUploading) setOwnBaseDragOver(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setOwnBaseDragOver(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setOwnBaseDragOver(false);
+                    const file = e.dataTransfer.files?.[0];
+                    void onPickOwnBase(file);
+                  }}
+                >
+                  <p className={styles.uploadLabel}>
+                    {messages.estudosOwnBaseUploadLabel}
+                  </p>
+                  <p className={styles.uploadHint}>
+                    {ownBaseUploading
+                      ? messages.estudosOwnBaseUploading
+                      : ownBaseDragOver
+                        ? messages.estudosOwnBaseDropActive
+                        : messages.estudosOwnBaseUploadHint}
+                  </p>
+                  <Button
+                    variant="clear"
+                    size="medium"
+                    disabled={disabled || ownBaseUploading}
+                    onClick={() => ownBaseInputRef.current?.click()}
+                  >
+                    {messages.estudosOwnBaseUploadCta}
+                  </Button>
+                  <input
+                    ref={ownBaseInputRef}
+                    type="file"
+                    className={styles.hiddenInput}
+                    accept={STUDY_OWN_BASE_ACCEPT}
+                    disabled={disabled || ownBaseUploading}
+                    onChange={(e) => {
+                      void onPickOwnBase(e.target.files?.[0]);
+                    }}
+                  />
+                </div>
+              )}
+              {ownBaseError && (
+                <p className={styles.ownBaseError} role="alert">
+                  {ownBaseError}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -655,3 +815,9 @@ export const StudyStep3Form = forwardRef<
     </div>
   );
 });
+
+function formatBytes(size: number): string {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}

@@ -94,6 +94,12 @@
   min-width: 0;
 }
 
+.triggerWrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
 .chevron {
   flex-shrink: 0;
   color: var(--color-text-muted);
@@ -113,6 +119,15 @@
   display: flex;
   flex-direction: column;
   max-height: 320px;
+}
+
+.panelInline {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 5;
 }
 
 .search {
