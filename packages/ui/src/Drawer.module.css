@@ -7,6 +7,15 @@
   animation: overlay-in 0.15s ease;
 }
 
+.overlayPassive {
+  background: transparent;
+  pointer-events: none;
+}
+
+.overlayPassive .drawer {
+  pointer-events: auto;
+}
+
 .right {
   margin-left: auto;
 }

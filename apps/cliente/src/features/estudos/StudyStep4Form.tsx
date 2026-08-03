@@ -5,10 +5,12 @@ import {
   useMemo,
   useRef,
   useState,
+  type DragEvent,
   type ReactNode,
 } from "react";
 import {
   Button,
+  BookOpenIcon,
   CheckboxIcon,
   CheckCircleIcon,
   ChoiceCards,
@@ -33,6 +35,13 @@ import {
 } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import {
+  findLibraryQuestion,
+  LIBRARY_QUESTION_MIME,
+  materializeLibraryPack,
+  materializeLibraryQuestion,
+  type LibraryPack,
+} from "../../lib/screenerLibrary";
+import {
   buildScreenerFromImport,
   cloneScreener,
   createDefaultPage,
@@ -46,6 +55,10 @@ import {
   type StudyScreener,
 } from "../../lib/screenerModel";
 import type { TeamStudy, UpdateStudyDraftInput } from "../../lib/teamApi";
+import {
+  ScreenerLibraryDrawer,
+  LIBRARY_WIDTH_DEFAULT,
+} from "./ScreenerLibraryDrawer";
 import styles from "./StudyStep4Form.module.css";
 
 export interface StudyStep4FormHandle {
@@ -151,6 +164,13 @@ export const StudyStep4Form = forwardRef<
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
   const [toolbarMenuOpen, setToolbarMenuOpen] = useState(false);
   const [pageMenuId, setPageMenuId] = useState<string | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [libraryWidth, setLibraryWidth] = useState(LIBRARY_WIDTH_DEFAULT);
+  const [draggingLibraryQuestionId, setDraggingLibraryQuestionId] = useState<
+    string | null
+  >(null);
+  const [dropTargetPageId, setDropTargetPageId] = useState<string | null>(null);
+  const [pendingPack, setPendingPack] = useState<LibraryPack | null>(null);
   const toolbarMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -198,6 +218,70 @@ export const StudyStep4Form = forwardRef<
     }),
     [screener],
   );
+
+  const insertLibraryQuestion = (pageId: string, libraryQuestionId: string) => {
+    const item = findLibraryQuestion(libraryQuestionId);
+    if (!item) return;
+    updateScreener((prev) => ({
+      ...prev,
+      pages: prev.pages.map((p) => {
+        if (p.id !== pageId) return p;
+        const nextQ = materializeLibraryQuestion(item, p.questions.length);
+        return { ...p, questions: [...p.questions, nextQ] };
+      }),
+    }));
+    showToast({
+      type: "success",
+      title: messages.estudosScreenerLibraryQuestionAdded,
+    });
+  };
+
+  const applyPack = (pack: LibraryPack) => {
+    const next = materializeLibraryPack(pack);
+    commit(next);
+    setFocus("all");
+    setPendingPack(null);
+    setLibraryOpen(false);
+    showToast({
+      type: "success",
+      title: messages.estudosScreenerLibraryApplied,
+    });
+  };
+
+  const requestApplyPack = (pack: LibraryPack) => {
+    if (screenerHasUserContent(screener)) {
+      setPendingPack(pack);
+      return;
+    }
+    applyPack(pack);
+  };
+
+  const onPageDragOver = (e: DragEvent, pageId: string) => {
+    const types = [...e.dataTransfer.types];
+    if (
+      !types.includes(LIBRARY_QUESTION_MIME) &&
+      !types.includes("text/plain")
+    ) {
+      return;
+    }
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setDropTargetPageId(pageId);
+  };
+
+  const onPageDrop = (e: DragEvent, pageId: string) => {
+    e.preventDefault();
+    const raw =
+      e.dataTransfer.getData(LIBRARY_QUESTION_MIME) ||
+      e.dataTransfer.getData("text/plain");
+    const libraryQuestionId = raw.startsWith("library-question:")
+      ? raw.slice("library-question:".length)
+      : raw;
+    setDropTargetPageId(null);
+    setDraggingLibraryQuestionId(null);
+    if (!libraryQuestionId || !findLibraryQuestion(libraryQuestionId)) return;
+    insertLibraryQuestion(pageId, libraryQuestionId);
+  };
 
   const savedLabel = useMemo(() => {
     if (!savedAt) return null;
@@ -283,7 +367,11 @@ export const StudyStep4Form = forwardRef<
       .join(" ");
 
   return (
-    <div className={styles.shell}>
+    <div
+      className={[styles.shell, libraryOpen ? styles.shellWithLibrary : ""]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <aside className={styles.sidebar}>
         <p className={styles.sidebarHeader}>{messages.estudosScreenerPagesTitle}</p>
         <ul className={styles.navList}>
@@ -443,6 +531,15 @@ export const StudyStep4Form = forwardRef<
             variant="clear"
             size="medium"
             disabled={disabled}
+            iconLeft={<BookOpenIcon size={24} />}
+            onClick={() => setLibraryOpen(true)}
+          >
+            {messages.estudosScreenerLibrary}
+          </Button>
+          <Button
+            variant="clear"
+            size="medium"
+            disabled={disabled}
             iconLeft={<UploadIcon size={24} />}
             onClick={() => setImportOpen(true)}
           >
@@ -466,10 +563,7 @@ export const StudyStep4Form = forwardRef<
                     className={styles.menuItem}
                     onClick={() => {
                       setToolbarMenuOpen(false);
-                      showToast({
-                        type: "info",
-                        title: messages.estudosScreenerLibrarySoon,
-                      });
+                      setLibraryOpen(true);
                     }}
                   >
                     {messages.estudosScreenerLibrary}
@@ -523,8 +617,28 @@ export const StudyStep4Form = forwardRef<
           )}
 
           {visiblePages.map((page) => (
-            <section key={page.id} className={styles.block}>
-              <div className={styles.card}>
+            <section
+              key={page.id}
+              className={styles.block}
+              onDragOver={(e) => onPageDragOver(e, page.id)}
+              onDragLeave={() => {
+                setDropTargetPageId((cur) => (cur === page.id ? null : cur));
+              }}
+              onDrop={(e) => onPageDrop(e, page.id)}
+            >
+              <div
+                className={[
+                  styles.card,
+                  dropTargetPageId === page.id ? styles.cardDropTarget : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                {draggingLibraryQuestionId && dropTargetPageId === page.id && (
+                  <p className={styles.dropHint}>
+                    {messages.estudosScreenerLibraryDropHint}
+                  </p>
+                )}
                 <div className={styles.cardHead}>
                   <h3 className={styles.cardTitle}>{page.name}</h3>
                   <div style={{ position: "relative" }}>
@@ -710,6 +824,20 @@ export const StudyStep4Form = forwardRef<
         </div>
       </div>
 
+      <ScreenerLibraryDrawer
+        open={libraryOpen}
+        width={libraryWidth}
+        onWidthChange={setLibraryWidth}
+        onClose={() => {
+          setLibraryOpen(false);
+          setDraggingLibraryQuestionId(null);
+          setDropTargetPageId(null);
+        }}
+        onApplyPack={(pack) => requestApplyPack(pack)}
+        draggingQuestionId={draggingLibraryQuestionId}
+        onDraggingQuestionIdChange={setDraggingLibraryQuestionId}
+      />
+
       <ImportModal
         open={importOpen}
         text={importText}
@@ -824,6 +952,37 @@ export const StudyStep4Form = forwardRef<
         </p>
       </Modal>
 
+      <Modal
+        open={pendingPack != null}
+        onClose={() => setPendingPack(null)}
+        title={messages.estudosScreenerLibraryReplaceTitle}
+        size="small"
+        footer={
+          <>
+            <Button
+              variant="clear"
+              size="medium"
+              onClick={() => setPendingPack(null)}
+            >
+              {messages.inviteCancel}
+            </Button>
+            <Button
+              variant="filled"
+              size="medium"
+              onClick={() => {
+                if (pendingPack) applyPack(pendingPack);
+              }}
+            >
+              {messages.estudosScreenerLibraryReplaceConfirm}
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.modalCopy}>
+          {messages.estudosScreenerLibraryReplaceBody}
+        </p>
+      </Modal>
+
       <ScreenerPreview
         open={previewOpen}
         screener={screener}
@@ -832,6 +991,18 @@ export const StudyStep4Form = forwardRef<
     </div>
   );
 });
+
+function screenerHasUserContent(screener: StudyScreener | null): boolean {
+  if (!screener) return false;
+  if (screener.pages.length > 1) return true;
+  return screener.pages.some((page) =>
+    page.questions.some(
+      (q) =>
+        q.prompt.trim().length > 0 ||
+        q.options.some((o) => o.label.trim().length > 0 && !o.isOther),
+    ),
+  );
+}
 
 function parseImportIntoExisting(
   current: StudyScreener,

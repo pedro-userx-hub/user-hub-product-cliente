@@ -56,7 +56,6 @@ export const messages = {
   estudosScreenerAllPages: "Todas as páginas",
   estudosScreenerNewPage: "Nova página",
   estudosScreenerPreview: "Pré-visualizar",
-  estudosScreenerLibrary: "Biblioteca",
   estudosScreenerImport: "Importar",
   estudosScreenerSavedAt: (when: string) => `Salvo ${when}`,
   estudosScreenerWelcomeSection: "Início",
@@ -118,6 +117,33 @@ export const messages = {
   estudosScreenerPreviewPage: (x: number, y: number) => `Página ${x} de ${y}`,
   estudosScreenerPreviewOtherPlaceholder: "Digite sua resposta",
   estudosScreenerPreviewClose: "Fechar pré-visualização",
+  estudosScreenerLibrary: "Biblioteca",
+  estudosScreenerLibrarySearch: "Buscar...",
+  estudosScreenerLibraryTabsAria: "Categorias da biblioteca",
+  estudosScreenerLibraryTabQuestions: "Questões",
+  estudosScreenerLibraryTabScreeners: "Screener",
+  estudosScreenerLibraryTabTemplates: "Templates",
+  estudosScreenerLibraryDragHint:
+    "Arraste questões para a seção desejada no builder.",
+  estudosScreenerLibrarySearchEmpty: "Nenhum resultado para sua busca.",
+  estudosScreenerLibraryTabEmpty: "Nenhum item nesta biblioteca.",
+  estudosScreenerLibraryLoadError:
+    "Não foi possível carregar a biblioteca.",
+  estudosScreenerLibraryRetry: "Tentar novamente",
+  estudosScreenerLibraryOptionCount: (n: number) =>
+    n === 1 ? "1 opção" : `${n} opções`,
+  estudosScreenerLibraryQuestionCount: (n: number) =>
+    n === 1 ? "1 pergunta" : `${n} perguntas`,
+  estudosScreenerLibraryApply: "Aplicar",
+  estudosScreenerLibraryReplaceTitle: "Substituir screener?",
+  estudosScreenerLibraryReplaceBody:
+    "Aplicar vai substituir o screener atual. Continuar?",
+  estudosScreenerLibraryReplaceConfirm: "Continuar",
+  estudosScreenerLibraryApplied: "Conteúdo da biblioteca aplicado.",
+  estudosScreenerLibraryQuestionAdded: "Questão adicionada ao screener.",
+  estudosScreenerLibraryDropHint: "Solte a questão aqui",
+  estudosScreenerLibraryClose: "Fechar biblioteca",
+  estudosScreenerLibraryResize: "Redimensionar biblioteca",
   estudosScreenerLibrarySoon: "Biblioteca em breve.",
   estudosStep1Placeholder:
     "Configure identificação e responsáveis neste passo (em breve).",

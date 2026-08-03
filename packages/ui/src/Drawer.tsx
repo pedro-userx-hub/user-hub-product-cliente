@@ -15,6 +15,11 @@ export interface DrawerProps {
   /** Impede fechar por overlay/ESC (ex.: enquanto salva). */
   dismissible?: boolean;
   side?: DrawerSide;
+  /**
+   * Quando true, o fundo continua clicável (overlay sem captura de ponteiro).
+   * Útil para arrastar itens do drawer para a página (ex.: Biblioteca).
+   */
+  allowBackgroundInteraction?: boolean;
 }
 
 /**
@@ -30,6 +35,7 @@ export function Drawer({
   footer,
   dismissible = true,
   side = "right",
+  allowBackgroundInteraction = false,
 }: DrawerProps) {
   const titleId = useId();
 
@@ -48,22 +54,32 @@ export function Drawer({
   }, [open, handleClose]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || allowBackgroundInteraction) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [open]);
+  }, [open, allowBackgroundInteraction]);
 
   if (!open) return null;
 
   return createPortal(
-    <div className={styles.overlay} onMouseDown={handleClose}>
+    <div
+      className={[
+        styles.overlay,
+        allowBackgroundInteraction ? styles.overlayPassive : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      onMouseDown={
+        allowBackgroundInteraction || !dismissible ? undefined : handleClose
+      }
+    >
       <aside
         className={[styles.drawer, styles[side]].filter(Boolean).join(" ")}
         role="dialog"
-        aria-modal="true"
+        aria-modal={!allowBackgroundInteraction}
         aria-labelledby={titleId}
         onMouseDown={(e) => e.stopPropagation()}
       >
