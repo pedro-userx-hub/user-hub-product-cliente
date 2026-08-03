@@ -1,0 +1,99 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  font-family: var(--font-family);
+}
+
+.list {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--color-border-subtle, #e5e7eb);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  min-width: 0;
+}
+
+.tab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.tab:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tabSelected {
+  color: var(--color-action);
+  border-bottom-color: var(--color-action);
+  font-weight: var(--fw-semibold);
+}
+
+.tabSelected:hover:not(:disabled) {
+  color: var(--color-action-hover);
+  border-bottom-color: var(--color-action-hover);
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.label {
+  min-width: 0;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-muted-surface, #f5f5f5);
+  color: var(--color-text-muted);
+  font-size: var(--font-xs, 0.75rem);
+  line-height: 1;
+  font-weight: var(--fw-semibold);
+}
+
+.tabSelected .count {
+  background: var(--color-action-surface);
+  color: var(--color-action-emphasis);
+}

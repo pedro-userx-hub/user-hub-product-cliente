@@ -1,0 +1,115 @@
+.root {
+
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: flex-start;
+
+  gap: var(--space-2);
+
+  cursor: pointer;
+
+  font-family: var(--font-family);
+
+  min-width: 0;
+
+}
+
+
+
+.disabled {
+
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+}
+
+
+
+/* Fica sobre o box visual — evita scroll pro sticky header ao focar. */
+
+.input {
+
+  position: absolute;
+
+  top: 0;
+
+  left: 0;
+
+  width: 24px;
+
+  height: 24px;
+
+  margin: 0;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+}
+
+
+
+.box {
+
+  flex-shrink: 0;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 24px;
+
+  height: 24px;
+
+  border: var(--border-width) solid var(--color-border);
+
+  border-radius: var(--radius-sm);
+
+  background: var(--color-surface);
+
+  color: var(--color-action-on);
+
+  box-sizing: border-box;
+
+}
+
+
+
+.boxChecked {
+
+  border-color: var(--color-action);
+
+  background: var(--color-action);
+
+}
+
+
+
+.root:focus-within .box {
+
+  outline: 2px solid var(--color-action);
+
+  outline-offset: 2px;
+
+}
+
+
+
+.label {
+
+  font-size: var(--font-sm);
+
+  line-height: var(--lh-sm);
+
+  color: var(--color-text);
+
+  padding-top: 2px;
+
+}
+
+

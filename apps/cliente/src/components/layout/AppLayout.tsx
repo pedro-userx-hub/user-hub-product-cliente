@@ -43,6 +43,11 @@ export function AppLayout() {
     [],
   );
 
+  /** Fluxo de criação / visão do estudo — tela full-bleed sem sidebar (Figma). */
+  const isStudyFocus =
+    /^\/estudos\/[^/]+\/criar\/?$/.test(location.pathname) ||
+    /^\/estudos\/[^/]+\/?$/.test(location.pathname);
+
   useEffect(() => {
     if (!routeAllowedForRole(location.pathname, user.role)) {
       navigate("/estudos", { replace: true });
@@ -64,10 +69,24 @@ export function AppLayout() {
         }}
       />
       <div className={styles.shell} key={shellKey}>
-        <AppSidebar />
+        {!isStudyFocus && <AppSidebar />}
         <div className={styles.main}>
-          <div className={styles.content}>
-            <div className={styles.contentInner}>
+          <div
+            className={[
+              styles.content,
+              isStudyFocus ? styles.contentFocus : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <div
+              className={[
+                styles.contentInner,
+                isStudyFocus ? styles.contentInnerFocus : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
               <Outlet />
             </div>
           </div>

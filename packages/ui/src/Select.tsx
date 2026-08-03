@@ -50,6 +50,9 @@ export interface SelectProps {
   onRetry?: () => void;
   disabled?: boolean;
   placeholder?: string;
+  label?: string;
+  helperText?: string;
+  error?: string;
   "aria-label"?: string;
   className?: string;
   /** Threshold to auto-enable search. Default 8. */
@@ -75,7 +78,10 @@ export function Select({
   onRetry,
   disabled = false,
   placeholder = "Selecionar",
-  "aria-label": ariaLabel = "Selecionar",
+  label: fieldLabel,
+  helperText,
+  error,
+  "aria-label": ariaLabelProp,
   className,
   searchThreshold = 8,
 }: SelectProps) {
@@ -85,9 +91,13 @@ export function Select({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const listId = useId();
+  const fieldId = useId();
+  const helperId = helperText || error ? `${fieldId}-helper` : undefined;
+  const hasError = Boolean(error);
+  const ariaLabel = ariaLabelProp ?? fieldLabel ?? "Selecionar";
 
   const selected = options.find((o) => o.value === value);
-  const label = selected?.label ?? placeholder;
+  const displayLabel = selected?.label ?? placeholder;
   const leading = selected?.leading;
   const canExpand = expandable && !disabled;
 
@@ -266,22 +276,31 @@ export function Select({
       ref={wrapRef}
       className={[styles.wrap, className ?? ""].filter(Boolean).join(" ")}
     >
+      {fieldLabel && (
+        <span className={styles.fieldLabel} id={`${fieldId}-label`}>
+          {fieldLabel}
+        </span>
+      )}
       <button
         ref={triggerRef}
         type="button"
         className={[
           styles.trigger,
           !canExpand ? styles.triggerStatic : "",
+          hasError ? styles.triggerError : "",
         ]
           .filter(Boolean)
           .join(" ")}
         disabled={disabled}
         aria-label={ariaLabel}
+        aria-labelledby={fieldLabel ? `${fieldId}-label` : undefined}
+        aria-invalid={hasError || undefined}
+        aria-describedby={helperId}
         aria-haspopup={canExpand ? "listbox" : undefined}
         aria-expanded={canExpand ? open : undefined}
         aria-controls={canExpand && open ? listId : undefined}
         data-open={open ? "true" : undefined}
-        title={label}
+        title={displayLabel}
         onClick={() => {
           if (!canExpand || disabled) return;
           setOpen((v) => !v);
@@ -290,13 +309,23 @@ export function Select({
         {leading != null && (
           <span className={styles.triggerLeading}>{leading}</span>
         )}
-        <span className={styles.triggerLabel}>{label}</span>
+        <span className={styles.triggerLabel}>{displayLabel}</span>
         {canExpand && (
           <span className={styles.chevron}>
             <ChevronDownIcon size={24} />
           </span>
         )}
       </button>
+      {(error || helperText) && (
+        <p
+          id={helperId}
+          className={[styles.helper, hasError ? styles.helperError : ""]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {error ?? helperText}
+        </p>
+      )}
 
       {panel && createPortal(panel, document.body)}
     </div>

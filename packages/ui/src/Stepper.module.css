@@ -1,0 +1,114 @@
+.root {
+  font-family: var(--font-family);
+  min-width: 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.connector {
+  width: 24px;
+  height: var(--border-width);
+  background: var(--color-border);
+  flex-shrink: 0;
+  margin: 0 var(--space-2);
+}
+
+.itemCurrent .connector,
+.item:has(+ .itemCurrent) .connector {
+  background: var(--color-action);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-1);
+  margin: 0;
+  border: none;
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  cursor: default;
+  text-align: left;
+}
+
+button.button {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+button.button:hover {
+  color: var(--color-text);
+}
+
+button.button:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.itemCurrent .button {
+  color: var(--color-action);
+  font-weight: var(--fw-semibold);
+}
+
+.itemDisabled .button {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.marker {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  box-sizing: border-box;
+}
+
+.markerPending {
+  color: var(--color-text-muted);
+}
+
+.markerCurrent {
+  border-color: var(--color-action);
+  background: var(--color-action);
+  color: var(--color-action-on);
+}
+
+.markerCompleted {
+  border-color: var(--color-action);
+  background: var(--color-action-subtle);
+  color: var(--color-action);
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

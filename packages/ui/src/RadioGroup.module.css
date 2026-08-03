@@ -1,0 +1,96 @@
+.root {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-family: var(--font-family);
+  min-width: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+}
+
+.optionDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.control {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  box-sizing: border-box;
+}
+
+.controlChecked {
+  border-color: var(--color-action);
+}
+
+.controlError {
+  border-color: var(--color-error);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-action);
+}
+
+.option:focus-within .control {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.optionLabel {
+  font-weight: var(--fw-regular);
+}
+
+.error {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-error);
+}

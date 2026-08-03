@@ -1,0 +1,212 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-family: var(--font-family);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-2) 0 var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.control:focus-within {
+  border-color: var(--color-action);
+}
+
+.controlError {
+  border-color: var(--color-error);
+}
+
+.controlError:focus-within {
+  border-color: var(--color-error);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  padding: var(--space-3) 0;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.iconBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.iconBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.helper {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.helperError {
+  color: var(--color-error);
+}
+
+.panel {
+  position: fixed;
+  z-index: 150;
+  width: 280px;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-family);
+}
+
+.monthBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.monthLabel {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  text-transform: capitalize;
+}
+
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.navBtn:hover {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: var(--space-1);
+}
+
+.weekday {
+  text-align: center;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.day {
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  cursor: pointer;
+}
+
+.day:hover:not(:disabled) {
+  background: var(--color-background);
+}
+
+.dayOutside {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.daySelected {
+  background: var(--color-action);
+  color: var(--color-action-on);
+  font-weight: var(--fw-semibold);
+}
+
+.daySelected:hover:not(:disabled) {
+  background: var(--color-action-hover);
+  color: var(--color-action-on);
+}
+
+.dayDisabled {
+  color: var(--color-text-muted);
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.day:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 1px;
+}

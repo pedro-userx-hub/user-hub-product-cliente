@@ -1,20 +1,32 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
-  ChevronDownIcon,
   EmptyState,
   HelpCircleIcon,
   Input,
-  PlusIcon,
   Skeleton,
   StudyCard,
+  Tabs,
   useToast,
   type BadgeColor,
 } from "@userx/ui";
+import { NewStudyMenu } from "../features/estudos/NewStudyMenu";
 import { messages } from "../lib/messages";
+import { canCreateStudy } from "../lib/permissions";
+import {
+  parseStudyTab,
+  STUDY_TAB_ITEMS,
+  studyMatchesTab,
+  studyTabLabel,
+  type StudyTabId,
+} from "../lib/studyTabs";
 import { useTeamContext } from "../lib/TeamContext";
 import {
+  createStudyDraft,
   fetchTeamStudies,
+  studyDisplayName,
+  type StudyModality,
   type StudyStatus,
   type TeamStudy,
 } from "../lib/teamApi";
@@ -46,17 +58,57 @@ function statusColor(status: StudyStatus): BadgeColor {
 }
 
 /**
- * Estudos — créditos discretos na toolbar, busca e Novo estudo.
+ * Estudos — listagem com tabs por status (Stories 1–2).
  */
 export function EstudosPage() {
-  const { currentTeam, loadState } = useTeamContext();
+  const { currentTeam, loadState, user } = useTeamContext();
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const noTeam = loadState === "empty" || !currentTeam;
+  const canCreate = canCreateStudy(user.role);
+
+  const activeTab = parseStudyTab(searchParams.get("tab"));
+
+  useEffect(() => {
+    const raw = searchParams.get("tab");
+    if (raw == null) return;
+    if (parseStudyTab(raw) === "todos" && raw !== "todos") {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("tab");
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }, [searchParams, setSearchParams]);
 
   const [search, setSearch] = useState("");
   const [studies, setStudies] = useState<TeamStudy[]>([]);
   const [viewState, setViewState] = useState<"loading" | "ready" | "error">(
     "loading",
+  );
+  const [creating, setCreating] = useState(false);
+  const creatingLock = useRef(false);
+
+  const setActiveTab = useCallback(
+    (tab: StudyTabId) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (tab === "todos") {
+            next.delete("tab");
+          } else {
+            next.set("tab", tab);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
   );
 
   const load = useCallback(async () => {
@@ -79,11 +131,68 @@ export function EstudosPage() {
     void load();
   }, [load]);
 
+  const inTab = useMemo(
+    () => studies.filter((s) => studyMatchesTab(s, activeTab)),
+    [studies, activeTab],
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return studies;
-    return studies.filter((s) => s.name.toLowerCase().includes(q));
-  }, [studies, search]);
+    if (!q) return inTab;
+    return inTab.filter((s) =>
+      studyDisplayName(s).toLowerCase().includes(q),
+    );
+  }, [inTab, search]);
+
+  const handleCreate = async (modality: StudyModality) => {
+    if (!currentTeam || creatingLock.current) return;
+    creatingLock.current = true;
+    setCreating(true);
+    try {
+      const study = await createStudyDraft({
+        teamId: currentTeam.id,
+        modality,
+      });
+      navigate(`/estudos/${study.id}/criar`);
+    } catch {
+      showToast({ type: "error", title: messages.estudosCreateError });
+    } finally {
+      creatingLock.current = false;
+      setCreating(false);
+    }
+  };
+
+  const openStudy = (study: TeamStudy) => {
+    if (study.status === "Rascunho") {
+      navigate(`/estudos/${study.id}/criar`);
+      return;
+    }
+    navigate(`/estudos/${study.id}`);
+  };
+
+  const searchActive = search.trim().length > 0;
+  const showStatusEmpty =
+    viewState === "ready" &&
+    filtered.length === 0 &&
+    inTab.length === 0 &&
+    !searchActive;
+  const showSearchEmpty =
+    viewState === "ready" &&
+    filtered.length === 0 &&
+    inTab.length > 0 &&
+    searchActive;
+  const showGlobalEmpty =
+    viewState === "ready" &&
+    filtered.length === 0 &&
+    studies.length === 0 &&
+    activeTab === "todos" &&
+    !searchActive;
+
+  const statusEmptyTitle = (() => {
+    if (activeTab === "rascunhos") return messages.estudosEmptyDrafts;
+    if (activeTab === "todos") return messages.estudosEmpty;
+    return messages.estudosEmptyStatus(studyTabLabel(activeTab));
+  })();
 
   return (
     <div className={styles.page}>
@@ -116,24 +225,24 @@ export function EstudosPage() {
             >
               <HelpCircleIcon size={20} />
             </button>
-            <Button
-              variant="filled"
-              size="medium"
-              iconLeft={<PlusIcon size={18} />}
-              iconRight={<ChevronDownIcon size={18} />}
-              onClick={() => {
-                // TODO(estudos-criar): fluxo de novo estudo
-                showToast({
-                  type: "info",
-                  title: messages.estudosNewCta,
-                  message: "Em breve.",
-                });
-              }}
-            >
-              {messages.estudosNewCta}
-            </Button>
+            {canCreate && (
+              <NewStudyMenu
+                loading={creating}
+                onSelect={(m) => void handleCreate(m)}
+              />
+            )}
           </div>
         </div>
+      )}
+
+      {!noTeam && (
+        <Tabs
+          className={styles.tabs}
+          aria-label={messages.estudosTabsAria}
+          items={STUDY_TAB_ITEMS}
+          value={activeTab}
+          onChange={(id) => setActiveTab(id as StudyTabId)}
+        />
       )}
 
       {noTeam && <EmptyState title={messages.memberWithoutTeam} />}
@@ -158,49 +267,68 @@ export function EstudosPage() {
         />
       )}
 
-      {!noTeam &&
-        viewState === "ready" &&
-        filtered.length === 0 &&
-        studies.length === 0 && (
-          <EmptyState title={messages.estudosEmpty} />
-        )}
+      {!noTeam && showGlobalEmpty && (
+        <EmptyState title={messages.estudosEmpty} />
+      )}
 
-      {!noTeam &&
-        viewState === "ready" &&
-        filtered.length === 0 &&
-        studies.length > 0 && (
-          <EmptyState title={messages.membersSearchEmpty} />
-        )}
+      {!noTeam && showStatusEmpty && !showGlobalEmpty && (
+        <EmptyState
+          title={statusEmptyTitle}
+          action={
+            activeTab === "rascunhos" && canCreate ? (
+              <NewStudyMenu
+                loading={creating}
+                onSelect={(m) => void handleCreate(m)}
+              />
+            ) : undefined
+          }
+        />
+      )}
+
+      {!noTeam && showSearchEmpty && (
+        <EmptyState title={messages.estudosSearchEmpty} />
+      )}
 
       {!noTeam && viewState === "ready" && filtered.length > 0 && (
-        <ul className={styles.grid}>
-          {filtered.map((study) => (
-            <li key={study.id} className={styles.item}>
-              <StudyCard
-                name={study.name}
-                status={study.status}
-                statusColor={statusColor(study.status)}
-                owners={study.owners}
-                ownersCaption={messages.estudosOwnersLabel}
-                sentAtLabel={formatDate(study.sentAt)}
-                sentCaption={messages.estudosSentLabel}
-                metrics={[
-                  {
-                    label: messages.estudosMetricParticipants,
-                    value: study.participants.toLocaleString("pt-BR"),
-                  },
-                  {
-                    label: messages.estudosMetricSessions,
-                    value: study.sessions.toLocaleString("pt-BR"),
-                  },
-                  {
-                    label: messages.estudosMetricCompletion,
-                    value: `${study.completionPct}%`,
-                  },
-                ]}
-              />
-            </li>
-          ))}
+        <ul className={styles.grid} role="tabpanel">
+          {filtered.map((study) => {
+            return (
+              <li key={study.id} className={styles.item}>
+                <StudyCard
+                  name={studyDisplayName(study)}
+                  status={study.status}
+                  statusColor={statusColor(study.status)}
+                  owners={study.owners}
+                  ownersCaption={messages.estudosOwnersLabel}
+                  sentAtLabel={formatDate(study.sentAt)}
+                  sentCaption={messages.estudosSentLabel}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openStudy(study)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openStudy(study);
+                    }
+                  }}
+                  metrics={[
+                    {
+                      label: messages.estudosMetricParticipants,
+                      value: study.participants.toLocaleString("pt-BR"),
+                    },
+                    {
+                      label: messages.estudosMetricSessions,
+                      value: study.sessions.toLocaleString("pt-BR"),
+                    },
+                    {
+                      label: messages.estudosMetricCompletion,
+                      value: `${study.completionPct}%`,
+                    },
+                  ]}
+                />
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

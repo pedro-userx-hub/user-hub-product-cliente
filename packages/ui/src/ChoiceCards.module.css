@@ -1,0 +1,232 @@
+.root {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-family: var(--font-family);
+  min-width: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.listCard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle, #e5e7eb);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.listCard:hover:not(:disabled) {
+  border-color: var(--color-border);
+}
+
+.listCard:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.listCard:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.listCardSelected {
+  border-color: var(--color-action);
+  background: var(--color-action-surface, #f3ebf8);
+}
+
+.radio {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border-radius: 999px;
+  border: var(--border-width) solid var(--color-border);
+  box-sizing: border-box;
+  background: var(--color-surface);
+}
+
+.radioChecked {
+  border-color: var(--color-action);
+}
+
+.radioDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--color-action);
+}
+
+.listCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.listTitle {
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.listDescription {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-regular);
+}
+
+.gridThree {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.gridTwo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-action);
+  background: var(--color-action-subtle);
+  border-radius: 999px;
+  padding: 2px var(--space-2);
+}
+
+.cardSelected .badge {
+  background: var(--color-action);
+  color: var(--color-action-on);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 112px;
+  padding: var(--space-4);
+  margin: 0;
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.card:hover:not(:disabled) {
+  border-color: var(--color-border);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cardSelected {
+  border-color: var(--color-action);
+  background: var(--color-action-surface);
+  color: var(--color-action);
+}
+
+.cardSelected:hover:not(:disabled) {
+  border-color: var(--color-action-hover);
+  background: var(--color-action-subtle);
+  color: var(--color-action-hover);
+}
+
+.icon {
+  display: inline-flex;
+  color: inherit;
+}
+
+.title {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.description {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-regular);
+}
+
+.cardSelected .description {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-error);
+}
+
+@media (max-width: 720px) {
+  .gridThree,
+  .gridTwo {
+    grid-template-columns: 1fr;
+  }
+}

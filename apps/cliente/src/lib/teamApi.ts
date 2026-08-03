@@ -733,9 +733,70 @@ export type StudyStatus =
   | "Pausado"
   | "Concluído";
 
+/** Modalidade do estudo (Story 1 — criação). */
+export type StudyModality = "moderated" | "unmoderated";
+
+/** Método do estudo moderado (Story 3). */
+export type StudyMethod = "individual" | "group";
+
+/** Canal de contato do responsável (Story 5). */
+export type StudyContactChannel = "email" | "phone" | "slack" | "teams";
+
+/** Formato das sessões (Passo 2 Story 3). */
+export type StudySessionFormat = "in_person" | "remote" | "hybrid";
+
+export type StudyRemotePlatform = "zoom" | "meet" | "teams" | "other";
+
+export type StudyParticipantType = "b2c" | "b2b";
+
+export type StudyRecruitmentSource = "userx" | "own" | "combined";
+
+export type StudyIncentiveResponsible = "client" | "userx" | "shared";
+
+export type {
+  StudyScreener,
+  ScreenerPage,
+  ScreenerQuestion,
+  ScreenerOption,
+  ScreenerEligibility,
+  ScreenerQuestionType,
+} from "./screenerModel";
+import type { StudyScreener } from "./screenerModel";
+import { cloneScreener } from "./screenerModel";
+
+export interface StudyConsentFile {
+  id: string;
+  name: string;
+  /** bytes */
+  size: number;
+}
+
+export const STUDY_PROFILE_MAX = 1000;
+
+export const STUDY_CONSENT_MAX_BYTES = 5 * 1024 * 1024;
+export const STUDY_CONSENT_ACCEPT = ".pdf,.doc,.docx";
+
+export const STUDY_BRIEFING_MAX_BYTES = 10 * 1024 * 1024;
+export const STUDY_BRIEFING_ACCEPT = ".pdf,.doc,.docx,.ppt,.pptx";
+
+export interface SavedStudyAddress {
+  id: string;
+  label: string;
+  detail: string;
+}
+
+export const STUDY_METHOD_LABELS: Record<StudyMethod, string> = {
+  individual: "Sessões individuais",
+  group: "Sessões em grupo",
+};
+
+export const STUDY_TITLE_MAX = 120;
+export const STUDY_OBJECTIVE_MAX = 1000;
+
 export interface TeamStudy {
   id: string;
   teamId: string;
+  /** Título interno; vazio → "Estudo sem título" na UI. */
   name: string;
   status: StudyStatus;
   owners: string[];
@@ -744,6 +805,97 @@ export interface TeamStudy {
   sessions: number;
   /** 0–100 */
   completionPct: number;
+  modality?: StudyModality;
+  /** Formato/método exibido no subtítulo (label de StudyMethod). */
+  format?: string;
+  method?: StudyMethod | "";
+  objective?: string;
+  ownerId?: string;
+  contactChannel?: StudyContactChannel | "";
+  contactValue?: string;
+  /** Responsável de CX/ops (distinct do responsável do estudo no Passo 1). */
+  cxOwnerId?: string;
+  cxOwnerName?: string;
+  /** Passo 1 — briefing opcional. */
+  briefingEnabled?: boolean;
+  briefingFile?: StudyConsentFile | null;
+  briefingLink?: string;
+  /** Datas civis do cronograma (YYYY-MM-DD). */
+  scheduleStart?: string;
+  scheduleEnd?: string;
+  /** Duração da sessão em minutos (30/60/90/120). */
+  sessionDurationMin?: number | null;
+  /** Intervalo entre sessões em minutos (15/30/60/90). */
+  sessionGapMin?: number | null;
+  /** Se true, aplica maxSessionsPerDay. */
+  limitSessionsPerDay?: boolean;
+  maxSessionsPerDay?: number | null;
+  /** Formato das sessões (Story 3 Passo 2). */
+  sessionFormat?: StudySessionFormat | "";
+  addressId?: string;
+  remotePlatform?: StudyRemotePlatform | "";
+  remoteLink?: string;
+  /** Faixas de horário diárias disponíveis (Story 4 Passo 2). */
+  scheduleSlots?: StudyScheduleSlot[];
+  /** Passo 3 — recrutamento. */
+  participantType?: StudyParticipantType | "";
+  participantQuantity?: number | null;
+  desiredProfile?: string;
+  exclusionEnabled?: boolean;
+  exclusionProfile?: string;
+  recruitmentSource?: StudyRecruitmentSource | "";
+  /** Passo 3 Story 4 — requisitos opcionais. */
+  reqDevicesEnabled?: boolean;
+  reqDevices?: string[];
+  reqSessionEnabled?: boolean;
+  reqSession?: string[];
+  reqActionsEnabled?: boolean;
+  reqActions?: string[];
+  reqOtherText?: string;
+  /** Passo 3 Story 5 — configurações adicionais. */
+  customConsentEnabled?: boolean;
+  consentFile?: StudyConsentFile | null;
+  incentivesEnabled?: boolean;
+  incentiveResponsible?: StudyIncentiveResponsible | "";
+  incentiveValue?: string;
+  /** Passo 4 — screener opcional de qualificação. */
+  screener?: StudyScreener | null;
+  /** Passo atual do wizard (1–4). */
+  wizardStep?: number;
+  /** Maior passo já alcançado (permite pular no indicador). */
+  wizardMaxStep?: number;
+}
+
+export type StudyWeekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
+
+export const STUDY_WEEKDAYS: StudyWeekday[] = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+];
+
+export interface StudyScheduleSlot {
+  id: string;
+  /** Dia da semana (Seg–Sáb). Ausente = legado sem dia. */
+  weekday?: StudyWeekday;
+  /** HH:mm */
+  startTime: string;
+  /** HH:mm */
+  endTime: string;
+}
+
+export const UNTITLED_STUDY_NAME = "Estudo sem título";
+
+export function studyDisplayName(study: Pick<TeamStudy, "name">): string {
+  const t = study.name.trim();
+  return t.length > 0 ? t : UNTITLED_STUDY_NAME;
+}
+
+export function studyModalityLabel(modality: StudyModality): string {
+  return modality === "moderated" ? "Estudo moderado" : "Estudo não moderado";
 }
 
 const mockStudies: TeamStudy[] = [
@@ -768,6 +920,49 @@ const mockStudies: TeamStudy[] = [
     participants: 20,
     sessions: 0,
     completionPct: 0,
+    modality: "moderated",
+    format: "Sessões individuais",
+    method: "individual",
+    objective:
+      "Validar o fluxo de checkout com consumidores que compram online ao menos 1× por mês.",
+    ownerId: "u-ana",
+    contactChannel: "email",
+    contactValue: "ana@empresa.com",
+    cxOwnerId: "",
+    cxOwnerName: "",
+    briefingEnabled: false,
+    scheduleStart: "2026-07-01",
+    scheduleEnd: "2026-08-15",
+    sessionDurationMin: 60,
+    sessionGapMin: 15,
+    limitSessionsPerDay: true,
+    maxSessionsPerDay: 4,
+    sessionFormat: "remote",
+    remotePlatform: "meet",
+    remoteLink: "https://meet.google.com/abc-defg-hij",
+    scheduleSlots: [
+      { id: "slot-1", weekday: "mon", startTime: "09:00", endTime: "12:00" },
+      { id: "slot-2", weekday: "wed", startTime: "14:00", endTime: "18:00" },
+      { id: "slot-3", weekday: "fri", startTime: "09:00", endTime: "11:00" },
+    ],
+    participantType: "b2c",
+    participantQuantity: 20,
+    desiredProfile:
+      "Pessoas de 25–45 anos que finalizam compras em e-commerce ao menos 1× por mês.",
+    exclusionEnabled: true,
+    exclusionProfile: "Profissionais de UX ou funcionários de concorrentes.",
+    recruitmentSource: "userx",
+    reqDevicesEnabled: true,
+    reqDevices: ["smartphone", "notebook"],
+    reqSessionEnabled: true,
+    reqSession: ["camera", "mic"],
+    reqActionsEnabled: false,
+    reqActions: [],
+    customConsentEnabled: false,
+    consentFile: null,
+    incentivesEnabled: true,
+    incentiveResponsible: "userx",
+    incentiveValue: "R$ 80",
   },
   {
     id: "s-pesquisa-3",
@@ -828,7 +1023,7 @@ const mockStudies: TeamStudy[] = [
 
 /**
  * Lista estudos do time atual (read-only).
- * TODO(estudos-detalhe): abrir/editar estudo fora desta listagem.
+ * TODO(estudos-detalhe): abrir/editar estudo publicado fora do fluxo de criação.
  */
 export async function fetchTeamStudies(teamId: string): Promise<TeamStudy[]> {
   await delay(280);
@@ -842,6 +1037,516 @@ export async function fetchTeamStudies(teamId: string): Promise<TeamStudy[]> {
     .filter((s) => s.teamId === teamId)
     .map((s) => ({ ...s, owners: [...s.owners] }))
     .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
+}
+
+/**
+ * Story 1 — cria rascunho ao escolher a modalidade.
+ */
+export async function createStudyDraft(input: {
+  teamId: string;
+  modality: StudyModality;
+}): Promise<TeamStudy> {
+  await delay(220);
+
+  const actor = await fetchSessionUser();
+  if (!actor.teamIds.includes(input.teamId)) {
+    throw new ForbiddenError();
+  }
+  if (
+    actor.role !== "Dono do Workspace" &&
+    actor.role !== "Administrador" &&
+    actor.role !== "Editor"
+  ) {
+    throw new ForbiddenError();
+  }
+
+  const study: TeamStudy = {
+    id: `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    teamId: input.teamId,
+    name: "",
+    status: "Rascunho",
+    owners: [actor.name],
+    sentAt: new Date().toISOString(),
+    participants: 0,
+    sessions: 0,
+    completionPct: 0,
+    modality: input.modality,
+    format: "",
+    method: "",
+    objective: "",
+    ownerId: "",
+    contactChannel: "",
+    contactValue: "",
+    cxOwnerId: "",
+    cxOwnerName: "",
+    briefingEnabled: false,
+    briefingFile: null,
+    briefingLink: "",
+    scheduleStart: "",
+    scheduleEnd: "",
+    sessionDurationMin: null,
+    sessionGapMin: null,
+    limitSessionsPerDay: false,
+    maxSessionsPerDay: null,
+    sessionFormat: "",
+    addressId: "",
+    remotePlatform: "",
+    remoteLink: "",
+    scheduleSlots: [],
+    participantType: "",
+    participantQuantity: null,
+    desiredProfile: "",
+    exclusionEnabled: false,
+    exclusionProfile: "",
+    recruitmentSource: "",
+    reqDevicesEnabled: false,
+    reqDevices: [],
+    reqSessionEnabled: false,
+    reqSession: [],
+    reqActionsEnabled: false,
+    reqActions: [],
+    reqOtherText: "",
+    customConsentEnabled: false,
+    consentFile: null,
+    incentivesEnabled: false,
+    incentiveResponsible: "",
+    incentiveValue: "",
+    screener: null,
+    wizardStep: 1,
+    wizardMaxStep: 1,
+  };
+  mockStudies.unshift(study);
+  mockTeamStudyCount[input.teamId] =
+    (mockTeamStudyCount[input.teamId] ?? 0) + 1;
+  return { ...study, owners: [...study.owners] };
+}
+
+export async function fetchStudy(studyId: string): Promise<TeamStudy> {
+  await delay(160);
+  const actor = await fetchSessionUser();
+  const study = mockStudies.find((s) => s.id === studyId);
+  if (!study) {
+    throw new NotFoundError("Este estudo não existe mais.");
+  }
+  if (!actor.teamIds.includes(study.teamId)) {
+    throw new ForbiddenError();
+  }
+  return {
+    ...study,
+    owners: [...study.owners],
+    screener: study.screener ? cloneScreener(study.screener) : study.screener,
+  };
+}
+
+export interface UpdateStudyDraftInput {
+  name?: string;
+  format?: string;
+  method?: StudyMethod | "";
+  objective?: string;
+  ownerId?: string;
+  owners?: string[];
+  contactChannel?: StudyContactChannel | "";
+  contactValue?: string;
+  briefingEnabled?: boolean;
+  briefingFile?: StudyConsentFile | null;
+  briefingLink?: string;
+  scheduleStart?: string;
+  scheduleEnd?: string;
+  sessionDurationMin?: number | null;
+  sessionGapMin?: number | null;
+  limitSessionsPerDay?: boolean;
+  maxSessionsPerDay?: number | null;
+  sessionFormat?: StudySessionFormat | "";
+  addressId?: string;
+  remotePlatform?: StudyRemotePlatform | "";
+  remoteLink?: string;
+  scheduleSlots?: StudyScheduleSlot[];
+  participantType?: StudyParticipantType | "";
+  participantQuantity?: number | null;
+  desiredProfile?: string;
+  exclusionEnabled?: boolean;
+  exclusionProfile?: string;
+  recruitmentSource?: StudyRecruitmentSource | "";
+  reqDevicesEnabled?: boolean;
+  reqDevices?: string[];
+  reqSessionEnabled?: boolean;
+  reqSession?: string[];
+  reqActionsEnabled?: boolean;
+  reqActions?: string[];
+  reqOtherText?: string;
+  customConsentEnabled?: boolean;
+  consentFile?: StudyConsentFile | null;
+  incentivesEnabled?: boolean;
+  incentiveResponsible?: StudyIncentiveResponsible | "";
+  incentiveValue?: string;
+  screener?: StudyScreener | null;
+  wizardStep?: number;
+  wizardMaxStep?: number;
+}
+
+/**
+ * Story 2 — persiste progresso do rascunho (avanço/volta de passo).
+ */
+export async function updateStudyDraft(
+  studyId: string,
+  patch: UpdateStudyDraftInput,
+): Promise<TeamStudy> {
+  await delay(180);
+  const actor = await fetchSessionUser();
+  if (
+    actor.role !== "Dono do Workspace" &&
+    actor.role !== "Administrador" &&
+    actor.role !== "Editor"
+  ) {
+    throw new ForbiddenError("Você não tem mais permissão para editar este estudo.");
+  }
+
+  const idx = mockStudies.findIndex((s) => s.id === studyId);
+  if (idx < 0) {
+    throw new NotFoundError("Este estudo não existe mais.");
+  }
+  const current = mockStudies[idx];
+  if (!actor.teamIds.includes(current.teamId)) {
+    throw new ForbiddenError();
+  }
+  if (current.status !== "Rascunho") {
+    throw new ForbiddenError("Somente rascunhos podem ser editados neste fluxo.");
+  }
+
+  const next: TeamStudy = {
+    ...current,
+    ...(patch.name !== undefined ? { name: patch.name } : {}),
+    ...(patch.format !== undefined ? { format: patch.format } : {}),
+    ...(patch.method !== undefined ? { method: patch.method } : {}),
+    ...(patch.objective !== undefined ? { objective: patch.objective } : {}),
+    ...(patch.ownerId !== undefined ? { ownerId: patch.ownerId } : {}),
+    ...(patch.owners !== undefined ? { owners: [...patch.owners] } : {}),
+    ...(patch.contactChannel !== undefined
+      ? { contactChannel: patch.contactChannel }
+      : {}),
+    ...(patch.contactValue !== undefined
+      ? { contactValue: patch.contactValue }
+      : {}),
+    ...(patch.briefingEnabled !== undefined
+      ? { briefingEnabled: patch.briefingEnabled }
+      : {}),
+    ...(patch.briefingFile !== undefined
+      ? {
+          briefingFile: patch.briefingFile
+            ? { ...patch.briefingFile }
+            : null,
+        }
+      : {}),
+    ...(patch.briefingLink !== undefined
+      ? { briefingLink: patch.briefingLink }
+      : {}),
+    ...(patch.scheduleStart !== undefined
+      ? { scheduleStart: patch.scheduleStart }
+      : {}),
+    ...(patch.scheduleEnd !== undefined
+      ? { scheduleEnd: patch.scheduleEnd }
+      : {}),
+    ...(patch.sessionDurationMin !== undefined
+      ? { sessionDurationMin: patch.sessionDurationMin }
+      : {}),
+    ...(patch.sessionGapMin !== undefined
+      ? { sessionGapMin: patch.sessionGapMin }
+      : {}),
+    ...(patch.limitSessionsPerDay !== undefined
+      ? { limitSessionsPerDay: patch.limitSessionsPerDay }
+      : {}),
+    ...(patch.maxSessionsPerDay !== undefined
+      ? { maxSessionsPerDay: patch.maxSessionsPerDay }
+      : {}),
+    ...(patch.sessionFormat !== undefined
+      ? { sessionFormat: patch.sessionFormat }
+      : {}),
+    ...(patch.addressId !== undefined ? { addressId: patch.addressId } : {}),
+    ...(patch.remotePlatform !== undefined
+      ? { remotePlatform: patch.remotePlatform }
+      : {}),
+    ...(patch.remoteLink !== undefined ? { remoteLink: patch.remoteLink } : {}),
+    ...(patch.scheduleSlots !== undefined
+      ? {
+          scheduleSlots: patch.scheduleSlots.map((s) => ({ ...s })),
+        }
+      : {}),
+    ...(patch.participantType !== undefined
+      ? { participantType: patch.participantType }
+      : {}),
+    ...(patch.participantQuantity !== undefined
+      ? { participantQuantity: patch.participantQuantity }
+      : {}),
+    ...(patch.desiredProfile !== undefined
+      ? { desiredProfile: patch.desiredProfile }
+      : {}),
+    ...(patch.exclusionEnabled !== undefined
+      ? { exclusionEnabled: patch.exclusionEnabled }
+      : {}),
+    ...(patch.exclusionProfile !== undefined
+      ? { exclusionProfile: patch.exclusionProfile }
+      : {}),
+    ...(patch.recruitmentSource !== undefined
+      ? { recruitmentSource: patch.recruitmentSource }
+      : {}),
+    ...(patch.reqDevicesEnabled !== undefined
+      ? { reqDevicesEnabled: patch.reqDevicesEnabled }
+      : {}),
+    ...(patch.reqDevices !== undefined
+      ? { reqDevices: [...patch.reqDevices] }
+      : {}),
+    ...(patch.reqSessionEnabled !== undefined
+      ? { reqSessionEnabled: patch.reqSessionEnabled }
+      : {}),
+    ...(patch.reqSession !== undefined
+      ? { reqSession: [...patch.reqSession] }
+      : {}),
+    ...(patch.reqActionsEnabled !== undefined
+      ? { reqActionsEnabled: patch.reqActionsEnabled }
+      : {}),
+    ...(patch.reqActions !== undefined
+      ? { reqActions: [...patch.reqActions] }
+      : {}),
+    ...(patch.reqOtherText !== undefined
+      ? { reqOtherText: patch.reqOtherText }
+      : {}),
+    ...(patch.customConsentEnabled !== undefined
+      ? { customConsentEnabled: patch.customConsentEnabled }
+      : {}),
+    ...(patch.consentFile !== undefined
+      ? {
+          consentFile: patch.consentFile
+            ? { ...patch.consentFile }
+            : null,
+        }
+      : {}),
+    ...(patch.incentivesEnabled !== undefined
+      ? { incentivesEnabled: patch.incentivesEnabled }
+      : {}),
+    ...(patch.incentiveResponsible !== undefined
+      ? { incentiveResponsible: patch.incentiveResponsible }
+      : {}),
+    ...(patch.incentiveValue !== undefined
+      ? { incentiveValue: patch.incentiveValue }
+      : {}),
+    ...(patch.screener !== undefined
+      ? {
+          screener: patch.screener ? cloneScreener(patch.screener) : null,
+        }
+      : {}),
+    ...(patch.wizardStep !== undefined ? { wizardStep: patch.wizardStep } : {}),
+    ...(patch.wizardMaxStep !== undefined
+      ? { wizardMaxStep: patch.wizardMaxStep }
+      : {}),
+  };
+  mockStudies[idx] = next;
+  return {
+    ...next,
+    owners: [...next.owners],
+    screener: next.screener ? cloneScreener(next.screener) : null,
+  };
+}
+
+export interface StudyOwnerCandidate {
+  id: string;
+  name: string;
+  email: string;
+}
+
+/**
+ * Story 5 — membros ativos elegíveis como responsável do estudo.
+ */
+export async function listStudyOwnerCandidates(): Promise<
+  StudyOwnerCandidate[]
+> {
+  await delay(160);
+  await fetchSessionUser();
+  return mockMembers
+    .filter((m) => m.status === "Ativo")
+    .map((m) => ({ id: m.id, name: m.name, email: m.email }))
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+}
+
+/**
+ * Atribui (ou remove) o responsável de CX do estudo.
+ * Papel distinto do responsável do estudo (Passo 1).
+ */
+export async function assignStudyCxOwner(
+  studyId: string,
+  cxOwnerId: string | null,
+): Promise<TeamStudy> {
+  await delay(220);
+  const actor = await fetchSessionUser();
+  if (
+    actor.role !== "Dono do Workspace" &&
+    actor.role !== "Administrador" &&
+    actor.role !== "Editor"
+  ) {
+    throw new ForbiddenError(
+      "Você não tem permissão para atribuir responsável de CX.",
+    );
+  }
+
+  const idx = mockStudies.findIndex((s) => s.id === studyId);
+  if (idx < 0) {
+    throw new NotFoundError("Este estudo não existe mais.");
+  }
+  const current = mockStudies[idx];
+  if (!actor.teamIds.includes(current.teamId)) {
+    throw new ForbiddenError();
+  }
+
+  let cxOwnerName = "";
+  if (cxOwnerId) {
+    const member = mockMembers.find(
+      (m) => m.id === cxOwnerId && m.status === "Ativo",
+    );
+    if (!member) {
+      throw new ForbiddenError("Pessoa de CX inválida ou inativa.");
+    }
+    cxOwnerName = member.name;
+  }
+
+  const next: TeamStudy = {
+    ...current,
+    cxOwnerId: cxOwnerId ?? "",
+    cxOwnerName,
+  };
+  mockStudies[idx] = next;
+  return { ...next, owners: [...next.owners] };
+}
+
+/** Telefone internacional leve (Story 5). */
+export function isValidPhoneFormat(value: string): boolean {
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= 8 && digits.length <= 15;
+}
+
+/** Slack / Teams: handle ou URL simples. */
+export function isValidChatHandle(value: string): boolean {
+  const t = value.trim();
+  return t.length >= 2 && t.length <= 120;
+}
+
+let mockSavedAddresses: SavedStudyAddress[] = [
+  {
+    id: "addr-1",
+    label: "Escritório SP — Paulista",
+    detail: "Av. Paulista, 1000 — São Paulo, SP",
+  },
+  {
+    id: "addr-2",
+    label: "Lab de usabilidade",
+    detail: "Rua Augusta, 200 — São Paulo, SP",
+  },
+];
+
+export async function listSavedStudyAddresses(): Promise<SavedStudyAddress[]> {
+  await delay(140);
+  await fetchSessionUser();
+  return mockSavedAddresses.map((a) => ({ ...a }));
+}
+
+export async function addSavedStudyAddress(input: {
+  label: string;
+  detail: string;
+}): Promise<SavedStudyAddress> {
+  await delay(160);
+  await fetchSessionUser();
+  const label = input.label.trim();
+  const detail = input.detail.trim();
+  if (!label || !detail) {
+    throw new Error("invalid_address");
+  }
+  const address: SavedStudyAddress = {
+    id: `addr-${Date.now().toString(36)}`,
+    label,
+    detail,
+  };
+  mockSavedAddresses = [address, ...mockSavedAddresses];
+  return { ...address };
+}
+
+export async function discardStudyDraft(studyId: string): Promise<void> {
+  await delay(160);
+  const actor = await fetchSessionUser();
+  if (
+    actor.role !== "Dono do Workspace" &&
+    actor.role !== "Administrador" &&
+    actor.role !== "Editor"
+  ) {
+    throw new ForbiddenError();
+  }
+  const idx = mockStudies.findIndex((s) => s.id === studyId);
+  if (idx < 0) return;
+  const study = mockStudies[idx];
+  if (!actor.teamIds.includes(study.teamId)) {
+    throw new ForbiddenError();
+  }
+  if (study.status !== "Rascunho") {
+    throw new ForbiddenError();
+  }
+  mockStudies.splice(idx, 1);
+  const count = mockTeamStudyCount[study.teamId] ?? 0;
+  mockTeamStudyCount[study.teamId] = Math.max(0, count - 1);
+}
+
+/**
+ * Passo 3 — lança o rascunho (status → Em recrutamento).
+ * Idempotente: se já estiver Em recrutamento, devolve o estudo (sem duplicar).
+ * Cobrança de créditos: OQ #2 (não modelada aqui).
+ */
+const launchInFlight = new Map<string, Promise<TeamStudy>>();
+
+export async function launchStudy(studyId: string): Promise<TeamStudy> {
+  const existing = launchInFlight.get(studyId);
+  if (existing) return existing;
+
+  const run = (async () => {
+    await delay(1800);
+    const actor = await fetchSessionUser();
+    if (
+      actor.role !== "Dono do Workspace" &&
+      actor.role !== "Administrador" &&
+      actor.role !== "Editor"
+    ) {
+      throw new ForbiddenError(
+        "Você não tem mais permissão para editar este estudo.",
+      );
+    }
+    const idx = mockStudies.findIndex((s) => s.id === studyId);
+    if (idx < 0) {
+      throw new NotFoundError("Este estudo não existe mais.");
+    }
+    const current = mockStudies[idx];
+    if (!actor.teamIds.includes(current.teamId)) {
+      throw new ForbiddenError();
+    }
+    // Já lançado (refresh / retry / reentrada) — idempotente.
+    if (current.status === "Em recrutamento") {
+      return { ...current, owners: [...current.owners] };
+    }
+    if (current.status !== "Rascunho") {
+      throw new ForbiddenError(
+        "Somente rascunhos podem ser lançados neste fluxo.",
+      );
+    }
+    const next: TeamStudy = {
+      ...current,
+      status: "Em recrutamento",
+      participants: current.participantQuantity ?? current.participants,
+      sentAt: new Date().toISOString(),
+    };
+    mockStudies[idx] = next;
+    return { ...next, owners: [...next.owners] };
+  })();
+
+  launchInFlight.set(studyId, run);
+  try {
+    return await run;
+  } finally {
+    launchInFlight.delete(studyId);
+  }
 }
 
 export type FinanceWallet = "B2B" | "B2C";
@@ -1125,6 +1830,14 @@ export class ForbiddenError extends Error {
   constructor(message = "forbidden") {
     super(message);
     this.name = "ForbiddenError";
+  }
+}
+
+export class NotFoundError extends Error {
+  readonly code = "not_found" as const;
+  constructor(message = "not_found") {
+    super(message);
+    this.name = "NotFoundError";
   }
 }
 

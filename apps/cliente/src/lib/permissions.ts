@@ -5,6 +5,15 @@ export function canCreateTeam(role: WorkspaceRole): boolean {
   return role === "Dono do Workspace" || role === "Administrador";
 }
 
+/** Criar/editar estudos — Dono, Admin, Editor (matriz Perfis). */
+export function canCreateStudy(role: WorkspaceRole): boolean {
+  return (
+    role === "Dono do Workspace" ||
+    role === "Administrador" ||
+    role === "Editor"
+  );
+}
+
 /**
  * Todas as funções podem inserir pessoas na sua faixa de convite.
  * Faixa em si é da Story 3.2 — aqui só a visibilidade do entry point.
