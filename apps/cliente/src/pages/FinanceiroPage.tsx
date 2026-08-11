@@ -17,8 +17,11 @@ import {
 } from "@userx/ui";
 import { messages } from "../lib/messages";
 import { canSeeFinanceiro } from "../lib/permissions";
+import { canView } from "../lib/featureVisibility";
+import { useLens } from "../lib/LensContext";
 import { useTeamContext } from "../lib/TeamContext";
 import {
+  fetchCxAggregatedFinanceiro,
   fetchTeamFinanceiro,
   ForbiddenError,
   type FinanceMovement,
@@ -26,6 +29,7 @@ import {
   type FinanceWallet,
   type TeamFinanceSummary,
 } from "../lib/teamApi";
+import { useWorkspaces } from "../features/workspaces/lib/store";
 import { NoAccessPage } from "./NoAccessPage";
 import styles from "./FinanceiroPage.module.css";
 
@@ -92,7 +96,12 @@ function TableSkeleton() {
  */
 export function FinanceiroPage() {
   const { user, currentTeam, loadState, refreshSession } = useTeamContext();
+  const { lens, cxWorkspaceId } = useLens();
+  const { getWorkspace } = useWorkspaces();
+  const isCx = lens === "cx";
+  const cxAllWorkspaces = isCx && cxWorkspaceId == null;
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [cxWorkspaceName, setCxWorkspaceName] = useState<string | null>(null);
 
   const [wallet, setWallet] = useState<WalletFilter>("all");
   const [period, setPeriod] = useState<FinancePeriod>("all");
@@ -105,8 +114,28 @@ export function FinanceiroPage() {
   >("loading");
 
   useEffect(() => {
+    if (!isCx || !cxWorkspaceId) {
+      setCxWorkspaceName(null);
+      return;
+    }
+    void getWorkspace(cxWorkspaceId)
+      .then((w) => setCxWorkspaceName(w.name))
+      .catch(() => setCxWorkspaceName(null));
+  }, [isCx, cxWorkspaceId, getWorkspace]);
+
+  useEffect(() => {
     let cancelled = false;
     async function check() {
+      if (isCx) {
+        setAllowed(
+          canView("financeiro", {
+            lens: "cx",
+            role: null,
+            cxWorkspaceId,
+          }),
+        );
+        return;
+      }
       setAllowed(null);
       const session = await refreshSession();
       if (cancelled) return;
@@ -116,9 +145,27 @@ export function FinanceiroPage() {
     return () => {
       cancelled = true;
     };
-  }, [refreshSession, user.role]);
+  }, [refreshSession, user.role, isCx, cxWorkspaceId]);
 
   const load = useCallback(async () => {
+    if (isCx) {
+      setViewState("loading");
+      try {
+        const result = await fetchCxAggregatedFinanceiro({
+          page,
+          pageSize: PAGE_SIZE,
+          wallet,
+          period,
+        });
+        setSummary(result.summary);
+        setItems(result.items);
+        setTotal(result.total);
+        setViewState("ready");
+      } catch {
+        setViewState("error");
+      }
+      return;
+    }
     if (!currentTeam || !canSeeFinanceiro(user.role)) return;
     setViewState("loading");
     try {
@@ -139,7 +186,7 @@ export function FinanceiroPage() {
       }
       setViewState("error");
     }
-  }, [currentTeam, user.role, page, wallet, period]);
+  }, [currentTeam, user.role, page, wallet, period, isCx]);
 
   useEffect(() => {
     void load();
@@ -169,11 +216,17 @@ export function FinanceiroPage() {
   );
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const noTeam = loadState === "empty" || !currentTeam;
+  const noTeam = !isCx && (loadState === "empty" || !currentTeam);
   const isEmpty =
-    viewState === "ready" && total === 0 && !noTeam;
+    viewState === "ready" && total === 0 && (!noTeam || isCx);
   const totalsStatus =
     viewState === "loading" || summary == null ? "loading" : "default";
+
+  const subtitle = isCx
+    ? cxAllWorkspaces
+      ? messages.cxFinanceiroAllSubtitle
+      : (cxWorkspaceName ?? "Workspace")
+    : currentTeam?.name;
 
   if (allowed === null) return null;
   if (!allowed) return <NoAccessPage />;
@@ -181,11 +234,9 @@ export function FinanceiroPage() {
   return (
     <div className={styles.page}>
       <PageHeader title={messages.financeiroTitle} />
-      {currentTeam && (
-        <p className={styles.subtitle}>{currentTeam.name}</p>
-      )}
+      {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
 
-      {!noTeam && (
+      {(!noTeam || isCx) && (
         <FinanceTotals
           status={totalsStatus}
           creditsB2B={summary?.creditsB2B ?? 0}
@@ -208,7 +259,7 @@ export function FinanceiroPage() {
         />
       )}
 
-      {!noTeam && (
+      {(!noTeam || isCx) && (
         <Toolbar>
           <Select
             aria-label={messages.financeiroFilterWallet}
@@ -231,9 +282,9 @@ export function FinanceiroPage() {
         <EmptyState title={messages.memberWithoutTeam} />
       )}
 
-      {viewState === "loading" && !noTeam && <TableSkeleton />}
+      {viewState === "loading" && (!noTeam || isCx) && <TableSkeleton />}
 
-      {viewState === "error" && !noTeam && (
+      {viewState === "error" && (!noTeam || isCx) && (
         <EmptyState
           variant="error"
           title={messages.financeiroLoadError}

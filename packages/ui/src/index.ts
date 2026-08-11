@@ -45,6 +45,9 @@ export type { InputProps } from "./Input";
 export { Modal } from "./Modal";
 export type { ModalProps, ModalSize } from "./Modal";
 
+export { ConfirmDialog } from "./ConfirmDialog";
+export type { ConfirmDialogProps } from "./ConfirmDialog";
+
 export { Drawer } from "./Drawer";
 export type { DrawerProps, DrawerSide } from "./Drawer";
 
@@ -198,6 +201,10 @@ export {
   EyeIcon,
   UploadIcon,
   TrashIcon,
+  FileIcon,
+  UserPlusIcon,
+  UserCheckIcon,
+  UserMinusIcon,
   DragIndicatorIcon,
   LayersIcon,
   SmileIcon,
@@ -206,4 +213,8 @@ export {
   XCircleIcon,
   RadioCheckedIcon,
   CheckboxIcon,
+  CopyIcon,
+  MailIcon,
+  PhoneIcon,
+  SettingsIcon,
 } from "./icons";

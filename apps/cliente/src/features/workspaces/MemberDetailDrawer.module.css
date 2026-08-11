@@ -1,0 +1,198 @@
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-4);
+  padding-bottom: var(--ds-space-5);
+  border-bottom: 1px solid var(--ds-gray-200);
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2);
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--ds-font-base);
+  font-weight: var(--ds-fw-bold);
+  color: var(--ds-neutral-900);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+}
+
+.section {
+  padding: var(--ds-space-5) 0;
+  border-bottom: 1px solid var(--ds-gray-200);
+}
+.section:last-child {
+  border-bottom: none;
+}
+
+.sectionTitle {
+  font-size: var(--ds-font-xs);
+  font-weight: var(--ds-fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ds-gray-500);
+  margin-bottom: var(--ds-space-3);
+}
+
+.emptyText {
+  font-size: var(--ds-font-sm);
+  color: var(--ds-gray-500);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-3);
+  padding: var(--ds-space-2) 0;
+}
+
+.fieldBody {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.fieldBody .copyBtn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fieldBody:hover .copyBtn,
+.fieldBody:focus-within .copyBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fieldIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-gray-100);
+  color: var(--ds-gray-600);
+  flex-shrink: 0;
+}
+
+.fieldText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: var(--ds-font-xs);
+  color: var(--ds-gray-500);
+}
+
+.fieldValue {
+  font-size: var(--ds-font-sm);
+  color: var(--ds-gray-800);
+  font-weight: var(--ds-fw-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldValueMuted {
+  font-size: var(--ds-font-sm);
+  color: var(--ds-gray-400);
+}
+
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--ds-gray-200);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-neutral-0);
+  color: var(--ds-gray-600);
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.copyBtn:hover {
+  background: var(--ds-gray-50);
+  color: var(--ds-gray-800);
+  border-color: var(--ds-gray-300);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-space-3);
+  padding: var(--ds-space-2) 0;
+}
+
+.rowLabel {
+  font-size: var(--ds-font-sm);
+  color: var(--ds-gray-500);
+}
+
+.rowValue {
+  font-size: var(--ds-font-sm);
+  color: var(--ds-gray-800);
+  font-weight: var(--ds-fw-medium);
+}
+
+.teamGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2);
+}
+
+.teamCard {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-3);
+  padding: var(--ds-space-3);
+  border: 1px solid var(--ds-gray-200);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-neutral-0);
+}
+
+.teamIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-brand-200);
+  color: var(--ds-brand-600);
+  flex-shrink: 0;
+}
+
+.teamInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.teamName {
+  font-size: var(--ds-font-sm);
+  font-weight: var(--ds-fw-semibold);
+  color: var(--ds-gray-800);
+}
+
+.teamMeta {
+  font-size: var(--ds-font-xs);
+  color: var(--ds-gray-500);
+}

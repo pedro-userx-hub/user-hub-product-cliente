@@ -1061,6 +1061,24 @@ export async function fetchTeamStudies(teamId: string): Promise<TeamStudy[]> {
     .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
 }
 
+export type CxStudyRow = TeamStudy & { teamName: string };
+
+/**
+ * Demo CX — estudos de todos os times do workspace (visão agregada).
+ */
+export async function fetchCxAggregatedStudies(): Promise<CxStudyRow[]> {
+  await delay(280);
+  await fetchSessionUser();
+  const nameByTeam = new Map(mockTeams.map((t) => [t.id, t.name]));
+  return mockStudies
+    .map((s) => ({
+      ...s,
+      owners: [...s.owners],
+      teamName: nameByTeam.get(s.teamId) ?? s.teamId,
+    }))
+    .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
+}
+
 /**
  * Story 1 — cria rascunho ao escolher a modalidade.
  */
@@ -1898,6 +1916,70 @@ export async function fetchTeamFinanceiro(
   filtered = filtered
     .slice()
     .sort((a, b) => b.at.localeCompare(a.at));
+
+  const total = filtered.length;
+  const start = (page - 1) * pageSize;
+  const items = filtered.slice(start, start + pageSize).map((m) => ({ ...m }));
+
+  return { summary: { ...summary }, items, total, page, pageSize };
+}
+
+/**
+ * Demo CX — financeiro agregado de todos os times.
+ */
+export async function fetchCxAggregatedFinanceiro(
+  query: FetchTeamFinanceiroQuery = {},
+): Promise<FetchTeamFinanceiroResult> {
+  await delay(350);
+  await fetchSessionUser();
+
+  if (failNextFinance) {
+    failNextFinance = false;
+    throw new Error("network");
+  }
+
+  const page = Math.max(1, query.page ?? 1);
+  const pageSize = Math.max(1, Math.min(50, query.pageSize ?? 10));
+  const wallet = query.wallet ?? "all";
+  const period = query.period ?? "all";
+  const cutoff = periodCutoff(period);
+
+  const summary: TeamFinanceSummary = {
+    creditsB2B: 0,
+    creditsB2C: 0,
+    reloadCount: 0,
+    reloadCreditsTotal: 0,
+    reloadCreditsB2B: 0,
+    reloadCreditsB2C: 0,
+    consumptionTotal: 0,
+    consumptionB2B: 0,
+    consumptionB2C: 0,
+    studiesCount: 0,
+  };
+  const allMovements: FinanceMovement[] = [];
+
+  for (const team of mockTeams.filter((t) => t.active)) {
+    const built = buildTeamFinance(team.id);
+    summary.creditsB2B += built.summary.creditsB2B;
+    summary.creditsB2C += built.summary.creditsB2C;
+    summary.reloadCount += built.summary.reloadCount;
+    summary.reloadCreditsTotal += built.summary.reloadCreditsTotal;
+    summary.reloadCreditsB2B += built.summary.reloadCreditsB2B;
+    summary.reloadCreditsB2C += built.summary.reloadCreditsB2C;
+    summary.consumptionTotal += built.summary.consumptionTotal;
+    summary.consumptionB2B += built.summary.consumptionB2B;
+    summary.consumptionB2C += built.summary.consumptionB2C;
+    summary.studiesCount += built.summary.studiesCount;
+    allMovements.push(...built.movements);
+  }
+
+  let filtered = allMovements.filter((m) => {
+    if (wallet !== "all" && m.wallet !== wallet) return false;
+    if (cutoff != null && new Date(m.at).getTime() < cutoff) return false;
+    return true;
+  });
+
+  filtered = filtered.slice().sort((a, b) => b.at.localeCompare(a.at));
 
   const total = filtered.length;
   const start = (page - 1) * pageSize;

@@ -6,6 +6,24 @@
   overflow: hidden;
 }
 
+.lensBanner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-action-surface, #f3ebf8);
+  border-bottom: var(--border-width) solid
+    color-mix(in srgb, var(--color-action) 28%, transparent);
+  color: var(--color-action-active, var(--color-action));
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  text-align: center;
+}
+
 .shell {
   display: flex;
   flex: 1;
@@ -72,5 +90,21 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.contentWorkspaces {
+  padding: 0;
+  justify-content: stretch;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.contentInnerWorkspaces {
+  max-width: none;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 

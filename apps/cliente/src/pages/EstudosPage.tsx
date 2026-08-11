@@ -12,6 +12,8 @@ import {
   type BadgeColor,
 } from "@userx/ui";
 import { NewStudyMenu } from "../features/estudos/NewStudyMenu";
+import { canAct, canView } from "../lib/featureVisibility";
+import { useLens } from "../lib/LensContext";
 import { messages } from "../lib/messages";
 import { canCreateStudy } from "../lib/permissions";
 import {
@@ -24,12 +26,14 @@ import {
 import { useTeamContext } from "../lib/TeamContext";
 import {
   createStudyDraft,
+  fetchCxAggregatedStudies,
   fetchTeamStudies,
   studyDisplayName,
   type StudyModality,
   type StudyStatus,
   type TeamStudy,
 } from "../lib/teamApi";
+import { useWorkspaces } from "../features/workspaces/lib/store";
 import { TeamCreditsBlock } from "../features/estudos/TeamCreditsBlock";
 import styles from "./EstudosPage.module.css";
 
@@ -62,11 +66,42 @@ function statusColor(status: StudyStatus): BadgeColor {
  */
 export function EstudosPage() {
   const { currentTeam, loadState, user } = useTeamContext();
+  const { lens, cxWorkspaceId } = useLens();
+  const { getWorkspace } = useWorkspaces();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const noTeam = loadState === "empty" || !currentTeam;
-  const canCreate = canCreateStudy(user.role);
+  const isCx = lens === "cx";
+  const cxAllWorkspaces = isCx && cxWorkspaceId == null;
+  const noTeam = !isCx && (loadState === "empty" || !currentTeam);
+  const visCtx = {
+    lens,
+    role: lens === "cliente" ? user.role : null,
+    cxWorkspaceId,
+  };
+  const canCreate =
+    canAct("estudos.novo", visCtx) && canCreateStudy(user.role);
+  const showCredits = canView("estudos.saldoCriacao", visCtx);
+
+  const [cxWorkspaceName, setCxWorkspaceName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isCx || !cxWorkspaceId) {
+      setCxWorkspaceName(null);
+      return;
+    }
+    void getWorkspace(cxWorkspaceId)
+      .then((w) => setCxWorkspaceName(w.name))
+      .catch(() => setCxWorkspaceName(null));
+  }, [isCx, cxWorkspaceId, getWorkspace]);
+
+  const subtitle = isCx
+    ? cxAllWorkspaces
+      ? messages.cxEstudosAllSubtitle
+      : (cxWorkspaceName ?? "Workspace")
+    : currentTeam
+      ? currentTeam.name
+      : "Nenhum time selecionado";
 
   const activeTab = parseStudyTab(searchParams.get("tab"));
 
@@ -112,6 +147,17 @@ export function EstudosPage() {
   );
 
   const load = useCallback(async () => {
+    if (isCx) {
+      setViewState("loading");
+      try {
+        const items = await fetchCxAggregatedStudies();
+        setStudies(items);
+        setViewState("ready");
+      } catch {
+        setViewState("error");
+      }
+      return;
+    }
     if (!currentTeam) {
       setStudies([]);
       setViewState("ready");
@@ -125,7 +171,7 @@ export function EstudosPage() {
     } catch {
       setViewState("error");
     }
-  }, [currentTeam]);
+  }, [currentTeam, isCx]);
 
   useEffect(() => {
     void load();
@@ -198,12 +244,10 @@ export function EstudosPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Estudos</h1>
-        <p className={styles.subtitle}>
-          {currentTeam ? currentTeam.name : "Nenhum time selecionado"}
-        </p>
+        <p className={styles.subtitle}>{subtitle}</p>
       </header>
 
-      {!noTeam && (
+      {(!noTeam || isCx) && (
         <div className={styles.toolbar}>
           <div className={styles.search}>
             <Input
@@ -214,7 +258,7 @@ export function EstudosPage() {
             />
           </div>
           <div className={styles.toolbarEnd}>
-            <TeamCreditsBlock density="compact" />
+            {showCredits && <TeamCreditsBlock density="compact" />}
             <button
               type="button"
               className={styles.help}

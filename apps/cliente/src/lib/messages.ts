@@ -521,6 +521,18 @@ export const messages = {
   teamCreditsRetry: "Tentar novamente",
   /** Story 6.1 — modo demo */
   demoPersonaLabel: "Modo demo — persona",
+  /** Demo — lente Cliente / CX */
+  lensMenuAria: "Trocar lente de visualização",
+  lensCliente: "Cliente",
+  lensCx: "CX",
+  lensOption: (name: string, lensLabel: string) => `${name} · ${lensLabel}`,
+  lensCxBadge: "Você está como CX · UserX",
+  workspaceSelectorLabel: "Workspace",
+  workspaceSelectorNone: "Todos os workspaces",
+  workspaceSelectorError: "Não foi possível listar os workspaces.",
+  cxWorkspacesNav: "Gestão de Workspaces",
+  cxEstudosAllSubtitle: "Todos os workspaces",
+  cxFinanceiroAllSubtitle: "Todos os workspaces",
   /** Listagem de estudos */
   estudosEmpty: "Nenhum estudo neste time ainda.",
   estudosLoadError: "Não foi possível carregar os estudos.",

@@ -1,0 +1,83 @@
+/**
+ * Ponte --ds-* → tokens canônicos do cliente.
+ * A feature de workspaces veio do governanca-cx (tokens --ds-*).
+ */
+:root {
+  --ds-brand-200: var(--color-action-subtle);
+  --ds-brand-600: var(--color-action);
+  --ds-brand-700: var(--color-action-hover);
+
+  --ds-neutral-0: var(--color-surface);
+  --ds-neutral-50: var(--color-background);
+  --ds-neutral-100: var(--color-muted-surface);
+  --ds-neutral-200: var(--color-border-subtle);
+  --ds-neutral-300: var(--color-border);
+  --ds-neutral-400: var(--color-text-disabled);
+  --ds-neutral-600: var(--color-text-muted);
+  --ds-neutral-800: var(--color-text);
+  --ds-neutral-900: var(--color-text);
+
+  --ds-gray-50: var(--color-background);
+  --ds-gray-100: var(--color-muted-surface);
+  --ds-gray-200: var(--color-border-subtle);
+  --ds-gray-300: var(--color-border);
+  --ds-gray-400: var(--color-text-disabled);
+  --ds-gray-500: var(--color-text-muted);
+  --ds-gray-600: var(--color-text-muted);
+  --ds-gray-800: var(--color-text);
+
+  --ds-font-family: var(--font-family);
+  --ds-font-xs: var(--font-xs);
+  --ds-font-sm: var(--font-sm);
+  --ds-font-base: var(--font-base);
+  --ds-lh-xs: var(--lh-xs);
+  --ds-lh-sm: var(--lh-sm);
+  --ds-lh-base: var(--lh-base);
+  --ds-fw-regular: var(--fw-regular);
+  --ds-fw-medium: var(--fw-medium);
+  --ds-fw-semibold: var(--fw-semibold);
+  --ds-fw-bold: var(--fw-bold);
+
+  --ds-space-0: var(--space-0);
+  --ds-space-1: var(--space-1);
+  --ds-space-2: var(--space-2);
+  --ds-space-3: var(--space-3);
+  --ds-space-4: var(--space-4);
+  --ds-space-5: var(--space-5);
+  --ds-space-6: var(--space-6);
+  --ds-space-8: var(--space-8);
+  --ds-space-12: var(--space-12);
+
+  --ds-radius-sm: var(--radius-sm);
+  --ds-radius-md: var(--radius-md);
+  --ds-radius-lg: var(--radius-lg);
+  --ds-radius-full: var(--radius-full);
+
+  --ds-border-width: var(--border-width);
+  --ds-shadow-sm: var(--shadow-sm);
+  --ds-shadow-md: var(--shadow-md);
+  --ds-shadow-error-ring: var(--shadow-error-ring);
+  --ds-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-action) 35%, transparent);
+  --ds-error-ring: var(--shadow-error-ring);
+
+  --ds-red-50: var(--color-error-surface);
+  --ds-red-100: var(--color-error-surface);
+  --ds-red-200: var(--color-error-surface);
+  --ds-red-700: var(--color-error);
+  --ds-red-800: var(--color-error);
+  --ds-red-900: var(--color-error-emphasis);
+  --ds-green-100: var(--color-success-surface);
+  --ds-green-700: var(--color-success);
+  --ds-green-900: var(--color-success-emphasis);
+  --ds-yellow-50: var(--color-warning-surface);
+  --ds-yellow-100: var(--color-warning-surface);
+  --ds-yellow-900: var(--color-warning-emphasis);
+  --ds-blue-100: var(--color-info-surface);
+  --ds-blue-600: var(--color-info);
+  --ds-blue-900: var(--color-info-emphasis);
+  --ds-primary-50: var(--color-background);
+  --ds-primary-200: var(--color-info-surface);
+  --ds-primary-300: var(--color-info-surface);
+  --ds-primary-900: var(--color-info-emphasis);
+  --ds-accent: var(--color-info);
+}

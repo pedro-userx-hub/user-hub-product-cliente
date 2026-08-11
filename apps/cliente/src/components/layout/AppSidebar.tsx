@@ -11,15 +11,12 @@ import {
   UsersIcon,
   WalletIcon,
 } from "@userx/ui";
+import { canView, type VisibilityContext } from "../../lib/featureVisibility";
+import { useLens } from "../../lib/LensContext";
 import { messages } from "../../lib/messages";
-import {
-  canSeeBalanco,
-  canSeeFinanceiro,
-  canSeeGestaoWorkspace,
-  canSeeTeamScreen,
-} from "../../lib/permissions";
 import { useTeamContext } from "../../lib/TeamContext";
-import { TeamSelector } from "./TeamSelector";
+import { ContextSelector } from "./ContextSelector";
+import { ProfileLensMenu } from "./ProfileLensMenu";
 import styles from "./AppSidebar.module.css";
 
 type SidebarMode = "main" | "gestao";
@@ -34,11 +31,12 @@ function navClass(isActive: boolean) {
 }
 
 /**
- * Story 1.1 + 1.3 — menu lateral com contexto de time e sub-menu Gestão.
- * Composição apenas; primitivos visuais vêm de @userx/ui.
+ * Shell sidebar — nav pelo contrato de visibilidade (lente + role).
+ * CX: Estudos, Financeiro + Gestão de Workspaces no menu.
  */
 export function AppSidebar() {
   const { user } = useTeamContext();
+  const { lens, cxWorkspaceId } = useLens();
   const location = useLocation();
   const navigate = useNavigate();
   const inGestaoRoute = location.pathname.startsWith("/gestao");
@@ -46,17 +44,28 @@ export function AppSidebar() {
     inGestaoRoute ? "gestao" : "main",
   );
 
+  const visCtx: VisibilityContext = {
+    lens,
+    role: lens === "cliente" ? user.role : null,
+    cxWorkspaceId,
+  };
+
   useEffect(() => {
     if (inGestaoRoute) setMode("gestao");
   }, [inGestaoRoute]);
 
-  const showGestao = canSeeGestaoWorkspace(user.role);
+  const showGestaoCliente = canView("gestaoWorkspace", visCtx);
+  const showCxWorkspaces = canView("cx.workspaces", visCtx);
+  const showFinanceiro = canView("financeiro", visCtx);
+  const showTime = canView("time", visCtx);
+  const showEstudos = canView("estudos", visCtx);
+  const showBalanco = canView("gestaoBalanco", visCtx);
+  const showGestaoTimes = canView("gestaoTimes", visCtx);
+  const showGestaoMembros = canView("gestaoMembros", visCtx);
 
   const openGestao = () => {
     setMode("gestao");
-    navigate(
-      canSeeBalanco(user.role) ? "/gestao/balanco" : "/gestao/times",
-    );
+    navigate(showBalanco ? "/gestao/balanco" : "/gestao/times");
   };
 
   const closeGestao = () => {
@@ -66,14 +75,14 @@ export function AppSidebar() {
     }
   };
 
-  if (mode === "gestao" && showGestao) {
+  if (mode === "gestao" && showGestaoCliente) {
     return (
       <Sidebar aria-label={messages.gestaoWorkspace}>
         <SidebarSubnav
           title={messages.gestaoWorkspace}
           onBack={closeGestao}
         >
-          {canSeeBalanco(user.role) && (
+          {showBalanco && (
             <NavLink
               to="/gestao/balanco"
               className={({ isActive }) => navClass(isActive)}
@@ -84,24 +93,28 @@ export function AppSidebar() {
               <span className={styles.navLabel}>{messages.gestaoBalanco}</span>
             </NavLink>
           )}
-          <NavLink
-            to="/gestao/times"
-            className={({ isActive }) => navClass(isActive)}
-          >
-            <span className={styles.navIcon} aria-hidden>
-              <UsersIcon size={20} />
-            </span>
-            <span className={styles.navLabel}>{messages.gestaoTimes}</span>
-          </NavLink>
-          <NavLink
-            to="/gestao/membros"
-            className={({ isActive }) => navClass(isActive)}
-          >
-            <span className={styles.navIcon} aria-hidden>
-              <UserIcon size={20} />
-            </span>
-            <span className={styles.navLabel}>{messages.gestaoMembros}</span>
-          </NavLink>
+          {showGestaoTimes && (
+            <NavLink
+              to="/gestao/times"
+              className={({ isActive }) => navClass(isActive)}
+            >
+              <span className={styles.navIcon} aria-hidden>
+                <UsersIcon size={20} />
+              </span>
+              <span className={styles.navLabel}>{messages.gestaoTimes}</span>
+            </NavLink>
+          )}
+          {showGestaoMembros && (
+            <NavLink
+              to="/gestao/membros"
+              className={({ isActive }) => navClass(isActive)}
+            >
+              <span className={styles.navIcon} aria-hidden>
+                <UserIcon size={20} />
+              </span>
+              <span className={styles.navLabel}>{messages.gestaoMembros}</span>
+            </NavLink>
+          )}
         </SidebarSubnav>
       </Sidebar>
     );
@@ -115,20 +128,22 @@ export function AppSidebar() {
           User<span className={styles.logoMark}>X</span>
         </div>
       }
-      team={<TeamSelector />}
+      team={<ContextSelector />}
       nav={
         <>
-          <NavLink
-            to="/estudos"
-            className={({ isActive }) => navClass(isActive)}
-            end
-          >
-            <span className={styles.navIcon} aria-hidden>
-              <BookOpenIcon size={20} />
-            </span>
-            <span className={styles.navLabel}>Estudos</span>
-          </NavLink>
-          {canSeeFinanceiro(user.role) && (
+          {showEstudos && (
+            <NavLink
+              to="/estudos"
+              className={({ isActive }) => navClass(isActive)}
+              end
+            >
+              <span className={styles.navIcon} aria-hidden>
+                <BookOpenIcon size={20} />
+              </span>
+              <span className={styles.navLabel}>Estudos</span>
+            </NavLink>
+          )}
+          {showFinanceiro && (
             <NavLink
               to="/financeiro"
               className={({ isActive }) => navClass(isActive)}
@@ -139,7 +154,7 @@ export function AppSidebar() {
               <span className={styles.navLabel}>Financeiro</span>
             </NavLink>
           )}
-          {canSeeTeamScreen(user.role) && (
+          {showTime && (
             <NavLink
               to="/time"
               className={({ isActive }) => navClass(isActive)}
@@ -150,11 +165,24 @@ export function AppSidebar() {
               <span className={styles.navLabel}>Time</span>
             </NavLink>
           )}
+          {showCxWorkspaces && (
+            <NavLink
+              to="/workspaces"
+              className={({ isActive }) => navClass(isActive)}
+            >
+              <span className={styles.navIcon} aria-hidden>
+                <BuildingIcon size={20} />
+              </span>
+              <span className={styles.navLabel}>
+                {messages.cxWorkspacesNav}
+              </span>
+            </NavLink>
+          )}
         </>
       }
       footer={
         <>
-          {showGestao && (
+          {showGestaoCliente && (
             <>
               <MenuItem icon={<BuildingIcon size={20} />} onClick={openGestao}>
                 {messages.gestaoWorkspace}
@@ -162,17 +190,10 @@ export function AppSidebar() {
               <div className={styles.footerDivider} aria-hidden />
             </>
           )}
-          <div className={styles.profile}>
-            <span className={styles.profileIcon} aria-hidden>
-              <UserIcon size={20} />
-            </span>
-            <div className={styles.profileText}>
-              <span className={styles.profileName} title={user.name}>
-                {user.name}
-              </span>
-              <span className={styles.profileRole}>{user.role}</span>
-            </div>
-          </div>
+          <ProfileLensMenu
+            name={user.name}
+            roleLabel={lens === "cx" ? messages.lensCx : user.role}
+          />
         </>
       }
     />

@@ -4,6 +4,7 @@ import {
   useId,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import { MoreVerticalIcon } from "./icons";
@@ -11,19 +12,22 @@ import { MenuItem } from "./MenuItem";
 import styles from "./Menu.module.css";
 
 export interface MenuItemConfig {
-  id: string;
+  id?: string;
   label: string;
   onSelect: () => void;
   disabled?: boolean;
   destructive?: boolean;
+  icon?: ReactNode;
 }
 
 export interface MenuProps {
   items: MenuItemConfig[];
   ariaLabel: string;
+  /** Ícone do gatilho. Default: kebab (três pontos). */
+  trigger?: ReactNode;
 }
 
-export function Menu({ items, ariaLabel }: MenuProps) {
+export function Menu({ items, ariaLabel, trigger }: MenuProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -76,9 +80,12 @@ export function Menu({ items, ariaLabel }: MenuProps) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
       >
-        <MoreVerticalIcon size={20} />
+        {trigger ?? <MoreVerticalIcon size={20} />}
       </button>
 
       {open &&
@@ -90,12 +97,13 @@ export function Menu({ items, ariaLabel }: MenuProps) {
             role="menu"
             aria-label={ariaLabel}
           >
-            {items.map((item) => (
+            {items.map((item, index) => (
               <MenuItem
-                key={item.id}
+                key={item.id ?? `${item.label}-${index}`}
                 role="menuitem"
                 state={item.disabled ? "disabled" : "default"}
                 className={item.destructive ? styles.destructive : undefined}
+                icon={item.icon}
                 title={item.label}
                 onClick={() => {
                   if (item.disabled) return;

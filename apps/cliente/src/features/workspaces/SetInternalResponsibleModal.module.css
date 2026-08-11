@@ -1,0 +1,11 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-4);
+}
+
+.description {
+  font-size: var(--ds-font-sm);
+  line-height: var(--ds-lh-sm);
+  color: var(--ds-gray-600);
+}

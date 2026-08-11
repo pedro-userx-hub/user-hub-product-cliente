@@ -6,6 +6,7 @@ export interface SkeletonProps {
   variant?: "line";
   width?: number | string;
   height?: number | string;
+  radius?: number | string;
   style?: CSSProperties;
   className?: string;
 }
@@ -14,6 +15,7 @@ export function Skeleton({
   variant = "line",
   width = "100%",
   height,
+  radius,
   style,
   className,
 }: SkeletonProps) {
@@ -27,7 +29,7 @@ export function Skeleton({
       style={{
         width,
         height: lineHeight,
-        borderRadius: "var(--radius-sm)",
+        borderRadius: radius ?? "var(--radius-sm)",
         ...style,
       }}
       aria-hidden
