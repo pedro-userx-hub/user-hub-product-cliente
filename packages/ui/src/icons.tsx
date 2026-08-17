@@ -17,6 +17,12 @@ function base({ size = 24, ...props }: IconProps) {
   };
 }
 
+export const SwapVertIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M8 5v14M8 5 5 8M8 5l3 3M16 19V5M16 19l3-3M16 19l-3-3" />
+  </svg>
+);
+
 export const ChevronDownIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="m6 9 6 6 6-6" />

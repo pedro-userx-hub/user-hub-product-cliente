@@ -45,6 +45,43 @@
   border-top-right-radius: var(--radius-md);
 }
 
+.headerSortable {
+  cursor: pointer;
+}
+
+.sortButton {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sortButton:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.sortIcon {
+  flex-shrink: 0;
+  opacity: 0;
+  color: var(--color-text-muted);
+}
+
+.headerSortable:hover .sortIcon,
+.headerSortable:focus-within .sortIcon,
+.headerSorted .sortIcon {
+  opacity: 1;
+}
+
 .cell {
   padding: var(--space-3) var(--space-4);
   font-size: var(--font-base);

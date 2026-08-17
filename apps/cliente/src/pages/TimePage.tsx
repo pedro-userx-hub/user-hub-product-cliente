@@ -138,6 +138,55 @@ function roleBadgeLabel(role: WorkspaceRole): string {
   return role;
 }
 
+type MemberSortKey =
+  | "name"
+  | "email"
+  | "joinedAt"
+  | "lastAccessAt"
+  | "invitedBy"
+  | "invitedAt"
+  | "inviteExpires"
+  | "role";
+
+function compareOptionalString(a?: string, b?: string): number {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  return a.localeCompare(b, "pt-BR");
+}
+
+function compareOptionalNumber(a?: number, b?: number): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return a - b;
+}
+
+function compareMembers(
+  a: CurrentTeamMember,
+  b: CurrentTeamMember,
+  key: MemberSortKey,
+): number {
+  switch (key) {
+    case "name":
+      return displayName(a).localeCompare(displayName(b), "pt-BR");
+    case "email":
+      return a.email.localeCompare(b.email, "pt-BR");
+    case "invitedBy":
+      return compareOptionalString(a.invitedByName, b.invitedByName);
+    case "role":
+      return a.role.localeCompare(b.role, "pt-BR");
+    case "joinedAt":
+      return compareOptionalString(a.joinedAt, b.joinedAt);
+    case "lastAccessAt":
+      return compareOptionalString(a.lastAccessAt, b.lastAccessAt);
+    case "invitedAt":
+      return compareOptionalString(a.invitedAt, b.invitedAt);
+    case "inviteExpires":
+      return compareOptionalNumber(a.inviteExpiresAt, b.inviteExpiresAt);
+  }
+}
+
 function TableSkeleton({ tab }: { tab: TimeTab }) {
   const invited = tab === "convidados";
   return (
@@ -239,6 +288,8 @@ export function TimePage() {
   const [tab, setTab] = useState<TimeTab>("ativos");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [sortKey, setSortKey] = useState<MemberSortKey>("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     let cancelled = false;
@@ -309,17 +360,47 @@ export function TimePage() {
     });
   }, [members, role, search, tab]);
 
+  const sorted = useMemo(() => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...filtered].sort(
+      (a, b) => dir * compareMembers(a, b, sortKey),
+    );
+  }, [filtered, sortDir, sortKey]);
+
   const hasFilters = search.trim() !== "" || role !== "all";
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
   const safePage = Math.min(page, pageCount);
-  const pageStart = filtered.length === 0 ? 0 : (safePage - 1) * pageSize;
-  const paged = filtered.slice(pageStart, pageStart + pageSize);
-  const rangeFrom = filtered.length === 0 ? 0 : pageStart + 1;
+  const pageStart = sorted.length === 0 ? 0 : (safePage - 1) * pageSize;
+  const paged = sorted.slice(pageStart, pageStart + pageSize);
+  const rangeFrom = sorted.length === 0 ? 0 : pageStart + 1;
   const rangeTo = pageStart + paged.length;
 
   useEffect(() => {
     setPage(1);
-  }, [search, role, tab, pageSize, currentTeam?.id]);
+  }, [search, role, tab, pageSize, currentTeam?.id, sortKey, sortDir]);
+
+  useEffect(() => {
+    setSortKey("name");
+    setSortDir("asc");
+  }, [tab]);
+
+  const toggleSort = (key: MemberSortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir("asc");
+  };
+
+  const sortHeader = (key: MemberSortKey) => ({
+    sortable: true as const,
+    sortDirection: (sortKey === key ? sortDir : false) as
+      | "asc"
+      | "desc"
+      | false,
+    onSort: () => toggleSort(key),
+  });
 
   const openDetail = async (memberId: string) => {
     try {
@@ -652,29 +733,50 @@ export function TimePage() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableHeaderCell>{messages.colName}</TableHeaderCell>
-                  <TableHeaderCell>{messages.colEmail}</TableHeaderCell>
+                  <TableHeaderCell {...sortHeader("name")}>
+                    {messages.colName}
+                  </TableHeaderCell>
+                  <TableHeaderCell {...sortHeader("email")}>
+                    {messages.colEmail}
+                  </TableHeaderCell>
                   {tab === "convidados" ? (
                     <>
-                      <TableHeaderCell>{messages.colInvitedBy}</TableHeaderCell>
-                      <TableHeaderCell className={styles.dateHead}>
+                      <TableHeaderCell {...sortHeader("invitedBy")}>
+                        {messages.colInvitedBy}
+                      </TableHeaderCell>
+                      <TableHeaderCell
+                        className={styles.dateHead}
+                        {...sortHeader("invitedAt")}
+                      >
                         {messages.colInvitedAt}
                       </TableHeaderCell>
-                      <TableHeaderCell className={styles.dateHead}>
+                      <TableHeaderCell
+                        className={styles.dateHead}
+                        {...sortHeader("inviteExpires")}
+                      >
                         {messages.colInviteExpires}
                       </TableHeaderCell>
                     </>
                   ) : (
                     <>
-                      <TableHeaderCell className={styles.dateHead}>
+                      <TableHeaderCell
+                        className={styles.dateHead}
+                        {...sortHeader("joinedAt")}
+                      >
                         {messages.colMemberSince}
                       </TableHeaderCell>
-                      <TableHeaderCell className={styles.dateHead}>
+                      <TableHeaderCell
+                        className={styles.dateHead}
+                        {...sortHeader("lastAccessAt")}
+                      >
                         {messages.colLastAccess}
                       </TableHeaderCell>
                     </>
                   )}
-                  <TableHeaderCell className={styles.roleHead}>
+                  <TableHeaderCell
+                    className={styles.roleHead}
+                    {...sortHeader("role")}
+                  >
                     {messages.colRole}
                   </TableHeaderCell>
                   <TableHeaderCell
@@ -778,7 +880,7 @@ export function TimePage() {
 
             <div className={styles.footer}>
               <p className={styles.range}>
-                {messages.timePaginationRange(rangeFrom, rangeTo, filtered.length)}
+                {messages.timePaginationRange(rangeFrom, rangeTo, sorted.length)}
               </p>
               {pageCount > 1 && (
                 <Pagination

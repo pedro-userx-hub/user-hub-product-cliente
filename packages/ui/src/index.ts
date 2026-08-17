@@ -112,6 +112,7 @@ export {
   TableHeaderCell,
   TableCell,
 } from "./Table";
+export type { TableSortDirection } from "./Table";
 
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
@@ -177,6 +178,7 @@ export type {
 
 export {
   ChevronDownIcon,
+  SwapVertIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ArrowLeftIcon,

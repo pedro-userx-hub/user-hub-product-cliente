@@ -1,5 +1,8 @@
 import type { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
+import { SwapVertIcon } from "./icons";
 import styles from "./Table.module.css";
+
+export type TableSortDirection = "asc" | "desc";
 
 export function Table({
   className,
@@ -68,14 +71,45 @@ export function TableRow({
 export function TableHeaderCell({
   className,
   children,
+  sortable = false,
+  sortDirection,
+  onSort,
   ...rest
-}: ThHTMLAttributes<HTMLTableCellElement>) {
+}: ThHTMLAttributes<HTMLTableCellElement> & {
+  sortable?: boolean;
+  sortDirection?: TableSortDirection | false;
+  onSort?: () => void;
+}) {
+  const sorted = sortDirection === "asc" || sortDirection === "desc";
+  const ariaSort = sorted
+    ? sortDirection === "asc"
+      ? "ascending"
+      : "descending"
+    : sortable
+      ? "none"
+      : undefined;
+
   return (
     <th
-      className={[styles.headerCell, className ?? ""].filter(Boolean).join(" ")}
+      className={[
+        styles.headerCell,
+        sortable ? styles.headerSortable : "",
+        sorted ? styles.headerSorted : "",
+        className ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-sort={ariaSort}
       {...rest}
     >
-      {children}
+      {sortable ? (
+        <button type="button" className={styles.sortButton} onClick={onSort}>
+          <span>{children}</span>
+          <SwapVertIcon size={16} className={styles.sortIcon} />
+        </button>
+      ) : (
+        children
+      )}
     </th>
   );
 }
