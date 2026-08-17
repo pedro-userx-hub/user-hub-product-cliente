@@ -33,6 +33,11 @@
   white-space: nowrap;
 }
 
+.navNewBadge {
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
 .footerDivider {
   width: 100%;
   height: 0;

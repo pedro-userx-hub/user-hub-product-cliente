@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
+  Badge,
   BookOpenIcon,
   BuildingIcon,
   getMenuItemClassName,
@@ -162,7 +163,14 @@ export function AppSidebar() {
               <span className={styles.navIcon} aria-hidden>
                 <UsersIcon size={20} />
               </span>
-              <span className={styles.navLabel}>Time</span>
+              <span className={styles.navLabel}>{messages.navMembros}</span>
+              <Badge
+                color="brand"
+                size="sm"
+                className={styles.navNewBadge}
+              >
+                {messages.navMembrosNew}
+              </Badge>
             </NavLink>
           )}
           {showCxWorkspaces && (

@@ -4,3 +4,101 @@
   gap: var(--space-4);
   min-width: 0;
 }
+
+.teamForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.inviteSubmit {
+  width: 100%;
+}
+
+.divider {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.sent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.sentTitle {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-xs);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+}
+
+.sentList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.sentCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 80px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+}
+
+.sentPerson {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.sentText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.sentName {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sentEmail {
+  font-size: var(--font-xs);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fechar {
+  border: var(--border-width) solid var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.fechar:hover:not(:disabled) {
+  background: var(--color-background);
+  color: var(--color-text);
+}

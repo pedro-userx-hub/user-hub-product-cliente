@@ -216,10 +216,10 @@ let mockMembers: WorkspaceMember[] = [
   },
   {
     id: "u-maria-pend",
-    name: "maria.souza@empresa.com",
+    name: "Maria Souza",
     email: "maria.souza@empresa.com",
     role: "Editor",
-    status: "Pendente",
+    status: "Expirado",
     teams: [TEAM.pesquisa],
     invitedByName: "Ana Silva",
   },
@@ -271,7 +271,7 @@ let mockMembers: WorkspaceMember[] = [
   /** AC1 Story 4.1 — Observador / Descoberta */
   {
     id: "u-aceite-obs",
-    name: "convidado.obs@empresa.com",
+    name: "Carla Nunes",
     email: "convidado.obs@empresa.com",
     role: "Observador",
     status: "Pendente",
@@ -281,7 +281,7 @@ let mockMembers: WorkspaceMember[] = [
   /** Login: conta na plataforma sem workspace */
   {
     id: "u-aceite-login",
-    name: "nova@plataforma.com",
+    name: "Nova Pessoa",
     email: "nova@plataforma.com",
     role: "Editor",
     status: "Pendente",
@@ -291,7 +291,7 @@ let mockMembers: WorkspaceMember[] = [
   /** Edge: times do convite já removidos — entra sem time */
   {
     id: "u-aceite-sem-time",
-    name: "sem.time@empresa.com",
+    name: "Rita Sem Time",
     email: "sem.time@empresa.com",
     role: "Editor",
     status: "Pendente",
@@ -309,6 +309,46 @@ let mockMembers: WorkspaceMember[] = [
     invitedByName: "Ana Silva",
   },
 ];
+
+const MIN_MS = 60_000;
+const HOUR_MS = 60 * MIN_MS;
+const DAY_MS = 24 * HOUR_MS;
+
+function lastAccessAgo(ms: number): string {
+  return new Date(Date.now() - ms).toISOString();
+}
+
+const MEMBER_ACCESS: Record<
+  string,
+  Pick<WorkspaceMember, "joinedAt" | "lastAccessAt">
+> = {
+  "u-dono": {
+    joinedAt: "2024-06-11T00:00:00.000Z",
+    lastAccessAt: lastAccessAgo(2 * HOUR_MS),
+  },
+  "u-ana": {
+    joinedAt: "2024-08-02T00:00:00.000Z",
+    lastAccessAt: lastAccessAgo(36 * MIN_MS),
+  },
+  "u-carlos": {
+    joinedAt: "2025-01-15T00:00:00.000Z",
+    lastAccessAt: lastAccessAgo(DAY_MS),
+  },
+  "u-joao-produto": {
+    joinedAt: "2025-03-20T00:00:00.000Z",
+    lastAccessAt: lastAccessAgo(3 * DAY_MS),
+  },
+  "u-bia": {
+    joinedAt: "2025-05-08T00:00:00.000Z",
+    lastAccessAt: lastAccessAgo(7 * DAY_MS),
+  },
+  "u-lia": {
+    joinedAt: "2025-02-10T00:00:00.000Z",
+    lastAccessAt: lastAccessAgo(14 * DAY_MS),
+  },
+};
+
+mockMembers = mockMembers.map((m) => ({ ...m, ...MEMBER_ACCESS[m.id] }));
 
 interface InviteSeed {
   token: string;
@@ -371,7 +411,7 @@ let mockInvites: InviteRecord[] = [
     token: "tok-login-plataforma",
     memberId: "u-aceite-login",
     status: "pending",
-    expiresAt: now + INVITE_TTL_MS,
+    expiresAt: now + 3 * 24 * 60 * 60 * 1000,
     invitedByName: "Ana Silva",
   }),
   buildInvite({
@@ -648,6 +688,11 @@ export interface CurrentTeamMember {
   role: WorkspaceRole;
   status: MemberStatus;
   invitedByName: string;
+  teamIds: string[];
+  joinedAt?: string;
+  lastAccessAt?: string;
+  invitedAt?: string;
+  inviteExpiresAt?: number;
 }
 
 export interface FetchCurrentTeamMembersResult {
@@ -657,10 +702,64 @@ export interface FetchCurrentTeamMembersResult {
   members: CurrentTeamMember[];
 }
 
+function latestInvite(memberId: string): InviteRecord | undefined {
+  return mockInvites.find(
+    (i) =>
+      i.memberId === memberId &&
+      (i.status === "pending" || i.status === "expired"),
+  );
+}
+
+function toTimePageMember(m: WorkspaceMember): CurrentTeamMember {
+  const invite = latestInvite(m.id);
+  return {
+    id: m.id,
+    name: m.name || m.email,
+    email: m.email,
+    role: m.role,
+    status: m.status,
+    invitedByName: m.invitedByName,
+    teamIds: m.teams.map((t) => t.id),
+    joinedAt: m.joinedAt,
+    lastAccessAt: m.lastAccessAt,
+    invitedAt: invite
+      ? new Date(invite.expiresAt - INVITE_TTL_MS).toISOString()
+      : undefined,
+    inviteExpiresAt: invite?.expiresAt,
+  };
+}
+
+/**
+ * Tela Membros — pessoas do workspace no escopo do ator (não só o time atual).
+ * Dono: todos. Admin/Editor: interseção com os próprios times.
+ * Observador: Forbidden. Excluídos ocultos.
+ */
+export async function fetchTimePageMembers(): Promise<CurrentTeamMember[]> {
+  await delay(300);
+
+  const actor = await fetchSessionUser();
+  if (!canSeeTeamScreen(actor.role)) {
+    throw new ForbiddenError();
+  }
+
+  syncExpiredInvites();
+
+  const allowed =
+    actor.role === "Dono do Workspace" ? null : new Set(actor.teamIds);
+
+  return mockMembers
+    .filter((m) => {
+      if (m.status === "Excluído") return false;
+      if (!allowed) return true;
+      return m.teams.some((t) => allowed.has(t.id));
+    })
+    .map(toTimePageMember)
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+}
+
 /**
  * Story 1.5 — membros do time no contexto atual (só vínculos deste time).
  * Observador: Forbidden. Excluídos ocultos.
- * TODO(story-3.1): listagem completa do workspace é Gestão > Membros.
  */
 export async function fetchCurrentTeamMembers(
   teamId: string,
@@ -688,15 +787,7 @@ export async function fetchCurrentTeamMembers(
         m.status !== "Excluído" &&
         m.teams.some((t) => t.id === teamId),
     )
-    .map((m) => ({
-      id: m.id,
-      name:
-        m.status === "Pendente" || m.status === "Expirado" ? m.email : m.name,
-      email: m.email,
-      role: m.role,
-      status: m.status,
-      invitedByName: m.invitedByName,
-    }))
+    .map(toTimePageMember)
     .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
   return {
@@ -3219,12 +3310,15 @@ export interface InviteEmailResult {
   email: string;
   ok: boolean;
   reason?: InviteRejectReason;
+  memberId?: string;
 }
 
 export interface InviteMembersInput {
   emails: string[];
   role: WorkspaceRole;
   teamIds: string[];
+  /** Nome informado no convite (drawer time-scoped). */
+  name?: string;
   /** Client request key for idempotência (duplo clique). */
   requestId?: string;
 }
@@ -3310,7 +3404,7 @@ export async function inviteMembers(
 
       // Excluído: permite novo ciclo de convite reutilizando o registro.
       if (existing && existing.status === "Excluído") {
-        existing.name = email;
+        existing.name = input.name?.trim() || email;
         existing.role = input.role;
         existing.status = "Pendente";
         existing.teams = teamRefs.map((t) => ({ ...t }));
@@ -3339,13 +3433,13 @@ export async function inviteMembers(
           timestamp: new Date().toISOString(),
         });
 
-        created.push({ email, ok: true });
+        created.push({ email, ok: true, memberId: existing.id });
         continue;
       }
 
       mockMembers.unshift({
         id: `invite-${email}-${Date.now()}`,
-        name: email,
+        name: input.name?.trim() || email,
         email,
         role: input.role,
         status: "Pendente",
@@ -3371,7 +3465,7 @@ export async function inviteMembers(
         timestamp: new Date().toISOString(),
       });
 
-      created.push({ email, ok: true });
+      created.push({ email, ok: true, memberId });
     }
 
     return { created, rejected };

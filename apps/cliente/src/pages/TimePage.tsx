@@ -1,12 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Avatar,
   Badge,
+  type BadgeColor,
   Button,
   EmptyState,
+  Input,
   Menu,
   type MenuItemConfig,
   Modal,
   PageHeader,
+  Pagination,
+  PlusIcon,
+  SearchIcon,
+  Select,
   Skeleton,
   Table,
   TableBody,
@@ -14,9 +21,11 @@ import {
   TableHead,
   TableHeaderCell,
   TableRow,
+  Tabs,
   useToast,
 } from "@userx/ui";
 import { EditMemberDrawer } from "../features/members/EditMemberDrawer";
+import { MemberDetailDrawer } from "../features/members/MemberDetailDrawer";
 import { useInvite } from "../lib/InviteContext";
 import { messages } from "../lib/messages";
 import {
@@ -27,59 +36,162 @@ import {
 } from "../lib/permissions";
 import { useTeamContext } from "../lib/TeamContext";
 import {
-  fetchCurrentTeamMembers,
+  fetchTimePageMembers,
   ForbiddenError,
   getMemberTeamCount,
   getWorkspaceMember,
+  InviteManageError,
   removeMemberFromTeam,
+  resendInvite,
+  revokeInvite,
   setMemberActiveStatus,
   type CurrentTeamMember,
 } from "../lib/teamApi";
-import type { WorkspaceMember } from "../lib/types";
+import type {
+  MemberStatus,
+  WorkspaceMember,
+  WorkspaceRole,
+} from "../lib/types";
 import { NoAccessPage } from "./NoAccessPage";
 import styles from "./TimePage.module.css";
 
-function statusBadgeColor(
-  status: CurrentTeamMember["status"],
-): "green" | "yellow" | "gray" | "red" {
-  if (status === "Ativo") return "green";
-  if (status === "Pendente") return "yellow";
-  if (status === "Excluído") return "red";
+const PAGE_SIZE_OPTIONS = ["10", "20", "50"] as const;
+const DEFAULT_PAGE_SIZE = 10;
+
+type TimeTab = "ativos" | "convidados" | "inativos";
+type RoleFilter = WorkspaceRole | "all";
+
+function matchesTab(status: MemberStatus, tab: TimeTab): boolean {
+  if (tab === "ativos") return status === "Ativo";
+  if (tab === "convidados")
+    return status === "Pendente" || status === "Expirado";
+  return status === "Inativo" || status === "Excluído";
+}
+
+function displayName(member: CurrentTeamMember): string {
+  return member.name || member.email;
+}
+
+function formatInviteExpiry(member: CurrentTeamMember): {
+  label: string;
+  tone: "default" | "warning" | "error";
+} {
+  if (member.status === "Expirado") {
+    return { label: messages.inviteExpiresExpired, tone: "error" };
+  }
+  if (!member.inviteExpiresAt) {
+    return { label: messages.memberDetailEmpty, tone: "default" };
+  }
+  const remaining = member.inviteExpiresAt - Date.now();
+  if (remaining <= 0) {
+    return { label: messages.inviteExpiresExpired, tone: "error" };
+  }
+  const days = Math.max(1, Math.ceil(remaining / 86_400_000));
+  return {
+    label: messages.inviteExpiresDays(days),
+    tone: days <= 3 ? "warning" : "default",
+  };
+}
+
+function formatMemberDate(iso?: string): string {
+  if (!iso) return messages.memberDetailEmpty;
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const month = date
+    .toLocaleDateString("pt-BR", { month: "short" })
+    .replace(".", "")
+    .trim();
+  const year = String(y).slice(-2);
+  const monthLabel = month.charAt(0).toUpperCase() + month.slice(1);
+  return `${d} de ${monthLabel} ${year}`;
+}
+
+function formatRelativeAccess(iso?: string): string {
+  if (!iso) return messages.memberDetailEmpty;
+  const diffMs = Math.max(0, Date.now() - new Date(iso).getTime());
+  const minutes = Math.floor(diffMs / 60_000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (minutes < 60) return `Há ${Math.max(1, minutes)} min`;
+  if (hours < 24) return `Há ${hours}h`;
+  if (days === 1) return "Há 1 dia";
+  if (days < 7) return `Há ${days} dias`;
+  const weeks = Math.floor(days / 7);
+  if (weeks === 1) return "Há 1 semana";
+  if (weeks < 5) return `Há ${weeks} semanas`;
+  const months = Math.floor(days / 30);
+  if (months <= 1) return "Há 1 mês";
+  if (months < 12) return `Há ${months} meses`;
+  const years = Math.floor(days / 365);
+  return years <= 1 ? "Há 1 ano" : `Há ${years} anos`;
+}
+
+function roleBadgeColor(role: WorkspaceRole): BadgeColor {
+  if (role === "Dono do Workspace") return "brand";
+  if (role === "Administrador") return "yellow";
   return "gray";
 }
 
-function TableSkeleton() {
+function roleBadgeLabel(role: WorkspaceRole): string {
+  if (role === "Dono do Workspace") return messages.memberDetailRoleDono;
+  return role;
+}
+
+function TableSkeleton({ tab }: { tab: TimeTab }) {
+  const invited = tab === "convidados";
   return (
     <Table>
       <TableHead>
         <TableRow>
           <TableHeaderCell>{messages.colName}</TableHeaderCell>
           <TableHeaderCell>{messages.colEmail}</TableHeaderCell>
+          {invited ? (
+            <>
+              <TableHeaderCell>{messages.colInvitedBy}</TableHeaderCell>
+              <TableHeaderCell>{messages.colInvitedAt}</TableHeaderCell>
+              <TableHeaderCell>{messages.colInviteExpires}</TableHeaderCell>
+            </>
+          ) : (
+            <>
+              <TableHeaderCell>{messages.colMemberSince}</TableHeaderCell>
+              <TableHeaderCell>{messages.colLastAccess}</TableHeaderCell>
+            </>
+          )}
           <TableHeaderCell>{messages.colRole}</TableHeaderCell>
-          <TableHeaderCell>{messages.timeColInvitedBy}</TableHeaderCell>
-          <TableHeaderCell>{messages.colStatus}</TableHeaderCell>
-          <TableHeaderCell>{messages.colActions}</TableHeaderCell>
+          <TableHeaderCell
+            className={styles.actionsHead}
+            aria-label={messages.colActions}
+          />
         </TableRow>
       </TableHead>
       <TableBody>
         {Array.from({ length: 5 }).map((_, i) => (
           <TableRow key={i}>
             <TableCell>
-              <Skeleton height={16} width="60%" />
+              <div className={styles.person}>
+                <Skeleton width={40} height={40} radius="var(--radius-full)" />
+                <Skeleton height={16} width={140} />
+              </div>
+            </TableCell>
+            <TableCell>
+              <Skeleton height={16} width="80%" />
             </TableCell>
             <TableCell>
               <Skeleton height={16} width="70%" />
             </TableCell>
             <TableCell>
-              <Skeleton height={16} width="40%" />
+              <Skeleton height={16} width="80%" />
             </TableCell>
+            {invited && (
+              <TableCell>
+                <Skeleton height={16} width="50%" />
+              </TableCell>
+            )}
             <TableCell>
               <Skeleton height={16} width="50%" />
             </TableCell>
-            <TableCell>
-              <Skeleton height={16} width="30%" />
-            </TableCell>
-            <TableCell>
+            <TableCell className={styles.actionsCell}>
               <Skeleton height={16} width={24} />
             </TableCell>
           </TableRow>
@@ -103,11 +215,13 @@ export function TimePage() {
 
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [members, setMembers] = useState<CurrentTeamMember[]>([]);
-  const [memberCount, setMemberCount] = useState(0);
   const [viewState, setViewState] = useState<"loading" | "ready" | "error">(
     "loading",
   );
 
+  const [detailTarget, setDetailTarget] = useState<WorkspaceMember | null>(
+    null,
+  );
   const [editTarget, setEditTarget] = useState<WorkspaceMember | null>(null);
   const [removeTarget, setRemoveTarget] = useState<CurrentTeamMember | null>(
     null,
@@ -115,8 +229,16 @@ export function TimePage() {
   const [removeIsLast, setRemoveIsLast] = useState(false);
   const [inactivateTarget, setInactivateTarget] =
     useState<CurrentTeamMember | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<CurrentTeamMember | null>(
+    null,
+  );
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string | undefined>();
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState<RoleFilter>("all");
+  const [tab, setTab] = useState<TimeTab>("ativos");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,12 +255,11 @@ export function TimePage() {
   }, [refreshSession, user.role]);
 
   const load = useCallback(async () => {
-    if (!currentTeam || !canSeeTeamScreen(user.role)) return;
+    if (!canSeeTeamScreen(user.role)) return;
     setViewState("loading");
     try {
-      const result = await fetchCurrentTeamMembers(currentTeam.id);
-      setMembers(result.members);
-      setMemberCount(result.memberCount);
+      const result = await fetchTimePageMembers();
+      setMembers(result);
       setViewState("ready");
     } catch (e) {
       if (e instanceof ForbiddenError) {
@@ -147,26 +268,67 @@ export function TimePage() {
       }
       setViewState("error");
     }
-  }, [currentTeam, user.role]);
+  }, [user.role]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const inviteCta = currentTeam ? (
-    <Button
-      variant="filled"
-      size="medium"
-      onClick={() =>
-        openInvite({
-          teamIds: [currentTeam.id],
-          onSuccess: () => void load(),
-        })
-      }
-    >
-      {messages.timeInviteCta}
-    </Button>
-  ) : null;
+  const roleOptions = useMemo(
+    () => [
+      { value: "all", label: messages.membersFilterAll },
+      { value: "Dono do Workspace", label: "Dono do Workspace" },
+      { value: "Administrador", label: "Administrador" },
+      { value: "Editor", label: "Editor" },
+      { value: "Observador", label: "Observador" },
+    ],
+    [],
+  );
+
+  const tabCounts = useMemo(
+    () => ({
+      ativos: members.filter((m) => matchesTab(m.status, "ativos")).length,
+      convidados: members.filter((m) => matchesTab(m.status, "convidados"))
+        .length,
+      inativos: members.filter((m) => matchesTab(m.status, "inativos")).length,
+      enviados: members.filter((m) => m.status === "Pendente").length,
+      expirados: members.filter((m) => m.status === "Expirado").length,
+    }),
+    [members],
+  );
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return members.filter((m) => {
+      if (!matchesTab(m.status, tab)) return false;
+      if (role !== "all" && m.role !== role) return false;
+      if (!q) return true;
+      return (
+        m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)
+      );
+    });
+  }, [members, role, search, tab]);
+
+  const hasFilters = search.trim() !== "" || role !== "all";
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const pageStart = filtered.length === 0 ? 0 : (safePage - 1) * pageSize;
+  const paged = filtered.slice(pageStart, pageStart + pageSize);
+  const rangeFrom = filtered.length === 0 ? 0 : pageStart + 1;
+  const rangeTo = pageStart + paged.length;
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, role, tab, pageSize, currentTeam?.id]);
+
+  const openDetail = async (memberId: string) => {
+    try {
+      const full = await getWorkspaceMember(memberId);
+      setDetailTarget(full);
+    } catch {
+      showToast({ type: "error", title: messages.memberDetailLoadError });
+    }
+  };
 
   const openEdit = async (memberId: string) => {
     try {
@@ -200,6 +362,46 @@ export function TimePage() {
       await load();
     } catch {
       setActionError(messages.removeFromTeamError);
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const handleResend = async (member: CurrentTeamMember) => {
+    setActionBusy(true);
+    try {
+      await resendInvite(member.id);
+      showToast({ type: "success", title: messages.inviteResendSuccess });
+      await load();
+    } catch (e) {
+      if (e instanceof InviteManageError && e.code === "already_accepted") {
+        showToast({ type: "warning", title: e.message });
+        await load();
+      } else {
+        showToast({ type: "error", title: messages.inviteResendError });
+      }
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const confirmRevoke = async () => {
+    if (!revokeTarget) return;
+    setActionBusy(true);
+    setActionError(undefined);
+    try {
+      await revokeInvite(revokeTarget.id);
+      showToast({ type: "success", title: messages.inviteRevokeSuccess });
+      setRevokeTarget(null);
+      await load();
+    } catch (e) {
+      if (e instanceof InviteManageError && e.code === "already_accepted") {
+        showToast({ type: "warning", title: e.message });
+        setRevokeTarget(null);
+        await load();
+      } else {
+        setActionError(messages.inviteRevokeError);
+      }
     } finally {
       setActionBusy(false);
     }
@@ -240,6 +442,35 @@ export function TimePage() {
       };
 
       const items: MenuItemConfig[] = [];
+      const invitePending =
+        member.status === "Pendente" || member.status === "Expirado";
+
+      if (invitePending) {
+        items.push(
+          {
+            id: "resend",
+            label: messages.inviteResendMenu,
+            disabled: actionBusy,
+            onSelect: () => {
+              void handleResend(member);
+            },
+          },
+          {
+            id: "revoke",
+            label:
+              member.status === "Expirado"
+                ? messages.inviteDeleteExpiredMenu
+                : messages.inviteRevokeMenu,
+            destructive: true,
+            disabled: actionBusy,
+            onSelect: () => {
+              setActionError(undefined);
+              setRevokeTarget(member);
+            },
+          },
+        );
+        return items;
+      }
 
       if (canEditMember(user.role, user.teamIds, targetRef)) {
         items.push({
@@ -253,8 +484,7 @@ export function TimePage() {
 
       if (
         canManageTeam(user.role, user.teamIds, currentTeam.id) &&
-        member.status !== "Pendente" &&
-        member.status !== "Expirado"
+        member.teamIds.includes(currentTeam.id)
       ) {
         items.push({
           id: "remove-from-team",
@@ -282,35 +512,123 @@ export function TimePage() {
 
       return items;
     },
-    [currentTeam, user.role, user.teamIds],
+    [actionBusy, currentTeam, user.role, user.teamIds],
   );
 
   const noTeam = loadState === "empty" || !currentTeam;
-  const onlySelf =
-    viewState === "ready" &&
-    members.length === 1 &&
-    members[0]?.id === user.id;
+
+  const emptyTabMessage =
+    tab === "convidados"
+      ? messages.timeEmptyConvidados
+      : tab === "inativos"
+        ? messages.timeEmptyInativos
+        : messages.timeEmptyAtivos;
 
   if (allowed === null) return null;
   if (!allowed) return <NoAccessPage />;
 
   return (
     <div className={styles.page}>
-      <PageHeader
-        title={messages.timeScreenTitle}
-        action={inviteCta}
-      />
-      {currentTeam && viewState === "ready" && (
-        <p className={styles.meta}>
-          {currentTeam.name} · {messages.timeMemberCount(memberCount)}
-        </p>
-      )}
+      <PageHeader title={messages.timeScreenTitle} />
 
       {noTeam && <EmptyState title={messages.memberWithoutTeam} />}
 
-      {viewState === "loading" && !noTeam && <TableSkeleton />}
+      <div className={styles.cards}>
+        <button
+          type="button"
+          className={styles.statCard}
+          onClick={() => setTab("ativos")}
+        >
+          <span className={styles.statLabel}>{messages.timeCardActive}</span>
+          <span className={styles.statValue}>{tabCounts.ativos}</span>
+        </button>
+        <button
+          type="button"
+          className={styles.statCard}
+          onClick={() => setTab("convidados")}
+        >
+          <span className={styles.statLabel}>{messages.timeCardInvites}</span>
+          <span className={styles.statValue}>{tabCounts.enviados}</span>
+        </button>
+        <button
+          type="button"
+          className={styles.statCard}
+          onClick={() => setTab("convidados")}
+        >
+          <span className={styles.statLabel}>{messages.timeCardExpired}</span>
+          <span className={styles.statValue}>{tabCounts.expirados}</span>
+        </button>
+      </div>
 
-      {viewState === "error" && !noTeam && (
+      <Tabs
+        aria-label={messages.timeTabsAria}
+        value={tab}
+        onChange={(id) => setTab(id as TimeTab)}
+        items={[
+          {
+            id: "ativos",
+            label: messages.timeTabAtivos,
+            count: tabCounts.ativos,
+          },
+          {
+            id: "convidados",
+            label: messages.timeTabConvidados,
+            count: tabCounts.convidados,
+          },
+          {
+            id: "inativos",
+            label: messages.timeTabInativos,
+            count: tabCounts.inativos,
+          },
+        ]}
+      />
+
+      <div className={styles.toolbar}>
+        <div className={styles.search}>
+          <span className={styles.searchIcon} aria-hidden>
+            <SearchIcon size={24} />
+          </span>
+          <Input
+            className={styles.searchInput}
+            aria-label={messages.membersSearchPlaceholder}
+            placeholder={messages.membersSearchPlaceholder}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className={styles.roleFilter}>
+          <Select
+            aria-label={messages.timeFilterRole}
+            placeholder={messages.timeFilterRole}
+            value={role === "all" ? "" : role}
+            options={roleOptions}
+            onChange={(v) => setRole((v || "all") as RoleFilter)}
+            expandable
+          />
+        </div>
+        <Button
+          className={styles.invite}
+          variant="filled"
+          size="large"
+          iconLeft={<PlusIcon size={24} />}
+          onClick={() =>
+            openInvite({
+              teamIds: currentTeam ? [currentTeam.id] : undefined,
+              teamScoped: true,
+              onSuccess: () => {
+                setTab("convidados");
+                void load();
+              },
+            })
+          }
+        >
+          {messages.timeInviteCta}
+        </Button>
+      </div>
+
+      {viewState === "loading" && <TableSkeleton tab={tab} />}
+
+      {viewState === "error" && (
         <EmptyState
           variant="error"
           title={messages.timeLoadError}
@@ -322,50 +640,179 @@ export function TimePage() {
         />
       )}
 
-      {onlySelf && (
-        <EmptyState title={messages.timeEmptySolo} action={inviteCta} />
+      {viewState === "ready" && filtered.length === 0 && (
+        <EmptyState
+          title={hasFilters ? messages.membersSearchEmpty : emptyTabMessage}
+        />
       )}
 
-      {viewState === "ready" && members.length > 0 && !onlySelf && !noTeam && (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell>{messages.colName}</TableHeaderCell>
-              <TableHeaderCell>{messages.colEmail}</TableHeaderCell>
-              <TableHeaderCell>{messages.colRole}</TableHeaderCell>
-              <TableHeaderCell>{messages.timeColInvitedBy}</TableHeaderCell>
-              <TableHeaderCell>{messages.colStatus}</TableHeaderCell>
-              <TableHeaderCell>{messages.colActions}</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {members.map((m) => {
-              const actions = memberMenuItems(m);
-              return (
-                <TableRow key={m.id}>
-                  <TableCell>{m.name}</TableCell>
-                  <TableCell>{m.email}</TableCell>
-                  <TableCell>{m.role}</TableCell>
-                  <TableCell>{m.invitedByName}</TableCell>
-                  <TableCell>
-                    <Badge color={statusBadgeColor(m.status)} size="sm">
-                      {m.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {actions.length > 0 ? (
-                      <Menu
-                        ariaLabel={`Ações de ${m.name}`}
-                        items={actions}
-                      />
-                    ) : null}
-                  </TableCell>
+      {viewState === "ready" && filtered.length > 0 && (
+          <>
+            <div className={styles.tableWrap}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableHeaderCell>{messages.colName}</TableHeaderCell>
+                  <TableHeaderCell>{messages.colEmail}</TableHeaderCell>
+                  {tab === "convidados" ? (
+                    <>
+                      <TableHeaderCell>{messages.colInvitedBy}</TableHeaderCell>
+                      <TableHeaderCell className={styles.dateHead}>
+                        {messages.colInvitedAt}
+                      </TableHeaderCell>
+                      <TableHeaderCell className={styles.dateHead}>
+                        {messages.colInviteExpires}
+                      </TableHeaderCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableHeaderCell className={styles.dateHead}>
+                        {messages.colMemberSince}
+                      </TableHeaderCell>
+                      <TableHeaderCell className={styles.dateHead}>
+                        {messages.colLastAccess}
+                      </TableHeaderCell>
+                    </>
+                  )}
+                  <TableHeaderCell className={styles.roleHead}>
+                    {messages.colRole}
+                  </TableHeaderCell>
+                  <TableHeaderCell
+                    className={styles.actionsHead}
+                    aria-label={messages.colActions}
+                  />
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      )}
+              </TableHead>
+              <TableBody>
+                {paged.map((m) => {
+                  const actions = memberMenuItems(m);
+                  const name = displayName(m);
+                  return (
+                    <TableRow
+                      key={m.id}
+                      clickable
+                      tabIndex={0}
+                      onClick={() => void openDetail(m.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          void openDetail(m.id);
+                        }
+                      }}
+                    >
+                      <TableCell className={styles.personCell}>
+                        <div className={styles.person}>
+                          <Avatar name={name} size="lg" />
+                          <span className={styles.personName}>{name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className={styles.emailCell}>
+                        {m.email}
+                      </TableCell>
+                      {tab === "convidados" ? (
+                        <>
+                          <TableCell>
+                            {m.invitedByName || messages.memberDetailEmpty}
+                          </TableCell>
+                          <TableCell className={styles.dateHead}>
+                            {formatMemberDate(m.invitedAt)}
+                          </TableCell>
+                          <TableCell className={styles.dateHead}>
+                            {(() => {
+                              const expiry = formatInviteExpiry(m);
+                              return (
+                                <span
+                                  className={
+                                    expiry.tone === "error"
+                                      ? styles.expiresError
+                                      : expiry.tone === "warning"
+                                        ? styles.expiresWarning
+                                        : undefined
+                                  }
+                                >
+                                  {expiry.label}
+                                </span>
+                              );
+                            })()}
+                          </TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell className={styles.dateHead}>
+                            {formatMemberDate(m.joinedAt)}
+                          </TableCell>
+                          <TableCell className={styles.accessCell}>
+                            {formatRelativeAccess(m.lastAccessAt)}
+                          </TableCell>
+                        </>
+                      )}
+                      <TableCell>
+                        <Badge
+                          color={roleBadgeColor(m.role)}
+                          size="sm"
+                          className={
+                            m.status === "Expirado"
+                              ? styles.badgeExpired
+                              : undefined
+                          }
+                        >
+                          {roleBadgeLabel(m.role)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell
+                        className={styles.actionsCell}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      >
+                        <Menu
+                          ariaLabel={`Ações de ${name}`}
+                          items={actions}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+            </div>
+
+            <div className={styles.footer}>
+              <p className={styles.range}>
+                {messages.timePaginationRange(rangeFrom, rangeTo, filtered.length)}
+              </p>
+              {pageCount > 1 && (
+                <Pagination
+                  page={safePage}
+                  pageCount={pageCount}
+                  onPageChange={setPage}
+                />
+              )}
+              <div className={styles.pageSize}>
+                <span className={styles.pageSizeLabel}>
+                  {messages.timePageSizeLabel}
+                </span>
+                <div className={styles.pageSizeSelect}>
+                  <Select
+                    aria-label={messages.timePageSizeLabel}
+                    value={String(pageSize)}
+                    options={PAGE_SIZE_OPTIONS.map((n) => ({
+                      value: n,
+                      label: n,
+                    }))}
+                    onChange={(v) => setPageSize(Number(v))}
+                    expandable
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+      <MemberDetailDrawer
+        open={detailTarget != null}
+        member={detailTarget}
+        onClose={() => setDetailTarget(null)}
+      />
 
       <EditMemberDrawer
         open={editTarget != null}
@@ -466,6 +913,59 @@ export function TimePage() {
           <div className={styles.confirmBody}>
             <p>
               {messages.memberInactivateBody(inactivateTarget.name)}
+            </p>
+            {actionError && (
+              <p role="alert" className={styles.confirmError}>
+                {actionError}
+              </p>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={revokeTarget != null}
+        onClose={() => {
+          if (!actionBusy) setRevokeTarget(null);
+        }}
+        title={
+          revokeTarget?.status === "Expirado"
+            ? messages.inviteDeleteExpiredTitle
+            : messages.inviteRevokeTitle
+        }
+        size="small"
+        dismissible={!actionBusy}
+        footer={
+          <>
+            <Button
+              variant="clear"
+              size="medium"
+              disabled={actionBusy}
+              onClick={() => setRevokeTarget(null)}
+            >
+              {messages.inviteCancel}
+            </Button>
+            <Button
+              variant="filled"
+              size="medium"
+              loading={actionBusy}
+              onClick={() => void confirmRevoke()}
+            >
+              {actionError
+                ? messages.membersRetry
+                : revokeTarget?.status === "Expirado"
+                  ? messages.inviteDeleteExpiredConfirm
+                  : messages.inviteRevokeConfirm}
+            </Button>
+          </>
+        }
+      >
+        {revokeTarget && (
+          <div className={styles.confirmBody}>
+            <p>
+              {revokeTarget.status === "Expirado"
+                ? messages.inviteDeleteExpiredBody(revokeTarget.email)
+                : messages.inviteRevokeBody(revokeTarget.email)}
             </p>
             {actionError && (
               <p role="alert" className={styles.confirmError}>

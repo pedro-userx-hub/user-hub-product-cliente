@@ -5,6 +5,8 @@ import {
   useState,
   type KeyboardEvent,
   type ClipboardEvent,
+  type MouseEvent,
+  type ReactNode,
 } from "react";
 import { XIcon } from "./icons";
 import styles from "./ChipInput.module.css";
@@ -30,9 +32,11 @@ export interface ChipInputProps {
   error?: string;
   inputValue?: string;
   onInputChange?: (value: string) => void;
+  /** Conteúdo à direita do campo (ex.: seletor de papel). */
+  trailing?: ReactNode;
 }
 
-const TOKEN_SPLIT = /[,;\n\r]+/;
+const TOKEN_SPLIT = /[,;\s]+/;
 
 function splitTokens(raw: string): string[] {
   return raw
@@ -52,6 +56,7 @@ export function ChipInput({
   error,
   inputValue: controlledInputValue,
   onInputChange,
+  trailing,
 }: ChipInputProps) {
   const autoId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -79,6 +84,9 @@ export function ChipInput({
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      commitDraft();
+    } else if (e.key === " " && draft.trim()) {
       e.preventDefault();
       commitDraft();
     } else if (e.key === "Backspace" && draft === "" && chips.length > 0) {
@@ -118,34 +126,45 @@ export function ChipInput({
           if (!disabled) inputRef.current?.focus();
         }}
       >
-        {chips.map((chip) => (
-          <Chip
-            key={chip.id}
-            chip={chip}
+        <div className={styles.main}>
+          {chips.map((chip) => (
+            <Chip
+              key={chip.id}
+              chip={chip}
+              disabled={disabled}
+              onRemove={() => onRemove(chip.id)}
+              onAction={
+                chip.status === "pending" && onChipAction
+                  ? () => onChipAction(chip.id)
+                  : undefined
+              }
+            />
+          ))}
+          <input
+            ref={inputRef}
+            id={autoId}
+            className={styles.input}
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={commitDraft}
+            onPaste={handlePaste}
+            placeholder={chips.length === 0 ? placeholder : undefined}
             disabled={disabled}
-            onRemove={() => onRemove(chip.id)}
-            onAction={
-              chip.status === "pending" && onChipAction
-                ? () => onChipAction(chip.id)
-                : undefined
-            }
+            aria-invalid={hasGlobalError || undefined}
+            aria-describedby={helperId}
           />
-        ))}
-        <input
-          ref={inputRef}
-          id={autoId}
-          className={styles.input}
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={commitDraft}
-          onPaste={handlePaste}
-          placeholder={chips.length === 0 ? placeholder : undefined}
-          disabled={disabled}
-          aria-invalid={hasGlobalError || undefined}
-          aria-describedby={helperId}
-        />
+        </div>
+        {trailing ? (
+          <div
+            className={styles.trailing}
+            onClick={(e: MouseEvent) => e.stopPropagation()}
+            onMouseDown={(e: MouseEvent) => e.stopPropagation()}
+          >
+            {trailing}
+          </div>
+        ) : null}
       </div>
       {error && (
         <p id={helperId} className={styles.helperError}>

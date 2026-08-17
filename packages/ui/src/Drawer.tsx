@@ -9,6 +9,8 @@ export interface DrawerProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Ícone à esquerda do título (ex.: convite). */
+  titleIcon?: ReactNode;
   description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
@@ -30,6 +32,7 @@ export function Drawer({
   open,
   onClose,
   title,
+  titleIcon,
   description,
   children,
   footer,
@@ -85,9 +88,16 @@ export function Drawer({
       >
         <header className={styles.header}>
           <div className={styles.heading}>
-            <h2 id={titleId} className={styles.title}>
-              {title}
-            </h2>
+            <div className={styles.titleRow}>
+              {titleIcon != null && (
+                <span className={styles.titleIcon} aria-hidden>
+                  {titleIcon}
+                </span>
+              )}
+              <h2 id={titleId} className={styles.title}>
+                {title}
+              </h2>
+            </div>
             {description != null && (
               <div className={styles.description}>{description}</div>
             )}

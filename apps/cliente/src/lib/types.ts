@@ -46,6 +46,10 @@ export interface WorkspaceMember {
    * Preservado mesmo se o convidante for removido do workspace.
    */
   invitedByName: string;
+  /** Data em que passou a ser membro (aceite). */
+  joinedAt?: string;
+  /** Último acesso ao produto. */
+  lastAccessAt?: string;
 }
 
 /** Payload público do aceite — sem vazamento em estados inválidos. */

@@ -1,32 +1,217 @@
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  width: 100%;
-  min-width: 0;
-}
-
-.meta {
-  margin: calc(var(--space-2) * -1) 0 0;
-  font-size: var(--font-sm);
-  line-height: var(--lh-sm);
-  color: var(--color-text-muted);
-}
-
-.confirmBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.confirmBody p {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-sm);
-  line-height: var(--lh-sm);
-}
-
-.confirmError {
-  color: var(--color-error) !important;
-}
-
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  min-width: 0;
+}
+
+.cards {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-6);
+  width: 100%;
+  min-width: 0;
+}
+
+.statCard {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 142px;
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.statCard:hover {
+  border-color: var(--color-text-muted);
+}
+
+.statCard:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.statLabel {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-regular);
+  color: var(--color-text-muted);
+}
+
+.statValue {
+  font-size: var(--font-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.search {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 0;
+  max-width: 379px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.searchInput {
+  padding-left: 48px;
+}
+
+.roleFilter {
+  width: 128px;
+  flex-shrink: 0;
+}
+
+.invite {
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tableWrap {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.personCell {
+  white-space: normal;
+  min-width: 180px;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.personName {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emailCell {
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.dateHead,
+.accessCell {
+  white-space: nowrap;
+}
+
+.expiresWarning {
+  color: var(--color-warning);
+}
+
+.expiresError {
+  color: var(--color-error);
+}
+
+.badgeExpired {
+  opacity: 0.5;
+}
+
+.roleHead {
+  width: 160px;
+}
+
+.actionsHead,
+.actionsCell {
+  width: 56px;
+  text-align: right;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.range {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.pageSize {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  min-width: 0;
+}
+
+.pageSizeLabel {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.pageSizeSelect {
+  width: 88px;
+  flex-shrink: 0;
+}
+
+.confirmBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.confirmBody p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+}
+
+.confirmError {
+  color: var(--color-error) !important;
+}

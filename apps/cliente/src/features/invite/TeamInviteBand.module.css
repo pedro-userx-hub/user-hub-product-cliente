@@ -1,0 +1,70 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  background: color-mix(in srgb, var(--color-action) 6%, var(--color-surface));
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+}
+
+.desc {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  color: var(--color-text-muted);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.submit {
+  flex-shrink: 0;
+  margin-top: calc(var(--lh-sm) + var(--space-2));
+}
+
+.roleSelect :global(button) {
+  border: none;
+  background: transparent;
+  min-height: 32px;
+  padding: 0 var(--space-1) 0 var(--space-2);
+  box-shadow: none;
+}
+
+.roleSelect :global(button:hover:not(:disabled)),
+.roleSelect :global(button:focus-visible),
+.roleSelect :global(button[data-open="true"]) {
+  border: none;
+  background: transparent;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  color: var(--color-text-muted);
+}

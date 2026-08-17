@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from "react";
 import styles from "./Avatar.module.css";
 
-export type AvatarSize = "sm" | "md";
+export type AvatarSize = "sm" | "md" | "lg";
 
 export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
   /** Nome para iniciais e tooltip. */
