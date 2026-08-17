@@ -107,7 +107,7 @@ function formatMemberDate(iso?: string): string {
 }
 
 function formatRelativeAccess(iso?: string): string {
-  if (!iso) return messages.memberDetailLastAccessNever;
+  if (!iso) return "";
   const diffMs = Math.max(0, Date.now() - new Date(iso).getTime());
   const minutes = Math.floor(diffMs / 60_000);
   const hours = Math.floor(minutes / 60);

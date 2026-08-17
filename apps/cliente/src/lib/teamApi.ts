@@ -445,6 +445,11 @@ for (let i = 1; i <= 4; i += 1) {
     status: "Ativo",
     teams: inPesquisa ? [TEAM.pesquisa] : [TEAM.produto],
     invitedByName: "Ana Silva",
+    joinedAt: new Date(Date.now() - (60 + i) * DAY_MS)
+      .toISOString()
+      .slice(0, 10)
+      .concat("T00:00:00.000Z"),
+    lastAccessAt: lastAccessAgo((i + 1) * DAY_MS),
   });
 }
 
@@ -3654,6 +3659,9 @@ export async function acceptInvite(
   member.name = displayName;
   member.status = "Ativo";
   member.teams = teams.map((t) => ({ ...t }));
+  const acceptedAt = new Date().toISOString();
+  member.joinedAt = acceptedAt;
+  member.lastAccessAt = acceptedAt;
   record.status = "accepted";
 
   // Invalida outros tokens do mesmo membro (uso único / prep 4.2).

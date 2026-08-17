@@ -149,15 +149,11 @@ export function MemberDetailDrawer({ open, member, onClose }: Props) {
                 value={formatMemberDate(member.joinedAt)}
               />
             ) : null}
-            {!invitePending ? (
+            {!invitePending && member.lastAccessAt ? (
               <InfoRow
                 icon={<EyeIcon size={24} />}
                 label={messages.memberDetailLastAccess}
-                value={
-                  member.lastAccessAt
-                    ? formatMemberDateTime(member.lastAccessAt)
-                    : messages.memberDetailLastAccessNever
-                }
+                value={formatMemberDateTime(member.lastAccessAt)}
               />
             ) : null}
           </div>
