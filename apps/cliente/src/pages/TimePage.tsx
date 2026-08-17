@@ -80,7 +80,7 @@ function formatInviteExpiry(member: CurrentTeamMember): {
     return { label: messages.inviteExpiresExpired, tone: "error" };
   }
   if (!member.inviteExpiresAt) {
-    return { label: messages.memberDetailEmpty, tone: "default" };
+    return { label: "", tone: "default" };
   }
   const remaining = member.inviteExpiresAt - Date.now();
   if (remaining <= 0) {
@@ -94,7 +94,7 @@ function formatInviteExpiry(member: CurrentTeamMember): {
 }
 
 function formatMemberDate(iso?: string): string {
-  if (!iso) return messages.memberDetailEmpty;
+  if (!iso) return "";
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
   const date = new Date(y, m - 1, d);
   const month = date
@@ -107,7 +107,7 @@ function formatMemberDate(iso?: string): string {
 }
 
 function formatRelativeAccess(iso?: string): string {
-  if (!iso) return messages.memberDetailEmpty;
+  if (!iso) return messages.memberDetailLastAccessNever;
   const diffMs = Math.max(0, Date.now() - new Date(iso).getTime());
   const minutes = Math.floor(diffMs / 60_000);
   const hours = Math.floor(minutes / 60);
@@ -712,7 +712,7 @@ export function TimePage() {
                       {tab === "convidados" ? (
                         <>
                           <TableCell>
-                            {m.invitedByName || messages.memberDetailEmpty}
+                            {m.invitedByName || ""}
                           </TableCell>
                           <TableCell className={styles.dateHead}>
                             {formatMemberDate(m.invitedAt)}

@@ -88,6 +88,8 @@ export function MemberDetailDrawer({ open, member, onClose }: Props) {
   if (!member) return null;
 
   const name = member.name || member.email;
+  const invitePending =
+    member.status === "Pendente" || member.status === "Expirado";
 
   return (
     <Drawer
@@ -133,29 +135,31 @@ export function MemberDetailDrawer({ open, member, onClose }: Props) {
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>{messages.memberDetailAccess}</h3>
           <div className={styles.infoStack}>
-            <InfoRow
-              icon={<UserPlusIcon size={24} />}
-              label={messages.memberDetailInvitedBy}
-              value={member.invitedByName || messages.memberDetailEmpty}
-            />
-            <InfoRow
-              icon={<CalendarIcon size={24} />}
-              label={messages.memberDetailMemberSince}
-              value={
-                member.joinedAt
-                  ? formatMemberDate(member.joinedAt)
-                  : messages.memberDetailEmpty
-              }
-            />
-            <InfoRow
-              icon={<EyeIcon size={24} />}
-              label={messages.memberDetailLastAccess}
-              value={
-                member.lastAccessAt
-                  ? formatMemberDateTime(member.lastAccessAt)
-                  : messages.memberDetailLastAccessNever
-              }
-            />
+            {member.invitedByName ? (
+              <InfoRow
+                icon={<UserPlusIcon size={24} />}
+                label={messages.memberDetailInvitedBy}
+                value={member.invitedByName}
+              />
+            ) : null}
+            {!invitePending && member.joinedAt ? (
+              <InfoRow
+                icon={<CalendarIcon size={24} />}
+                label={messages.memberDetailMemberSince}
+                value={formatMemberDate(member.joinedAt)}
+              />
+            ) : null}
+            {!invitePending ? (
+              <InfoRow
+                icon={<EyeIcon size={24} />}
+                label={messages.memberDetailLastAccess}
+                value={
+                  member.lastAccessAt
+                    ? formatMemberDateTime(member.lastAccessAt)
+                    : messages.memberDetailLastAccessNever
+                }
+              />
+            ) : null}
           </div>
         </section>
       </div>
