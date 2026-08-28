@@ -258,17 +258,18 @@ export function ParticipantsAnswersGrid({
   };
 
   const patchRow = (id: string, patch: Partial<RowChrome>) => {
-    setRowChrome((prev) => ({
-      ...prev,
-      [id]: {
+    setRowChrome((prev) => {
+      const current: RowChrome = prev[id] ?? {
         hidden: false,
         pinned: false,
         underlined: false,
         paint: null,
-        ...prev[id],
-        ...patch,
-      },
-    }));
+      };
+      return {
+        ...prev,
+        [id]: { ...current, ...patch },
+      };
+    });
   };
 
   const autofitCol = useCallback((id: ColId) => {

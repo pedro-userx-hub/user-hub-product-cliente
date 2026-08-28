@@ -220,12 +220,12 @@ export function StudyParticipantsPanel({
     });
   };
 
-  const toggleAll = (ids: string[], on: boolean) => {
+  const toggleAll = (checked: boolean) => {
     setSelected((prev) => {
       const n = new Set(prev);
-      for (const id of ids) {
-        if (on) n.add(id);
-        else n.delete(id);
+      for (const p of filtered) {
+        if (checked) n.add(p.id);
+        else n.delete(p.id);
       }
       return n;
     });

@@ -7,7 +7,6 @@ import {
   DEFAULT_EMAIL_INVITE,
   DEFAULT_EMAIL_SUBJECT,
   DEFAULT_EMAIL_TITLE,
-  DEFAULT_SHARE_SETTINGS,
   emailCollectorUrl,
   emptyShareState,
   embedCollectorUrl,
