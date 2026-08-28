@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>UserX · Acesso ao protótipo</title>
+    <style>
+      :root {
+        --color-action: #8f5cb8;
+        --color-action-hover: #9b6ac9;
+        --color-action-on: #ffffff;
+        --color-text: #262626;
+        --color-text-muted: #737373;
+        --color-border: #e0e0e0;
+        --color-surface: #ffffff;
+        --color-background: #fafafa;
+        --color-error: #b91c1c;
+        --color-error-surface: #fee2e2;
+        --font-family: "Open Sans", sans-serif;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-6: 24px;
+        --space-8: 32px;
+        --radius-md: 8px;
+        --border-width: 1.5px;
+        --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: var(--space-6);
+        font-family: var(--font-family);
+        color: var(--color-text);
+        background: var(--color-background);
+      }
+
+      .panel {
+        width: min(100%, 420px);
+        padding: var(--space-8);
+        background: var(--color-surface);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+      }
+
+      h1 {
+        font-size: 24px;
+        line-height: 32px;
+        font-weight: 600;
+        margin-bottom: var(--space-2);
+      }
+
+      p {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-6);
+      }
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: var(--space-2);
+      }
+
+      input {
+        width: 100%;
+        padding: 10px var(--space-3);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-md);
+        font: inherit;
+        margin-bottom: var(--space-4);
+      }
+
+      input:focus-visible {
+        outline: 2px solid var(--color-action);
+        outline-offset: 2px;
+      }
+
+      button {
+        width: 100%;
+        border: 0;
+        border-radius: var(--radius-md);
+        padding: 12px var(--space-4);
+        font: inherit;
+        font-weight: 600;
+        color: var(--color-action-on);
+        background: var(--color-action);
+        cursor: pointer;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--color-action-hover);
+      }
+
+      button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .error {
+        display: none;
+        margin-bottom: var(--space-4);
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        color: var(--color-error);
+        background: var(--color-error-surface);
+      }
+
+      .error.visible {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="panel">
+      <h1>Acesso ao protótipo</h1>
+      <p>Este ambiente é restrito. Informe a senha para continuar.</p>
+      <form id="gate-form" novalidate>
+        <div id="error" class="error" role="alert"></div>
+        <label for="password">Senha</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+        <button id="submit" type="submit">Entrar</button>
+      </form>
+    </main>
+    <script>
+      const form = document.getElementById("gate-form");
+      const passwordInput = document.getElementById("password");
+      const submitButton = document.getElementById("submit");
+      const errorEl = document.getElementById("error");
+
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      const nextPath =
+        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+          ? nextParam
+          : "/estudos";
+
+      function showError(message) {
+        errorEl.textContent = message;
+        errorEl.classList.add("visible");
+      }
+
+      function clearError() {
+        errorEl.textContent = "";
+        errorEl.classList.remove("visible");
+      }
+
+      async function checkSession() {
+        try {
+          const response = await fetch("/api/prototype-session", {
+            credentials: "same-origin",
+          });
+          if (response.ok) {
+            window.location.replace(nextPath);
+          }
+        } catch {
+          /* offline / dev without API */
+        }
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearError();
+
+        const password = passwordInput.value;
+        if (!password) {
+          showError("Informe a senha.");
+          return;
+        }
+
+        submitButton.disabled = true;
+
+        try {
+          const response = await fetch("/api/prototype-auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ password }),
+          });
+
+          if (response.ok) {
+            window.location.replace(nextPath);
+            return;
+          }
+
+          showError("Senha incorreta.");
+        } catch {
+          showError("Não foi possível validar a senha. Tente novamente.");
+        } finally {
+          submitButton.disabled = false;
+          passwordInput.focus();
+          passwordInput.select();
+        }
+      });
+
+      checkSession();
+      passwordInput.focus();
+    </script>
+  </body>
+</html>
