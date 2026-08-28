@@ -1,33 +1,45 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import {
   ArrowLeftIcon,
   Badge,
   Button,
   EmptyState,
+  FileIcon,
+  ListChecksIcon,
+  SettingsIcon,
+  ShareIcon,
   Skeleton,
   Tabs,
+  UsersIcon,
   useToast,
   type BadgeColor,
 } from "@userx/ui";
-import { StudyAgendaPanel } from "../features/estudos/StudyAgendaPanel";
 import { StudyCxAssignControl } from "../features/estudos/StudyCxAssignControl";
-import { StudySetupPanel } from "../features/estudos/StudySetupPanel";
+import { StudyDadosPanel } from "../features/estudos/StudyDadosPanel";
+import { StudyParticipantsPanel } from "../features/estudos/StudyParticipantsPanel";
+import { StudyRecrutamentoPanel } from "../features/estudos/StudyRecrutamentoPanel";
+import { StudyScreenerPanel } from "../features/estudos/StudyScreenerPanel";
 import { messages } from "../lib/messages";
 import { canCreateStudy } from "../lib/permissions";
+import { useLens } from "../lib/LensContext";
+import type { ParticipantFilter } from "../lib/studyParticipants";
 import {
-  parseAgendaSub,
+  parseDadosSection,
   parseParticipantesSub,
   parseStudyDetailTab,
-  STUDY_AGENDA_SUB_ITEMS,
   STUDY_DETAIL_DEFAULT_TAB,
   STUDY_DETAIL_TAB_ITEMS,
   STUDY_PARTICIPANTES_SUB_ITEMS,
-  type StudyAgendaSubId,
   type StudyDetailTabId,
-  type StudyParticipantesSubId,
 } from "../lib/studyDetailTabs";
 import { useTeamContext } from "../lib/TeamContext";
+import { useScreenerShare } from "../lib/useScreenerShare";
 import {
   fetchStudy,
   listSavedStudyAddresses,
@@ -54,25 +66,77 @@ function statusColor(status: StudyStatus): BadgeColor {
   }
 }
 
+function tabIcon(id: StudyDetailTabId) {
+  switch (id) {
+    case "dados":
+      return <SettingsIcon size={24} />;
+    case "screener":
+      return <ListChecksIcon size={24} />;
+    case "recrutamento":
+      return <ShareIcon size={24} />;
+    case "participantes":
+      return <UsersIcon size={24} />;
+    case "arquivos":
+      return <FileIcon size={24} />;
+  }
+}
+
+/** Tabs visíveis por lente (cliente: visão restrita). */
+function visibleTabs(isCx: boolean): StudyDetailTabId[] {
+  if (isCx) {
+    return ["dados", "screener", "recrutamento", "participantes", "arquivos"];
+  }
+  return ["dados", "arquivos"];
+}
+
 /**
- * Tela do estudo — modo foco com tabs superiores (Stories 1–4 MVP).
+ * Tela do estudo — shell de 5 tabs (ciclo de vida) + tab Dados (Spec 1).
  */
 export function StudyDetailPage() {
   const { studyId = "" } = useParams<{ studyId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useTeamContext();
+  const { lens } = useLens();
   const { showToast } = useToast();
   const canAssign = canCreateStudy(user.role);
+  const isCx = lens === "cx";
+  const backTo =
+    typeof (location.state as { from?: unknown } | null)?.from === "string"
+      ? (location.state as { from: string }).from
+      : "/estudos";
 
-  const activeTab = parseStudyDetailTab(searchParams.get("tab"));
-  const agendaSub = parseAgendaSub(searchParams.get("sub"));
+  const requestedTab = parseStudyDetailTab(searchParams.get("tab"));
+  const allowed = useMemo(() => visibleTabs(isCx), [isCx]);
+  const activeTab = allowed.includes(requestedTab)
+    ? requestedTab
+    : STUDY_DETAIL_DEFAULT_TAB;
   const participantesSub = parseParticipantesSub(searchParams.get("sub"));
+  const dadosSection = parseDadosSection(searchParams.get("section"));
 
   const [study, setStudy] = useState<TeamStudy | null>(null);
   const [addressLabel, setAddressLabel] = useState<string | undefined>();
   const [viewState, setViewState] = useState<"loading" | "ready" | "error">(
     "loading",
+  );
+
+  const {
+    share,
+    setShare,
+    loadState: shareLoadState,
+    reload: reloadShare,
+  } = useScreenerShare(studyId, isCx && Boolean(studyId));
+
+  const tabItems = useMemo(
+    () =>
+      STUDY_DETAIL_TAB_ITEMS.filter((item) => allowed.includes(item.id)).map(
+        (item) => ({
+          ...item,
+          icon: tabIcon(item.id),
+        }),
+      ),
+    [allowed],
   );
 
   const load = useCallback(async () => {
@@ -112,50 +176,62 @@ export function StudyDetailPage() {
     void load();
   }, [load]);
 
-  // Normaliza tab inválida na URL.
+  // Normaliza tab inválida / legada / sem permissão na URL.
   useEffect(() => {
     const raw = searchParams.get("tab");
-    if (raw == null) return;
+    if (raw == null && activeTab === STUDY_DETAIL_DEFAULT_TAB) return;
     if (
-      parseStudyDetailTab(raw) === STUDY_DETAIL_DEFAULT_TAB &&
-      raw !== STUDY_DETAIL_DEFAULT_TAB
+      parseStudyDetailTab(raw) !== activeTab ||
+      (raw != null &&
+        activeTab === STUDY_DETAIL_DEFAULT_TAB &&
+        raw !== STUDY_DETAIL_DEFAULT_TAB)
     ) {
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          next.delete("tab");
-          next.set("sub", "qualificados");
+          if (activeTab === STUDY_DETAIL_DEFAULT_TAB) {
+            next.delete("tab");
+          } else {
+            next.set("tab", activeTab);
+          }
+          if (activeTab !== "participantes") {
+            next.delete("sub");
+          }
+          if (activeTab !== "dados") {
+            next.delete("section");
+          }
           return next;
         },
         { replace: true },
       );
     }
-  }, [searchParams, setSearchParams]);
+  }, [activeTab, searchParams, setSearchParams]);
 
   const setTab = useCallback(
     (tab: StudyDetailTabId) => {
+      if (!allowed.includes(tab)) return;
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
           if (tab === STUDY_DETAIL_DEFAULT_TAB) {
             next.delete("tab");
-            next.set("sub", "qualificados");
           } else {
             next.set("tab", tab);
-            if (tab === "agenda") {
-              next.set("sub", "disponibilidade");
-            } else if (tab === "participantes") {
-              next.set("sub", "qualificados");
-            } else {
-              next.delete("sub");
-            }
+          }
+          if (tab === "participantes") {
+            next.set("sub", "todos");
+          } else {
+            next.delete("sub");
+          }
+          if (tab !== "dados") {
+            next.delete("section");
           }
           return next;
         },
         { replace: true },
       );
     },
-    [setSearchParams],
+    [allowed, setSearchParams],
   );
 
   const setSub = useCallback(
@@ -172,24 +248,33 @@ export function StudyDetailPage() {
     [setSearchParams],
   );
 
+  const setDadosSection = useCallback(
+    (section: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (section === "dados") {
+            next.delete("section");
+          } else {
+            next.set("section", section);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
   const title = useMemo(
     () => (study ? studyDisplayName(study) : ""),
     [study],
   );
 
   const subItems =
-    activeTab === "agenda"
-      ? STUDY_AGENDA_SUB_ITEMS
-      : activeTab === "participantes"
-        ? STUDY_PARTICIPANTES_SUB_ITEMS
-        : null;
-
+    activeTab === "participantes" ? STUDY_PARTICIPANTES_SUB_ITEMS : null;
   const subValue =
-    activeTab === "agenda"
-      ? agendaSub
-      : activeTab === "participantes"
-        ? participantesSub
-        : undefined;
+    activeTab === "participantes" ? participantesSub : undefined;
 
   return (
     <div className={styles.page}>
@@ -199,7 +284,7 @@ export function StudyDetailPage() {
             type="button"
             className={styles.back}
             aria-label={messages.estudosDetailBackAria}
-            onClick={() => navigate("/estudos")}
+            onClick={() => navigate(backTo)}
           >
             <ArrowLeftIcon size={20} />
           </button>
@@ -218,6 +303,17 @@ export function StudyDetailPage() {
             )}
           </div>
         </div>
+
+        <div className={styles.headerTabs}>
+          <Tabs
+            className={styles.mainTabs}
+            aria-label={messages.estudosDetailTabsAria}
+            items={tabItems}
+            value={activeTab}
+            onChange={(id) => setTab(id as StudyDetailTabId)}
+          />
+        </div>
+
         <div className={styles.headerRight}>
           {study && viewState === "ready" && (
             <StudyCxAssignControl
@@ -229,14 +325,8 @@ export function StudyDetailPage() {
         </div>
       </header>
 
-      <div className={styles.tabsWrap}>
-        <Tabs
-          aria-label={messages.estudosDetailTabsAria}
-          items={STUDY_DETAIL_TAB_ITEMS}
-          value={activeTab}
-          onChange={(id) => setTab(id as StudyDetailTabId)}
-        />
-        {subItems && subValue && (
+      {subItems && subValue && (
+        <div className={styles.subTabsWrap}>
           <Tabs
             className={styles.subTabs}
             aria-label={messages.estudosDetailSubTabsAria}
@@ -244,10 +334,17 @@ export function StudyDetailPage() {
             value={subValue}
             onChange={setSub}
           />
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className={styles.body}>
+      <div
+        className={`${styles.body}${
+          (activeTab === "dados" || activeTab === "recrutamento") &&
+          viewState === "ready"
+            ? ` ${styles.bodyDados}`
+            : ""
+        }`}
+      >
         {viewState === "loading" && (
           <div className={styles.loading} aria-busy="true">
             <Skeleton height={120} />
@@ -272,37 +369,44 @@ export function StudyDetailPage() {
           />
         )}
 
-        {viewState === "ready" && study && activeTab === "setup" && (
-          <StudySetupPanel study={study} addressLabel={addressLabel} />
-        )}
-
-        {viewState === "ready" && study && activeTab === "agenda" && (
-          <StudyAgendaPanel
+        {viewState === "ready" && study && activeTab === "dados" && (
+          <StudyDadosPanel
             study={study}
-            sub={agendaSub as StudyAgendaSubId}
+            addressLabel={addressLabel}
+            initialSection={dadosSection}
+            onSectionChange={setDadosSection}
           />
         )}
 
-        {viewState === "ready" && activeTab === "participantes" && (
-          <EmptyState
-            title={messages.estudosDetailParticipantsEmpty(
-              STUDY_PARTICIPANTES_SUB_ITEMS.find(
-                (i) => i.id === (participantesSub as StudyParticipantesSubId),
-              )?.label ?? participantesSub,
-            )}
+        {viewState === "ready" && study && activeTab === "screener" && (
+          <StudyScreenerPanel study={study} onStudyChange={setStudy} />
+        )}
+
+        {viewState === "ready" && study && activeTab === "recrutamento" && (
+          <StudyRecrutamentoPanel
+            study={study}
+            share={share}
+            shareLoadState={shareLoadState}
+            onShareChange={setShare}
+            onShareReload={() => void reloadShare()}
+            readOnly={!isCx}
           />
         )}
 
-        {viewState === "ready" &&
-          (activeTab === "screener" || activeTab === "arquivos") && (
-            <EmptyState
-              title={
-                activeTab === "arquivos"
-                  ? messages.estudosDetailFilesEmpty
-                  : messages.estudosDetailPlaceholder
-              }
+        {viewState === "ready" && study && activeTab === "participantes" && (
+          isCx ? (
+            <StudyParticipantsPanel
+              study={study}
+              filter={participantesSub as ParticipantFilter}
             />
-          )}
+          ) : (
+            <EmptyState title={messages.participantesClienteHint} />
+          )
+        )}
+
+        {viewState === "ready" && activeTab === "arquivos" && (
+          <EmptyState title={messages.estudosDetailFilesEmpty} />
+        )}
       </div>
     </div>
   );

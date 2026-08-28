@@ -48,6 +48,13 @@ export interface StudyStep3FormHandle {
 export interface StudyStep3FormProps {
   study: TeamStudy;
   disabled?: boolean;
+  /**
+   * Inclui “Participantes do estudo” e “Recrutamento dos participantes”.
+   * false = só requisitos + configurações adicionais (visão Setup CX).
+   */
+  showParticipantBlocks?: boolean;
+  /** Requisitos de participação + configurações adicionais. Default: true. */
+  showRequirementsAndSettings?: boolean;
   onStudyChange: (patch: UpdateStudyDraftInput) => void;
   onPersist: (patch: UpdateStudyDraftInput) => void;
 }
@@ -94,7 +101,14 @@ export const StudyStep3Form = forwardRef<
   StudyStep3FormHandle,
   StudyStep3FormProps
 >(function StudyStep3Form(
-  { study, disabled, onStudyChange, onPersist },
+  {
+    study,
+    disabled,
+    showParticipantBlocks = true,
+    showRequirementsAndSettings = true,
+    onStudyChange,
+    onPersist,
+  },
   ref,
 ) {
   const { user, currentTeam } = useTeamContext();
@@ -328,6 +342,8 @@ export const StudyStep3Form = forwardRef<
 
   return (
     <div className={styles.root}>
+      {showParticipantBlocks ? (
+        <>
       <section className={styles.card} aria-labelledby="step3-participants">
         <h3 id="step3-participants" className={styles.blockTitle}>
           {messages.estudosParticipantsSectionTitle}
@@ -717,7 +733,11 @@ export const StudyStep3Form = forwardRef<
           )}
         </div>
       </section>
+        </>
+      ) : null}
 
+      {showRequirementsAndSettings ? (
+        <>
       <ParticipationRequirementsSection
         ref={requirementsRef}
         reqDevicesEnabled={Boolean(study.reqDevicesEnabled)}
@@ -743,6 +763,8 @@ export const StudyStep3Form = forwardRef<
         onChange={onStudyChange}
         onPersist={onPersist}
       />
+        </>
+      ) : null}
 
       <Modal
         open={examplesOpen}

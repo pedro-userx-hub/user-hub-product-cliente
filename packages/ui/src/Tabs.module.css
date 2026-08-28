@@ -97,3 +97,18 @@
   background: var(--color-action-surface);
   color: var(--color-action-emphasis);
 }
+
+.trailing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-xs);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+}
+
+.tabSelected .trailing {
+  color: inherit;
+}

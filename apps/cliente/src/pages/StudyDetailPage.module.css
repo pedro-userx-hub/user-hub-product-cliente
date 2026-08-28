@@ -3,21 +3,23 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  flex: 1;
+  flex: 1 1 auto;
   height: 100%;
+  max-height: 100%;
+  overflow: hidden;
   background: var(--color-background);
 }
 
 .header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 20;
-  display: flex;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-4);
   min-height: 72px;
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-3) var(--space-6);
   background: var(--color-surface, #fff);
   border-bottom: 1px solid var(--color-border-subtle, #e0e0e0);
   box-sizing: border-box;
@@ -28,7 +30,18 @@
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
-  flex: 1;
+}
+
+.headerTabs {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mainTabs :global([role="tablist"]) {
+  border-bottom: none;
+  justify-content: center;
 }
 
 .headerRight {
@@ -83,14 +96,14 @@
   min-width: 0;
 }
 
-.tabsWrap {
+.subTabsWrap {
   background: var(--color-surface, #fff);
   padding: 0 var(--space-6);
   border-bottom: 1px solid var(--color-border-subtle, #e0e0e0);
 }
 
 .subTabs {
-  margin-top: var(--space-1);
+  margin-top: 0;
 }
 
 .body {
@@ -98,7 +111,24 @@
   min-height: 0;
   overflow: auto;
   overflow-anchor: none;
-  padding: var(--space-6);
+  padding: var(--space-6) var(--space-8, 32px);
+}
+
+/* Setup: menu lateral fixo; só a coluna de conteúdo rola. */
+.bodyDados {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.bodyDados > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
 }
 
 .loading {
@@ -106,4 +136,32 @@
   flex-direction: column;
   gap: var(--space-4);
   max-width: 798px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1100px) {
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .headerLeft {
+    flex: 1 1 auto;
+  }
+
+  .headerRight {
+    flex: 0 0 auto;
+  }
+
+  .headerTabs {
+    order: 3;
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .mainTabs :global([role="tablist"]) {
+    justify-content: flex-start;
+  }
 }

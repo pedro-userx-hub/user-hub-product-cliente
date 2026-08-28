@@ -14,6 +14,8 @@ export interface TabItem {
   /** Contador opcional (Story 3 / Fase 2). */
   count?: number | string;
   icon?: ReactNode;
+  /** Conteúdo à direita do rótulo (ex.: status da divulgação). */
+  trailing?: ReactNode;
 }
 
 export interface TabsProps {
@@ -137,6 +139,9 @@ export function Tabs({
               <span className={styles.label}>{item.label}</span>
               {item.count != null && (
                 <span className={styles.count}>{item.count}</span>
+              )}
+              {item.trailing && (
+                <span className={styles.trailing}>{item.trailing}</span>
               )}
             </button>
           );

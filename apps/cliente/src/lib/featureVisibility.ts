@@ -32,7 +32,9 @@ export type FeatureId =
   | "gestaoTimes"
   | "gestaoMembros"
   | "sidebar.seletorContexto"
-  | "cx.workspaces";
+  | "cx.workspaces"
+  | "cx.participantes"
+  | "cx.painel";
 
 /**
  * CX com "Todos os workspaces": vê estudos + financeiro agregados.
@@ -105,6 +107,16 @@ export const VISIBILITY: Record<FeatureId, FeatureVisibilityEntry> = {
     cx: { conteudo: "seletorWorkspace" },
   },
   "cx.workspaces": {
+    tipo: "pagina",
+    ver: { cliente: false, cx: true },
+    fazer: { cliente: false, cx: true },
+  },
+  "cx.participantes": {
+    tipo: "pagina",
+    ver: { cliente: false, cx: true },
+    fazer: { cliente: false, cx: true },
+  },
+  "cx.painel": {
     tipo: "pagina",
     ver: { cliente: false, cx: true },
     fazer: { cliente: false, cx: true },

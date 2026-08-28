@@ -1,0 +1,32 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-action-surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.heart {
+  color: var(--color-action);
+  font-size: var(--font-sm);
+  line-height: 1;
+}
+
+.score {
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  line-height: var(--lh-sm);
+}
+
+.empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}

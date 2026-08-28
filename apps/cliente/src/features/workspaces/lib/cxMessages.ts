@@ -33,10 +33,35 @@ export const messages = {
   teamsEmpty: "Nenhum time criado neste workspace.",
 
   ownerChangeNoEligible:
-    "Não há outro membro para tornar owner. Adicione um membro primeiro.",
-  ownerChangeConfirm: (member: string, currentOwner: string) =>
-    `Tornar ${member} owner? ${currentOwner} deixará de ser owner.`,
-  ownerChanged: "Owner atualizado.",
+    "Não há outro membro para tornar dono. Adicione um membro primeiro.",
+  ownerChangeTitle: (name: string) => `Tornar ${name} dono do workspace.`,
+  ownerChangeContext: (name: string) =>
+    `${name} passa a ser dono deste workspace.`,
+  ownerChangeQuestion: (name: string) => `O que fazer com ${name}?`,
+  ownerChangeKeep: "Manter no workspace com nova permissão",
+  ownerChangeKeepRole: (name: string) => `Nova permissão de ${name}`,
+  ownerChangeInactivate: (name: string) => `Inativar ${name}`,
+  ownerChangeInactivateHint:
+    "A pessoa continua listada no workspace, mas perde o acesso. Você pode reativá-la depois pela lista de membros.",
+  ownerChangeSummaryKeep: (newOwner: string, former: string, role: string) =>
+    `${newOwner} vira dono. ${former} passa a ${role}.`,
+  ownerChangeSummaryInactivate: (newOwner: string, former: string) =>
+    `${newOwner} vira dono. ${former} é inativado.`,
+  ownerChangeConfirmKeep: "Trocar dono",
+  ownerChangeConfirmInactivate: (name: string) =>
+    `Trocar dono e inativar ${name}`,
+  ownerChangeCancel: "Cancelar",
+  ownerChangeSuccessKeep: (newOwner: string, former: string, role: string) =>
+    `${newOwner} agora é dono. ${former} passou a ${role}.`,
+  ownerChangeSuccessInactivate: (newOwner: string, former: string) =>
+    `${newOwner} agora é dono. ${former} foi inativado.`,
+  ownerChangeError:
+    "Não foi possível trocar o dono. Nenhuma alteração foi aplicada. Tente de novo.",
+  ownerChangeSelectHint:
+    "Selecione quem será o novo dono. Em seguida você define o que acontece com o dono atual.",
+  ownerChangeContinue: "Continuar",
+  memberReactivated: (name: string) => `${name} foi reativado.`,
+  memberReactivateError: "Não foi possível reativar o membro. Tente de novo.",
 
   deactivateConfirm:
     "Desativar este workspace? Os usuários perderão acesso. Nenhum dado será excluído.",

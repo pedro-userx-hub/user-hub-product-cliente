@@ -6,6 +6,8 @@ export type AvatarSize = "sm" | "md" | "lg";
 export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
   /** Nome para iniciais e tooltip. */
   name: string;
+  /** Foto de perfil (quando ausente, mostra iniciais). */
+  src?: string | null;
   size?: AvatarSize;
 }
 
@@ -17,10 +19,11 @@ function initialsFromName(name: string): string {
 }
 
 /**
- * Avatar — iniciais do membro (Story 2.2 lista de times).
+ * Avatar — foto ou iniciais do membro.
  */
 export function Avatar({
   name,
+  src,
   size = "sm",
   className,
   title,
@@ -35,7 +38,11 @@ export function Avatar({
       aria-hidden={rest["aria-label"] ? undefined : true}
       {...rest}
     >
-      {initialsFromName(name)}
+      {src ? (
+        <img className={styles.photo} src={src} alt="" />
+      ) : (
+        initialsFromName(name)
+      )}
     </span>
   );
 }

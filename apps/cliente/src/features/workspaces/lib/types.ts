@@ -11,10 +11,15 @@ export type WorkspaceType = "demonstracao" | "free_trial" | "oficial";
 export type AccessFlow = "temp_password" | "pending_invite";
 
 /** Status de acesso de um usuário dentro do workspace. */
-export type AccessStatus = "ativo" | "pendente";
+export type AccessStatus = "ativo" | "pendente" | "inativo";
 
 /** Cargos possíveis dentro de um workspace. */
 export type Role = "owner" | "administrador" | "editor" | "observador";
+
+/** Destino do antigo dono na troca de titularidade (visão CX). */
+export type FormerOwnerDestiny =
+  | { kind: "keep"; role: Exclude<Role, "owner"> }
+  | { kind: "inactivate" };
 
 export interface Member {
   id: string;

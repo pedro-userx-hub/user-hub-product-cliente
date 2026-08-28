@@ -38,6 +38,10 @@ export interface StudyStep2FormHandle {
 export interface StudyStep2FormProps {
   study: TeamStudy;
   disabled?: boolean;
+  /** Visualização: não aplica minDate de “hoje” (permite ver janelas passadas). */
+  readOnly?: boolean;
+  /** Quando false, oculta a seção de agenda (ex.: tab Setup com agenda em outro item). */
+  showAgenda?: boolean;
   onStudyChange: (patch: UpdateStudyDraftInput) => void;
   onPersist: (patch: UpdateStudyDraftInput) => void;
 }
@@ -62,7 +66,14 @@ export const StudyStep2Form = forwardRef<
   StudyStep2FormHandle,
   StudyStep2FormProps
 >(function StudyStep2Form(
-  { study, disabled, onStudyChange, onPersist },
+  {
+    study,
+    disabled,
+    readOnly = false,
+    showAgenda = true,
+    onStudyChange,
+    onPersist,
+  },
   ref,
 ) {
   const today = todayISODate();
@@ -294,14 +305,16 @@ export const StudyStep2Form = forwardRef<
               placeholder={messages.estudosScheduleRangePlaceholder}
               start={start}
               end={end}
-              minDate={today}
+              minDate={disabled || readOnly ? undefined : today}
               error={
-                periodError ||
-                (endBeforeStart
-                  ? messages.estudosScheduleEndBeforeStart
-                  : insufficient
-                    ? messages.estudosScheduleInsufficient
-                    : undefined)
+                readOnly
+                  ? undefined
+                  : periodError ||
+                    (endBeforeStart
+                      ? messages.estudosScheduleEndBeforeStart
+                      : insufficient
+                        ? messages.estudosScheduleInsufficient
+                        : undefined)
               }
               disabled={disabled}
               onChange={({ start: nextStart, end: nextEnd }) => {
@@ -443,23 +456,25 @@ export const StudyStep2Form = forwardRef<
         onPersist={onPersist}
       />
 
-      <div className={styles.card}>
-        <SessionAgendaSection
-          ref={agendaRef}
-          slots={scheduleSlots}
-          scheduleStart={start}
-          scheduleEnd={end}
-          sessionDurationMin={
-            sessionDuration ? Number(sessionDuration) : null
-          }
-          disabled={disabled}
-          onChange={(patch) => {
-            if (patch.scheduleSlots) setScheduleSlots(patch.scheduleSlots);
-            onStudyChange(patch);
-          }}
-          onPersist={onPersist}
-        />
-      </div>
+      {showAgenda ? (
+        <div className={styles.card}>
+          <SessionAgendaSection
+            ref={agendaRef}
+            slots={scheduleSlots}
+            scheduleStart={start}
+            scheduleEnd={end}
+            sessionDurationMin={
+              sessionDuration ? Number(sessionDuration) : null
+            }
+            disabled={disabled}
+            onChange={(patch) => {
+              if (patch.scheduleSlots) setScheduleSlots(patch.scheduleSlots);
+              onStudyChange(patch);
+            }}
+            onPersist={onPersist}
+          />
+        </div>
+      ) : null}
     </div>
   );
 });

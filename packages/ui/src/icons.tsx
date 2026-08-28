@@ -309,3 +309,113 @@ export const SettingsIcon = (p: IconProps) => (
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
   </svg>
 );
+
+export const LinkIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+  </svg>
+);
+
+export const ShareIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" />
+  </svg>
+);
+
+export const CodeIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="m16 18 6-6-6-6" />
+    <path d="m8 6-6 6 6 6" />
+  </svg>
+);
+
+export const QrCodeIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <path d="M14 14h3v3h-3zM18 14h3v3h-3zM14 18h3v3h-3zM18 18h3v3h-3z" />
+  </svg>
+);
+
+export const PinIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 17v5" />
+    <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+  </svg>
+);
+
+export const EyeOffIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+    <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+    <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+    <path d="m2 2 20 20" />
+  </svg>
+);
+
+export const UnderlineIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M6 4v6a6 6 0 0 0 12 0V4" />
+    <path d="M4 20h16" />
+  </svg>
+);
+
+export const PaintBucketIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z" />
+    <path d="m5 2 5 5" />
+    <path d="M2 13h15" />
+    <path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z" />
+  </svg>
+);
+
+/** Marca Google Agenda (integração) — fills, sem stroke. */
+export const GoogleCalendarIcon = ({
+  size = 20,
+  ...props
+}: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden
+    {...props}
+  >
+    <rect x="3" y="4" width="18" height="17" rx="2" fill="#fff" stroke="#dadce0" strokeWidth="1" />
+    <path d="M3 9h18" stroke="#dadce0" strokeWidth="1" />
+    <path fill="#4285F4" d="M7 3.5h2v3H7zM15 3.5h2v3h-2z" />
+    <path fill="#EA4335" d="M7 11h3.2v3.2H7z" />
+    <path fill="#FBBC04" d="M10.9 11H14v3.2h-3.1z" />
+    <path fill="#34A853" d="M7 14.9h3.2V18H7z" />
+    <path fill="#4285F4" d="M10.9 14.9H14V18h-3.1z" />
+  </svg>
+);
+
+/** Marca Outlook (integração) — fills, sem stroke. */
+export const OutlookIcon = ({ size = 20, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden
+    {...props}
+  >
+    <rect x="8" y="4" width="13" height="16" rx="1.5" fill="#0078D4" />
+    <path
+      fill="#28A8EA"
+      d="M8 8.5h13V18a1.5 1.5 0 0 1-1.5 1.5H9.5A1.5 1.5 0 0 1 8 18V8.5Z"
+    />
+    <rect x="3" y="7" width="10" height="10" rx="1.5" fill="#0A2767" />
+    <path
+      fill="#fff"
+      d="M8 14.6c-1.7 0-2.9-1.2-2.9-2.8S6.3 9 8 9s2.9 1.2 2.9 2.8-1.2 2.8-2.9 2.8Zm0-4.4c-.9 0-1.5.7-1.5 1.6S7.1 13.4 8 13.4s1.5-.7 1.5-1.6S8.9 10.2 8 10.2Z"
+    />
+  </svg>
+);

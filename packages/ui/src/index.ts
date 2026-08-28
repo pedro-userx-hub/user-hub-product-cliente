@@ -49,7 +49,7 @@ export { ConfirmDialog } from "./ConfirmDialog";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
 
 export { Drawer } from "./Drawer";
-export type { DrawerProps, DrawerSide } from "./Drawer";
+export type { DrawerProps, DrawerSide, DrawerSize } from "./Drawer";
 
 export { Card, CardHeader, CardBody, CardActions } from "./Card";
 export type { CardProps, CardHeaderProps, CardBodyProps } from "./Card";
@@ -176,6 +176,44 @@ export type {
   CompositionSegment,
 } from "./CompositionChart";
 
+export { BubbleChart } from "./BubbleChart";
+export type {
+  BubbleChartProps,
+  BubbleChartPoint,
+  BubbleChartItem,
+  BubbleChartTone,
+} from "./BubbleChart";
+
+export { LineChart } from "./LineChart";
+export type {
+  LineChartProps,
+  LineChartPoint,
+  LineChartSeries,
+  LineChartSeriesTone,
+} from "./LineChart";
+
+export { BarChart } from "./BarChart";
+export type {
+  BarChartProps,
+  BarChartItem,
+  BarChartTone,
+} from "./BarChart";
+
+export { ChartPanel } from "./ChartPanel";
+export type { ChartPanelProps } from "./ChartPanel";
+
+export { StatCard } from "./StatCard";
+export type { StatCardProps, StatCardTone } from "./StatCard";
+
+export { DonutChart } from "./DonutChart";
+export type { DonutChartProps, DonutChartSlice } from "./DonutChart";
+
+export { HorizontalBarChart } from "./HorizontalBarChart";
+export type {
+  HorizontalBarChartProps,
+  HorizontalBarChartItem,
+} from "./HorizontalBarChart";
+
 export {
   ChevronDownIcon,
   SwapVertIcon,
@@ -219,4 +257,14 @@ export {
   MailIcon,
   PhoneIcon,
   SettingsIcon,
+  LinkIcon,
+  CodeIcon,
+  QrCodeIcon,
+  ShareIcon,
+  PinIcon,
+  EyeOffIcon,
+  UnderlineIcon,
+  PaintBucketIcon,
+  GoogleCalendarIcon,
+  OutlookIcon,
 } from "./icons";

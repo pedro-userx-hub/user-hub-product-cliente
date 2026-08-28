@@ -25,9 +25,21 @@ export interface MenuProps {
   ariaLabel: string;
   /** Ícone do gatilho. Default: kebab (três pontos). */
   trigger?: ReactNode;
+  /**
+   * Quando true, o botão se ajusta ao conteúdo do trigger
+   * (ex.: Badge + chevron) em vez do tamanho fixo de ícone 32×32.
+   */
+  fitContent?: boolean;
+  className?: string;
 }
 
-export function Menu({ items, ariaLabel, trigger }: MenuProps) {
+export function Menu({
+  items,
+  ariaLabel,
+  trigger,
+  fitContent = false,
+  className,
+}: MenuProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -71,11 +83,18 @@ export function Menu({ items, ariaLabel, trigger }: MenuProps) {
   }, [open, items.length]);
 
   return (
-    <div className={styles.wrap}>
+    <div
+      className={[styles.wrap, className ?? ""].filter(Boolean).join(" ")}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       <button
         ref={triggerRef}
         type="button"
-        className={styles.trigger}
+        className={[styles.trigger, fitContent ? styles.triggerFit : ""]
+          .filter(Boolean)
+          .join(" ")}
         aria-label={ariaLabel}
         aria-haspopup="menu"
         aria-expanded={open}

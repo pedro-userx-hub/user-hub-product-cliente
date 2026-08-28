@@ -110,6 +110,12 @@
 
   padding-top: 2px;
 
+  overflow-wrap: anywhere;
+
+  word-break: break-word;
+
+  min-width: 0;
+
 }
 
 

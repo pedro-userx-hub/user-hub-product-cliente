@@ -5,6 +5,7 @@ import {
   BookOpenIcon,
   BuildingIcon,
   getMenuItemClassName,
+  LayersIcon,
   MenuItem,
   Sidebar,
   SidebarSubnav,
@@ -57,6 +58,8 @@ export function AppSidebar() {
 
   const showGestaoCliente = canView("gestaoWorkspace", visCtx);
   const showCxWorkspaces = canView("cx.workspaces", visCtx);
+  const showParticipantes = canView("cx.participantes", visCtx);
+  const showPainel = canView("cx.painel", visCtx);
   const showFinanceiro = canView("financeiro", visCtx);
   const showTime = canView("time", visCtx);
   const showEstudos = canView("estudos", visCtx);
@@ -171,6 +174,32 @@ export function AppSidebar() {
               >
                 {messages.navMembrosNew}
               </Badge>
+            </NavLink>
+          )}
+          {showPainel && (
+            <NavLink
+              to="/painel/campanhas"
+              className={({ isActive }) =>
+                navClass(isActive || location.pathname.startsWith("/painel"))
+              }
+            >
+              <span className={styles.navIcon} aria-hidden>
+                <LayersIcon size={20} />
+              </span>
+              <span className={styles.navLabel}>{messages.cxPainelNav}</span>
+            </NavLink>
+          )}
+          {showParticipantes && (
+            <NavLink
+              to="/participantes"
+              className={({ isActive }) => navClass(isActive)}
+            >
+              <span className={styles.navIcon} aria-hidden>
+                <UserIcon size={20} />
+              </span>
+              <span className={styles.navLabel}>
+                {messages.participantBaseNav}
+              </span>
             </NavLink>
           )}
           {showCxWorkspaces && (

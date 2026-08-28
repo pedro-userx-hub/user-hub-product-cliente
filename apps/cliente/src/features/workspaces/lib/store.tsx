@@ -9,6 +9,7 @@ import {
 } from "react";
 import type {
   AccessFlow,
+  FormerOwnerDestiny,
   InternalTeamMember,
   Member,
   Role,
@@ -263,7 +264,12 @@ interface WorkspaceContextValue {
     workspaceId: string,
     input: { name: string; email: string; role: Role; teamId?: string },
   ) => Promise<{ member: Member; accessPending: boolean }>;
-  changeOwner: (workspaceId: string, memberId: string) => Promise<void>;
+  changeOwner: (
+    workspaceId: string,
+    memberId: string,
+    formerOwner: FormerOwnerDestiny,
+  ) => Promise<void>;
+  reactivateMember: (workspaceId: string, memberId: string) => Promise<void>;
   removeMember: (workspaceId: string, memberId: string) => Promise<void>;
   deactivateWorkspace: (workspaceId: string) => Promise<void>;
   regenerateAccess: (workspaceId: string, memberId: string) => Promise<Member>;
@@ -478,21 +484,51 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   );
 
   const changeOwner = useCallback(
-    async (workspaceId: string, memberId: string) => {
+    async (
+      workspaceId: string,
+      memberId: string,
+      formerOwner: FormerOwnerDestiny,
+    ) => {
       await delay(600);
       const ws = db.current.find((w) => w.id === workspaceId);
       if (!ws) throw new DomainError("nao_encontrado", "Workspace não encontrado.");
       failOnceIfSimulated();
       const target = ws.members.find((m) => m.id === memberId);
       if (!target) throw new DomainError("nao_encontrado", "Membro não encontrado.");
-      ws.members.forEach((m) => {
-        if (m.isOwner) {
-          m.isOwner = false;
-          if (m.role === "owner") m.role = "administrador";
+      if (target.isOwner) return;
+
+      const current = ws.members.find((m) => m.isOwner);
+      if (current) {
+        current.isOwner = false;
+        if (formerOwner.kind === "inactivate") {
+          current.accessStatus = "inativo";
+          if (current.role === "owner") current.role = null;
+        } else {
+          current.role = formerOwner.role;
+          if (current.accessStatus === "inativo") current.accessStatus = "ativo";
         }
-      });
+      }
+
       target.isOwner = true;
       target.role = "owner";
+      if (target.accessStatus === "inativo") target.accessStatus = "ativo";
+    },
+    [failOnceIfSimulated],
+  );
+
+  const reactivateMember = useCallback(
+    async (workspaceId: string, memberId: string) => {
+      await delay(400);
+      const ws = db.current.find((w) => w.id === workspaceId);
+      if (!ws) throw new DomainError("nao_encontrado", "Workspace não encontrado.");
+      failOnceIfSimulated();
+      const member = ws.members.find((m) => m.id === memberId);
+      if (!member) throw new DomainError("nao_encontrado", "Membro não encontrado.");
+      if (member.accessStatus !== "inativo") {
+        throw new DomainError("validacao", "Este membro não está inativo.");
+      }
+      member.accessStatus = "ativo";
+      if (!member.role && !member.isOwner) member.role = "observador";
     },
     [failOnceIfSimulated],
   );
@@ -597,6 +633,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setInternalResponsible,
       addMember,
       changeOwner,
+      reactivateMember,
       removeMember,
       deactivateWorkspace,
       regenerateAccess,
@@ -616,6 +653,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setInternalResponsible,
       addMember,
       changeOwner,
+      reactivateMember,
       removeMember,
       deactivateWorkspace,
       regenerateAccess,

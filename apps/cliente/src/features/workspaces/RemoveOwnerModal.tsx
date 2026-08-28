@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Workspace } from "./lib/types";
 import { useWorkspaces, DomainError } from "./lib/store";
 import {
@@ -42,7 +42,10 @@ export function RemoveOwnerModal({ open, workspace, onClose, onDone }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      await changeOwner(workspace.id, selected);
+      await changeOwner(workspace.id, selected, {
+        kind: "keep",
+        role: "administrador",
+      });
       await removeMember(workspace.id, owner.id);
       showToast({
         type: "success",

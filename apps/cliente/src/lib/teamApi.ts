@@ -859,6 +859,7 @@ export type {
 } from "./screenerModel";
 import type { StudyScreener } from "./screenerModel";
 import { cloneScreener } from "./screenerModel";
+import { createDemoScreener } from "./screenerDemo";
 
 export interface StudyConsentFile {
   id: string;
@@ -1020,13 +1021,30 @@ const mockStudies: TeamStudy[] = [
   {
     id: "s-pesquisa-1",
     teamId: "t-pesquisa",
-    name: "Mapa de jornada Q2",
+    name: "Grupo focal — jornada Q2",
     status: "Em execução",
     owners: ["Ana Silva", "Lia Nunes"],
     sentAt: "2026-05-02T14:00:00.000Z",
     participants: 12,
     sessions: 8,
     completionPct: 62,
+    modality: "moderated",
+    method: "group",
+    format: STUDY_METHOD_LABELS.group,
+    objective:
+      "Explorar em grupo a jornada de compra e barreiras de decisão com clientes da base.",
+    sessionFormat: "remote",
+    remotePlatform: "meet",
+    remoteLink: "https://meet.google.com/grupo-focal-jornada-q2",
+    scheduleStart: "2026-07-01",
+    scheduleEnd: "2026-09-30",
+    sessionDurationMin: 90,
+    sessionGapMin: 15,
+    scheduleSlots: [
+      { id: "slot-mj-1", weekday: "mon", startTime: "09:00", endTime: "12:00" },
+      { id: "slot-mj-2", weekday: "wed", startTime: "14:00", endTime: "18:00" },
+      { id: "slot-mj-3", weekday: "fri", startTime: "09:00", endTime: "11:00" },
+    ],
   },
   {
     id: "s-pesquisa-2",
@@ -1050,7 +1068,7 @@ const mockStudies: TeamStudy[] = [
     cxOwnerName: "",
     briefingEnabled: false,
     scheduleStart: "2026-07-01",
-    scheduleEnd: "2026-08-15",
+    scheduleEnd: "2026-09-30",
     sessionDurationMin: 60,
     sessionGapMin: 15,
     limitSessionsPerDay: true,
@@ -1138,6 +1156,99 @@ const mockStudies: TeamStudy[] = [
     completionPct: 0,
   },
 ];
+
+/** Preenche briefing de criação ausente — CX vê o estudo como o cliente lançou. */
+function ensureClientBriefing(study: TeamStudy): void {
+  if (!study.modality) study.modality = "moderated";
+  if (!study.method) {
+    study.method = "individual";
+    study.format = STUDY_METHOD_LABELS.individual;
+  }
+  if (!study.objective?.trim()) {
+    study.objective = `Entender motivações, barreiras e oportunidades relacionadas a “${study.name}”.`;
+  }
+  if (!study.ownerId) study.ownerId = "u-ana";
+  if (!study.contactChannel) study.contactChannel = "email";
+  if (!study.contactValue?.trim()) {
+    study.contactValue = "ana@empresa.com";
+  }
+  if (study.briefingEnabled === undefined) {
+    study.briefingEnabled = true;
+    study.briefingFile = {
+      id: `brief-${study.id}`,
+      name: "briefing.pdf",
+      size: 8 * 1024 * 1024,
+    };
+    study.briefingLink = "";
+  }
+  if (!study.scheduleStart) study.scheduleStart = "2026-07-01";
+  if (!study.scheduleEnd) study.scheduleEnd = "2026-09-30";
+  if (study.sessionDurationMin == null) study.sessionDurationMin = 60;
+  if (study.sessionGapMin == null) study.sessionGapMin = 15;
+  if (study.limitSessionsPerDay === undefined) {
+    study.limitSessionsPerDay = true;
+    study.maxSessionsPerDay = 4;
+  }
+  if (!study.sessionFormat) {
+    study.sessionFormat = "remote";
+    study.remotePlatform = "meet";
+    study.remoteLink = `https://meet.google.com/${study.id}`;
+  }
+  if (!study.scheduleSlots?.length) {
+    study.scheduleSlots = [
+      { id: `${study.id}-mon`, weekday: "mon", startTime: "09:00", endTime: "12:00" },
+      { id: `${study.id}-wed`, weekday: "wed", startTime: "14:00", endTime: "18:00" },
+      { id: `${study.id}-fri`, weekday: "fri", startTime: "09:00", endTime: "11:00" },
+    ];
+  }
+  if (!study.participantType) study.participantType = "b2c";
+  if (study.participantQuantity == null || study.participantQuantity <= 0) {
+    study.participantQuantity = Math.max(study.participants, 8) || 12;
+  }
+  if (!study.desiredProfile?.trim()) {
+    study.desiredProfile =
+      "Pessoas de 25–45 anos que usam o produto ao menos 1× por semana.";
+  }
+  if (study.exclusionEnabled === undefined) {
+    study.exclusionEnabled = true;
+    study.exclusionProfile =
+      "Profissionais de UX ou funcionários de concorrentes.";
+  }
+  if (!study.recruitmentSource) study.recruitmentSource = "userx";
+  if (study.reqDevicesEnabled === undefined) {
+    study.reqDevicesEnabled = true;
+    study.reqDevices = ["smartphone", "notebook"];
+  }
+  if (study.reqSessionEnabled === undefined) {
+    study.reqSessionEnabled = true;
+    study.reqSession = ["camera", "mic"];
+  }
+  if (study.reqActionsEnabled === undefined) {
+    study.reqActionsEnabled = false;
+    study.reqActions = [];
+  }
+  if (study.reqOtherText === undefined) study.reqOtherText = "";
+  if (study.customConsentEnabled === undefined) {
+    study.customConsentEnabled = false;
+    study.consentFile = null;
+  }
+  if (study.incentivesEnabled === undefined) {
+    study.incentivesEnabled = true;
+    study.incentiveResponsible = "userx";
+    study.incentiveValue = "R$ 80";
+  }
+}
+
+for (const study of mockStudies) {
+  ensureClientBriefing(study);
+}
+
+/** Demo: todo estudo mock já chega com Screener “enviado pelo cliente”. */
+for (const study of mockStudies) {
+  if (!study.screener) {
+    study.screener = createDemoScreener(study.name);
+  }
+}
 
 /**
  * Lista estudos do time atual (read-only).
@@ -1483,6 +1594,47 @@ export async function updateStudyDraft(
     ...(patch.wizardMaxStep !== undefined
       ? { wizardMaxStep: patch.wizardMaxStep }
       : {}),
+  };
+  mockStudies[idx] = next;
+  return {
+    ...next,
+    owners: [...next.owners],
+    screener: next.screener ? cloneScreener(next.screener) : null,
+  };
+}
+
+/**
+ * CX / gestão — atualiza o conteúdo do Screener de um estudo (qualquer status).
+ * Demo: permite editar o Screener “enviado pelo cliente” após o lançamento.
+ */
+export async function updateStudyScreener(
+  studyId: string,
+  screener: StudyScreener | null,
+): Promise<TeamStudy> {
+  await delay(220);
+  const actor = await fetchSessionUser();
+  if (
+    actor.role !== "Dono do Workspace" &&
+    actor.role !== "Administrador" &&
+    actor.role !== "Editor"
+  ) {
+    throw new ForbiddenError(
+      "Você não tem permissão para editar o Screener deste estudo.",
+    );
+  }
+
+  const idx = mockStudies.findIndex((s) => s.id === studyId);
+  if (idx < 0) {
+    throw new NotFoundError("Este estudo não existe mais.");
+  }
+  const current = mockStudies[idx];
+  if (!actor.teamIds.includes(current.teamId)) {
+    throw new ForbiddenError();
+  }
+
+  const next: TeamStudy = {
+    ...current,
+    screener: screener ? cloneScreener(screener) : null,
   };
   mockStudies[idx] = next;
   return {

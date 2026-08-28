@@ -9,12 +9,14 @@ import {
   type ReactNode,
 } from "react";
 import {
+  AlertCard,
   Button,
   BookOpenIcon,
   CheckboxIcon,
   CheckCircleIcon,
   ChoiceCards,
   DragIndicatorIcon,
+  EditIcon,
   EyeIcon,
   Input,
   LayersIcon,
@@ -24,6 +26,7 @@ import {
   PlusIcon,
   RadioCheckedIcon,
   Select,
+  ShareIcon,
   SmileIcon,
   TextArea,
   TrashIcon,
@@ -71,6 +74,15 @@ export interface StudyStep4FormProps {
   disabled?: boolean;
   onStudyChange: (patch: UpdateStudyDraftInput) => void;
   onPersist: (patch: UpdateStudyDraftInput) => void;
+  /**
+   * Detalhe do estudo (CX): trava Importar/Biblioteca/campos até Editar.
+   * No create flow, omitir (sempre editável).
+   */
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
+  showEditToggle?: boolean;
+  onShareClick?: () => void;
+  showPublishedChannelsWarning?: boolean;
 }
 
 type FocusId = "all" | "welcome" | "thanks" | string;
@@ -140,10 +152,21 @@ export const StudyStep4Form = forwardRef<
   StudyStep4FormHandle,
   StudyStep4FormProps
 >(function StudyStep4Form(
-  { study, disabled, onStudyChange, onPersist },
+  {
+    study,
+    disabled,
+    onStudyChange,
+    onPersist,
+    editing = true,
+    onEditingChange,
+    showEditToggle = false,
+    onShareClick,
+    showPublishedChannelsWarning = false,
+  },
   ref,
 ) {
   const { showToast } = useToast();
+  const contentDisabled = Boolean(disabled) || (showEditToggle && !editing);
   const [screener, setScreener] = useState<StudyScreener | null>(
     study.screener ?? null,
   );
@@ -306,7 +329,7 @@ export const StudyStep4Form = forwardRef<
         <ChoiceCards
           layout="list"
           options={ENTRY_OPTIONS}
-          disabled={disabled}
+          disabled={contentDisabled}
           onChange={(id) => {
             if (id === "scratch") {
               commit(createDefaultScreener());
@@ -320,7 +343,7 @@ export const StudyStep4Form = forwardRef<
           open={importOpen}
           text={importText}
           importing={importing}
-          disabled={disabled}
+          disabled={contentDisabled}
           onTextChange={setImportText}
           onClose={() => {
             if (!importing) setImportOpen(false);
@@ -379,7 +402,7 @@ export const StudyStep4Form = forwardRef<
             <button
               type="button"
               className={navClass("all")}
-              disabled={disabled}
+              disabled={contentDisabled}
               onClick={() => setFocus("all")}
             >
               <span className={styles.navIcon}>
@@ -396,7 +419,7 @@ export const StudyStep4Form = forwardRef<
             <button
               type="button"
               className={navClass("welcome")}
-              disabled={disabled}
+              disabled={contentDisabled}
               onClick={() => setFocus("welcome")}
             >
               <span className={styles.navIcon}>
@@ -414,8 +437,8 @@ export const StudyStep4Form = forwardRef<
               <button
                 type="button"
                 className={navClass(page.id)}
-                disabled={disabled}
-                draggable={!disabled}
+                disabled={contentDisabled}
+                draggable={!contentDisabled}
                 onDragStart={() => setDragPageId(page.id)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => {
@@ -443,7 +466,7 @@ export const StudyStep4Form = forwardRef<
                       className={styles.pageNameInput}
                       autoFocus
                       defaultValue={page.name}
-                      disabled={disabled}
+                      disabled={contentDisabled}
                       onClick={(e) => e.stopPropagation()}
                       onBlur={(e) => {
                         const name = e.target.value.trim() || defaultPageName(index);
@@ -483,7 +506,7 @@ export const StudyStep4Form = forwardRef<
             <button
               type="button"
               className={navClass("thanks")}
-              disabled={disabled}
+              disabled={contentDisabled}
               onClick={() => setFocus("thanks")}
             >
               <span className={styles.navIcon}>
@@ -501,7 +524,7 @@ export const StudyStep4Form = forwardRef<
           <Button
             variant="clear"
             size="medium"
-            disabled={disabled}
+            disabled={contentDisabled}
             iconLeft={<PlusIcon size={20} />}
             onClick={() => {
               updateScreener((prev) => {
@@ -516,62 +539,104 @@ export const StudyStep4Form = forwardRef<
       </aside>
 
       <div className={styles.main}>
+        {showPublishedChannelsWarning && (
+          <div className={styles.editWarning}>
+            <AlertCard variant="warning">
+              {messages.screenerSharePublishedEditWarning}
+            </AlertCard>
+          </div>
+        )}
         <div className={styles.toolbar}>
           {savedLabel && <span className={styles.saved}>{savedLabel}</span>}
+          {showEditToggle && (
+            <Button
+              variant="clear"
+              size="medium"
+              iconLeft={<EditIcon size={20} />}
+              onClick={() => {
+                const next = !editing;
+                if (!next) {
+                  setLibraryOpen(false);
+                  setImportOpen(false);
+                  setToolbarMenuOpen(false);
+                }
+                onEditingChange?.(next);
+              }}
+            >
+              {editing
+                ? messages.screenerShareDoneEditing
+                : messages.screenerShareEdit}
+            </Button>
+          )}
           <Button
             variant="clear"
             size="medium"
-            disabled={disabled}
             iconLeft={<EyeIcon size={24} />}
             onClick={() => setPreviewOpen(true)}
           >
             {messages.estudosScreenerPreview}
           </Button>
-          <Button
-            variant="clear"
-            size="medium"
-            disabled={disabled}
-            iconLeft={<BookOpenIcon size={24} />}
-            onClick={() => setLibraryOpen(true)}
-          >
-            {messages.estudosScreenerLibrary}
-          </Button>
-          <Button
-            variant="clear"
-            size="medium"
-            disabled={disabled}
-            iconLeft={<UploadIcon size={24} />}
-            onClick={() => setImportOpen(true)}
-          >
-            {messages.estudosScreenerImport}
-          </Button>
-          <div className={styles.toolbarMenu} ref={toolbarMenuRef}>
-            <button
-              type="button"
-              className={styles.iconBtn}
-              disabled={disabled}
-              aria-label={messages.estudosScreenerMoreAria}
-              onClick={() => setToolbarMenuOpen((v) => !v)}
+          {!showEditToggle && (
+            <>
+              <Button
+                variant="clear"
+                size="medium"
+                disabled={contentDisabled}
+                iconLeft={<BookOpenIcon size={24} />}
+                onClick={() => setLibraryOpen(true)}
+              >
+                {messages.estudosScreenerLibrary}
+              </Button>
+              <Button
+                variant="clear"
+                size="medium"
+                disabled={contentDisabled}
+                iconLeft={<UploadIcon size={24} />}
+                onClick={() => setImportOpen(true)}
+              >
+                {messages.estudosScreenerImport}
+              </Button>
+            </>
+          )}
+          {onShareClick && (
+            <Button
+              variant="clear"
+              size="medium"
+              iconLeft={<ShareIcon size={24} />}
+              onClick={onShareClick}
             >
-              <MoreVerticalIcon size={24} />
-            </button>
-            {toolbarMenuOpen && (
-              <ul className={styles.menuPanel}>
-                <li>
-                  <button
-                    type="button"
-                    className={styles.menuItem}
-                    onClick={() => {
-                      setToolbarMenuOpen(false);
-                      setLibraryOpen(true);
-                    }}
-                  >
-                    {messages.estudosScreenerLibrary}
-                  </button>
-                </li>
-              </ul>
-            )}
-          </div>
+              {messages.screenerShareOpen}
+            </Button>
+          )}
+          {!showEditToggle && (
+            <div className={styles.toolbarMenu} ref={toolbarMenuRef}>
+              <button
+                type="button"
+                className={styles.iconBtn}
+                disabled={contentDisabled}
+                aria-label={messages.estudosScreenerMoreAria}
+                onClick={() => setToolbarMenuOpen((v) => !v)}
+              >
+                <MoreVerticalIcon size={24} />
+              </button>
+              {toolbarMenuOpen && (
+                <ul className={styles.menuPanel}>
+                  <li>
+                    <button
+                      type="button"
+                      className={styles.menuItem}
+                      onClick={() => {
+                        setToolbarMenuOpen(false);
+                        setLibraryOpen(true);
+                      }}
+                    >
+                      {messages.estudosScreenerLibrary}
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={styles.canvas}>
@@ -595,7 +660,7 @@ export const StudyStep4Form = forwardRef<
               <div className={styles.card}>
                 <TextArea
                   value={screener.welcomeMessage}
-                  disabled={disabled}
+                  disabled={contentDisabled}
                   rows={5}
                   onChange={(e) => {
                     const welcomeMessage = e.target.value;
@@ -645,7 +710,7 @@ export const StudyStep4Form = forwardRef<
                     <button
                       type="button"
                       className={styles.iconBtn}
-                      disabled={disabled}
+                      disabled={contentDisabled}
                       aria-label={messages.estudosScreenerMoreAria}
                       onClick={() =>
                         setPageMenuId((id) => (id === page.id ? null : page.id))
@@ -678,7 +743,7 @@ export const StudyStep4Form = forwardRef<
                     <QuestionEditor
                       key={question.id}
                       question={question}
-                      disabled={disabled}
+                      disabled={contentDisabled}
                       canDelete={
                         page.questions.length > 1 || screener.pages.length > 1
                       }
@@ -736,7 +801,7 @@ export const StudyStep4Form = forwardRef<
                   <Button
                     variant="clear"
                     size="medium"
-                    disabled={disabled}
+                    disabled={contentDisabled}
                     iconLeft={<PlusIcon size={20} />}
                     onClick={() => {
                       updateScreener((prev) => ({
@@ -767,7 +832,7 @@ export const StudyStep4Form = forwardRef<
               <Button
                 variant="clear"
                 size="medium"
-                disabled={disabled}
+                disabled={contentDisabled}
                 iconLeft={<PlusIcon size={20} />}
                 onClick={() => {
                   updateScreener((prev) => {
@@ -801,7 +866,7 @@ export const StudyStep4Form = forwardRef<
               <div className={styles.card}>
                 <TextArea
                   value={screener.thanksMessage}
-                  disabled={disabled}
+                  disabled={contentDisabled}
                   rows={4}
                   onChange={(e) => {
                     const thanksMessage = e.target.value;
@@ -842,7 +907,7 @@ export const StudyStep4Form = forwardRef<
         open={importOpen}
         text={importText}
         importing={importing}
-        disabled={disabled}
+        disabled={contentDisabled}
         onTextChange={setImportText}
         onClose={() => {
           if (!importing) setImportOpen(false);

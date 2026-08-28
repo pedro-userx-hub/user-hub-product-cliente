@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { InternalTeamMember, Workspace } from "./lib/types";
 import { useWorkspaces, DomainError } from "./lib/store";
@@ -176,7 +176,7 @@ export function WorkspaceDetailPage() {
             trigger={<SettingsIcon size={20} />}
             items={[
               {
-                label: "Alterar owner",
+                label: "Alterar dono",
                 icon: <UserCheckIcon size={18} />,
                 disabled: !isActive,
                 onSelect: () => {

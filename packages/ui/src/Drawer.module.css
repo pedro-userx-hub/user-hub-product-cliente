@@ -35,6 +35,44 @@
   font-family: var(--font-family);
 }
 
+.wide {
+  width: 560px;
+}
+
+.nested {
+  /* empilhado sobre o drawer base */
+}
+
+.overlayNested {
+  z-index: 110;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.back:hover {
+  background: var(--color-background);
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
 .right.drawer {
   animation: drawer-in-right 0.2s ease;
 }
@@ -79,6 +117,14 @@
   line-height: var(--lh-base);
   font-weight: var(--fw-semibold);
   color: var(--color-text);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .description {
@@ -86,6 +132,13 @@
   font-size: var(--font-sm);
   line-height: var(--lh-sm);
   color: var(--color-text-muted);
+}
+
+.headerEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
 }
 
 .close {

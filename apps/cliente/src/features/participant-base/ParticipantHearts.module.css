@@ -1,0 +1,12 @@
+.hearts {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.on {
+  color: var(--color-action);
+}
+
+.off {
+  color: var(--color-border);
+}

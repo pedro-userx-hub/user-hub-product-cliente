@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Member, Workspace } from "../lib/types";
 import { useWorkspaces, DomainError } from "../lib/store";
 import { memberCountBucket, track } from "../lib/analytics";
@@ -16,6 +16,7 @@ import {
   UserCheckIcon,
   UserMinusIcon,
   UsersIcon,
+  useToast,
 } from "@userx/ui";
 import { AccessStatusBadge } from "../components/StatusBadge";
 import { AddMemberDrawer } from "../AddMemberDrawer";
@@ -33,7 +34,8 @@ interface Props {
 }
 
 export function MembersTab({ workspace, onChanged, onMakeOwner }: Props) {
-  const { regenerateAccess, removeMember } = useWorkspaces();
+  const { regenerateAccess, removeMember, reactivateMember } = useWorkspaces();
+  const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -168,7 +170,11 @@ export function MembersTab({ workspace, onChanged, onMakeOwner }: Props) {
               <td>
                 <AccessStatusBadge status={m.accessStatus} />
               </td>
-              <td className={styles.rowAction}>
+              <td
+                className={styles.rowAction}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 {m.isOwner ? (
                   <Menu
                     ariaLabel={`Ações de ${m.name}`}
@@ -178,7 +184,10 @@ export function MembersTab({ workspace, onChanged, onMakeOwner }: Props) {
                         icon: <UserMinusIcon size={18} />,
                         destructive: true,
                         disabled: !isActive,
-                        onSelect: () => setRemoveOwnerOpen(true),
+                        onSelect: () => {
+                          setDetailId(null);
+                          setRemoveOwnerOpen(true);
+                        },
                       },
                     ]}
                   />
@@ -186,17 +195,47 @@ export function MembersTab({ workspace, onChanged, onMakeOwner }: Props) {
                   <Menu
                     ariaLabel={`Ações de ${m.name}`}
                     items={[
+                      ...(m.accessStatus === "inativo"
+                        ? [
+                            {
+                              label: "Reativar",
+                              icon: <UserCheckIcon size={18} />,
+                              disabled: !isActive,
+                              onSelect: () => {
+                                void (async () => {
+                                  try {
+                                    await reactivateMember(workspace.id, m.id);
+                                    showToast({
+                                      type: "success",
+                                      title: messages.memberReactivated(m.name),
+                                    });
+                                    onChanged();
+                                  } catch {
+                                    showToast({
+                                      type: "error",
+                                      title: messages.memberReactivateError,
+                                    });
+                                  }
+                                })();
+                              },
+                            },
+                          ]
+                        : []),
                       {
-                        label: "Tornar owner",
+                        label: "Tornar dono do workspace",
                         icon: <UserCheckIcon size={18} />,
                         disabled: !isActive,
-                        onSelect: () => onMakeOwner(m.id),
+                        onSelect: () => {
+                          setDetailId(null);
+                          onMakeOwner(m.id);
+                        },
                       },
                       {
                         label: "Remover membro",
                         icon: <UserMinusIcon size={18} />,
                         destructive: true,
                         onSelect: () => {
+                          setDetailId(null);
                           setRemoveError(null);
                           setRemoving(m);
                         },

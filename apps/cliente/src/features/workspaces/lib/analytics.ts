@@ -67,6 +67,7 @@ export type AnalyticsEvent =
       previous_owner_id: string;
       new_owner_id: string;
       operator_id: string;
+      former_owner_destiny: "keep" | "inactivate";
     }
   | { name: "owner_change_failed"; workspace_id: string; reason: string }
   | {

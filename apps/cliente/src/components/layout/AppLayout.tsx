@@ -13,6 +13,12 @@ function routeAllowed(
   pathname: string,
   ctx: VisibilityContext,
 ): boolean {
+  if (pathname.startsWith("/painel")) {
+    return canView("cx.painel", ctx);
+  }
+  if (pathname.startsWith("/participantes")) {
+    return canView("cx.participantes", ctx);
+  }
   if (pathname.startsWith("/workspaces")) {
     return canView("cx.workspaces", ctx);
   }
@@ -67,6 +73,10 @@ export function AppLayout() {
   /** Lista usa o padding padrão do shell; criar/detalhe ficam full-bleed. */
   const isWorkspacesFocus = /^\/workspaces\/.+/.test(location.pathname);
   const isWorkspacesSurface = location.pathname.startsWith("/workspaces");
+  const isParticipantesSurface = location.pathname.startsWith("/participantes");
+  const isPainelSurface = location.pathname.startsWith("/painel");
+  const isFullWidthSurface =
+    isWorkspacesSurface || isParticipantesSurface || isPainelSurface;
 
   // Troca de lente → Estudos (CX agregada ou Cliente)
   useEffect(() => {
@@ -74,7 +84,11 @@ export function AppLayout() {
     prevLens.current = lens;
     if (lens === "cx") {
       navigate("/estudos", { replace: true });
-    } else if (location.pathname.startsWith("/workspaces")) {
+    } else if (
+      location.pathname.startsWith("/workspaces") ||
+      location.pathname.startsWith("/participantes") ||
+      location.pathname.startsWith("/painel")
+    ) {
       navigate("/estudos", { replace: true });
     }
   }, [lens, location.pathname, navigate]);
@@ -110,7 +124,14 @@ export function AppLayout() {
       )}
       <div className={styles.shell} key={shellKey}>
         {!hideSidebar && <AppSidebar />}
-        <div className={styles.main}>
+        <div
+          className={[
+            styles.main,
+            isStudyFocus ? styles.mainFocus : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <div
             className={[
               styles.content,
@@ -124,7 +145,7 @@ export function AppLayout() {
               className={[
                 styles.contentInner,
                 isStudyFocus ? styles.contentInnerFocus : "",
-                isWorkspacesSurface ? styles.contentInnerWorkspaces : "",
+                isFullWidthSurface ? styles.contentInnerWorkspaces : "",
               ]
                 .filter(Boolean)
                 .join(" ")}

@@ -1,0 +1,30 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  /* Cola o builder nas bordas do body (compensa o padding da page). */
+  margin: calc(-1 * var(--space-6));
+  width: calc(100% + 2 * var(--space-6));
+  min-height: calc(100% + 2 * var(--space-6));
+  padding: 0;
+  box-sizing: border-box;
+  flex: 1;
+}
+
+.hint {
+  margin: 0;
+  padding: var(--space-4) var(--space-6) 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.contentBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+  min-height: 0;
+}

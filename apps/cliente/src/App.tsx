@@ -12,6 +12,9 @@ import { GestaoMembrosPage } from "./pages/GestaoMembrosPage";
 import { GestaoTimesPage } from "./pages/GestaoTimesPage";
 import { GestaoBalancoPage } from "./pages/GestaoBalancoPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ParticipantesPage } from "./pages/ParticipantesPage";
+import { ClientBasePage } from "./pages/ClientBasePage";
+import { CxPainelPage } from "./pages/CxPainelPage";
 import { StudyDetailPage } from "./pages/StudyDetailPage";
 import { TimePage } from "./pages/TimePage";
 
@@ -25,9 +28,13 @@ export default function App() {
         <Route index element={<Navigate to="/estudos" replace />} />
         <Route path="estudos" element={<EstudosPage />} />
         <Route path="estudos/:studyId/criar" element={<CreateStudyPage />} />
+        <Route path="estudos/:studyId/base-cliente" element={<ClientBasePage />} />
         <Route path="estudos/:studyId" element={<StudyDetailPage />} />
         <Route path="financeiro" element={<FinanceiroPage />} />
         <Route path="time" element={<TimePage />} />
+        <Route path="participantes" element={<ParticipantesPage />} />
+        <Route path="painel" element={<Navigate to="/painel/campanhas" replace />} />
+        <Route path="painel/:view" element={<CxPainelPage />} />
         <Route path="workspaces" element={<WorkspaceListPage />} />
         <Route path="workspaces/novo" element={<WorkspaceCreatePage />} />
         <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
