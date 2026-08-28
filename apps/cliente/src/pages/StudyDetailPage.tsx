@@ -22,9 +22,11 @@ import {
 } from "@userx/ui";
 import { StudyCxAssignControl } from "../features/estudos/StudyCxAssignControl";
 import { StudyDadosPanel } from "../features/estudos/StudyDadosPanel";
+import { UnmoderatedSurveyDadosPanel } from "../features/estudos/UnmoderatedSurveyDadosPanel";
 import { StudyParticipantsPanel } from "../features/estudos/StudyParticipantsPanel";
 import { StudyRecrutamentoPanel } from "../features/estudos/StudyRecrutamentoPanel";
 import { StudyScreenerPanel } from "../features/estudos/StudyScreenerPanel";
+import { OnlineSurveyStudyHub } from "../features/estudos/OnlineSurveyStudyHub";
 import { messages } from "../lib/messages";
 import { canCreateStudy } from "../lib/permissions";
 import { useLens } from "../lib/LensContext";
@@ -33,10 +35,12 @@ import {
   parseDadosSection,
   parseParticipantesSub,
   parseStudyDetailTab,
+  parseUnmoderatedSurveyDadosSection,
   STUDY_DETAIL_DEFAULT_TAB,
   STUDY_DETAIL_TAB_ITEMS,
   STUDY_PARTICIPANTES_SUB_ITEMS,
   type StudyDetailTabId,
+  type UnmoderatedSurveyDadosSectionId,
 } from "../lib/studyDetailTabs";
 import { useTeamContext } from "../lib/TeamContext";
 import { useScreenerShare } from "../lib/useScreenerShare";
@@ -45,6 +49,10 @@ import {
   listSavedStudyAddresses,
   NotFoundError,
   studyDisplayName,
+  showsOnlineSurveySetupHub,
+  showsUnmoderatedLaunchedDetail,
+  isOnlineSurveyImportStudy,
+  isUnmoderatedTestStudy,
   type StudyStatus,
   type TeamStudy,
 } from "../lib/teamApi";
@@ -114,6 +122,9 @@ export function StudyDetailPage() {
     : STUDY_DETAIL_DEFAULT_TAB;
   const participantesSub = parseParticipantesSub(searchParams.get("sub"));
   const dadosSection = parseDadosSection(searchParams.get("section"));
+  const unmoderatedSurveySection = parseUnmoderatedSurveyDadosSection(
+    searchParams.get("section"),
+  );
 
   const [study, setStudy] = useState<TeamStudy | null>(null);
   const [addressLabel, setAddressLabel] = useState<string | undefined>();
@@ -175,6 +186,13 @@ export function StudyDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (viewState !== "ready" || !study) return;
+    if (study.status === "Rascunho" && (isOnlineSurveyImportStudy(study) || isUnmoderatedTestStudy(study))) {
+      navigate(`/estudos/${study.id}/criar`, { replace: true });
+    }
+  }, [navigate, study, viewState]);
 
   // Normaliza tab inválida / legada / sem permissão na URL.
   useEffect(() => {
@@ -266,6 +284,24 @@ export function StudyDetailPage() {
     [setSearchParams],
   );
 
+  const setUnmoderatedSurveySection = useCallback(
+    (section: UnmoderatedSurveyDadosSectionId) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (section === "dados") {
+            next.delete("section");
+          } else {
+            next.set("section", section);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
   const title = useMemo(
     () => (study ? studyDisplayName(study) : ""),
     [study],
@@ -275,6 +311,58 @@ export function StudyDetailPage() {
     activeTab === "participantes" ? STUDY_PARTICIPANTES_SUB_ITEMS : null;
   const subValue =
     activeTab === "participantes" ? participantesSub : undefined;
+
+  if (viewState === "ready" && study && showsOnlineSurveySetupHub(study)) {
+    return (
+      <OnlineSurveyStudyHub
+        study={study}
+        backTo={backTo}
+        onLaunched={(launched) => setStudy(launched)}
+      />
+    );
+  }
+
+  if (viewState === "ready" && study && showsUnmoderatedLaunchedDetail(study)) {
+    return (
+      <div className={styles.page}>
+        <header className={styles.header}>
+          <div className={styles.headerLeft}>
+            <button
+              type="button"
+              className={styles.back}
+              aria-label={messages.estudosDetailBackAria}
+              onClick={() => navigate(backTo)}
+            >
+              <ArrowLeftIcon size={20} />
+            </button>
+            <div className={styles.titleBlock}>
+              <h1 className={styles.title} title={title}>
+                {title}
+              </h1>
+              <Badge color={statusColor(study.status)} size="sm">
+                {study.status}
+              </Badge>
+            </div>
+          </div>
+          <div className={styles.headerRight}>
+            <StudyCxAssignControl
+              study={study}
+              canAssign={canAssign}
+              onAssigned={setStudy}
+            />
+          </div>
+        </header>
+
+        <div className={`${styles.body} ${styles.bodyDados}`}>
+          <UnmoderatedSurveyDadosPanel
+            study={study}
+            initialSection={unmoderatedSurveySection}
+            onSectionChange={setUnmoderatedSurveySection}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>

@@ -33,11 +33,14 @@ import {
   STUDY_METHOD_LABELS,
   STUDY_OBJECTIVE_MAX,
   STUDY_TITLE_MAX,
+  UNMODERATED_TYPE_DESCRIPTIONS,
+  UNMODERATED_TYPE_LABELS,
   type StudyConsentFile,
   type StudyContactChannel,
   type StudyMethod,
   type StudyOwnerCandidate,
   type TeamStudy,
+  type UnmoderatedStudyType,
   type UpdateStudyDraftInput,
 } from "../../lib/teamApi";
 import styles from "./StudyStep1Form.module.css";
@@ -62,6 +65,21 @@ const METHOD_OPTIONS: SelectOption[] = [
   {
     value: "group",
     label: messages.estudosMethodGroup,
+  },
+];
+
+const UNMODERATED_TYPE_OPTIONS: SelectOption[] = [
+  {
+    value: "online_survey",
+    label: messages.estudosUnmoderatedTypeOnlineSurvey,
+  },
+  {
+    value: "usability_test",
+    label: messages.estudosUnmoderatedTypeUsability,
+  },
+  {
+    value: "ab_test",
+    label: messages.estudosUnmoderatedTypeAb,
   },
 ];
 
@@ -152,6 +170,9 @@ export const StudyStep1Form = forwardRef<
   const [method, setMethod] = useState<StudyMethod | "">(
     study.method ?? "",
   );
+  const [unmoderatedType, setUnmoderatedType] = useState<
+    UnmoderatedStudyType | ""
+  >(study.unmoderatedType ?? "");
   const [title, setTitle] = useState(study.name);
   const [objective, setObjective] = useState(study.objective ?? "");
   const [ownerId, setOwnerId] = useState(study.ownerId ?? "");
@@ -198,8 +219,11 @@ export const StudyStep1Form = forwardRef<
     void loadOwners();
   }, [loadOwners]);
 
+  const isUnmoderated = study.modality === "unmoderated";
+
   useEffect(() => {
     setMethod(study.method ?? "");
+    setUnmoderatedType(study.unmoderatedType ?? "");
     setTitle(study.name);
     setObjective(study.objective ?? "");
     setOwnerId(study.ownerId ?? "");
@@ -221,13 +245,17 @@ export const StudyStep1Form = forwardRef<
 
   const buildPatch = useCallback((): UpdateStudyDraftInput => {
     const selectedOwner = owners.find((o) => o.id === ownerId);
-    const format =
-      method === "individual" || method === "group"
+    const format = isUnmoderated
+      ? unmoderatedType
+        ? UNMODERATED_TYPE_LABELS[unmoderatedType]
+        : ""
+      : method === "individual" || method === "group"
         ? STUDY_METHOD_LABELS[method]
         : "";
     return {
       name: title,
-      method,
+      method: isUnmoderated ? "" : method,
+      unmoderatedType: isUnmoderated ? unmoderatedType : "",
       format,
       objective,
       ownerId,
@@ -248,12 +276,14 @@ export const StudyStep1Form = forwardRef<
     briefingLink,
     channel,
     contact,
+    isUnmoderated,
     method,
     objective,
     ownerId,
     owners,
     study.owners,
     title,
+    unmoderatedType,
   ]);
 
   useImperativeHandle(
@@ -264,7 +294,16 @@ export const StudyStep1Form = forwardRef<
         let ok = true;
         let first: HTMLElement | null = null;
 
-        if (!method) {
+        if (isUnmoderated) {
+          if (!unmoderatedType) {
+            setMethodError(messages.estudosUnmoderatedTypeRequired);
+            ok = false;
+            const btn = methodRef.current?.querySelector("button");
+            first = btn ?? methodRef.current;
+          } else {
+            setMethodError(undefined);
+          }
+        } else if (!method) {
           setMethodError(messages.estudosMethodRequired);
           ok = false;
           const btn = methodRef.current?.querySelector("button");
@@ -299,8 +338,14 @@ export const StudyStep1Form = forwardRef<
         return ok;
       },
     }),
-    [buildPatch, channel, contact, method, objective.length, title.length],
+    [buildPatch, channel, contact, isUnmoderated, method, objective.length, title.length, unmoderatedType],
   );
+
+  const typeHelperText = isUnmoderated
+    ? unmoderatedType
+      ? UNMODERATED_TYPE_DESCRIPTIONS[unmoderatedType]
+      : undefined
+    : undefined;
 
   const persist = (patch: UpdateStudyDraftInput) => {
     onStudyChange(patch);
@@ -380,23 +425,44 @@ export const StudyStep1Form = forwardRef<
           />
 
           <div ref={methodRef} tabIndex={-1} className={styles.fieldFocus}>
-            <Select
-              label={messages.estudosMethodLabel}
-              aria-label={messages.estudosMethodLabel}
-              placeholder={messages.estudosMethodPlaceholder}
-              options={METHOD_OPTIONS}
-              value={method || undefined}
-              onChange={(v) => {
-                const next = v as StudyMethod;
-                setMethod(next);
-                setMethodError(undefined);
-                const format = STUDY_METHOD_LABELS[next];
-                persist({ method: next, format });
-              }}
-              error={methodError}
-              disabled={disabled}
-              expandable
-            />
+            {isUnmoderated ? (
+              <Select
+                label={messages.estudosUnmoderatedTypeLabel}
+                aria-label={messages.estudosUnmoderatedTypeLabel}
+                placeholder={messages.estudosUnmoderatedTypePlaceholder}
+                options={UNMODERATED_TYPE_OPTIONS}
+                value={unmoderatedType || undefined}
+                helperText={typeHelperText}
+                onChange={(v) => {
+                  const next = v as UnmoderatedStudyType;
+                  setUnmoderatedType(next);
+                  setMethodError(undefined);
+                  const format = UNMODERATED_TYPE_LABELS[next];
+                  persist({ unmoderatedType: next, format, method: "" });
+                }}
+                error={methodError}
+                disabled={disabled}
+                expandable
+              />
+            ) : (
+              <Select
+                label={messages.estudosMethodLabel}
+                aria-label={messages.estudosMethodLabel}
+                placeholder={messages.estudosMethodPlaceholder}
+                options={METHOD_OPTIONS}
+                value={method || undefined}
+                onChange={(v) => {
+                  const next = v as StudyMethod;
+                  setMethod(next);
+                  setMethodError(undefined);
+                  const format = STUDY_METHOD_LABELS[next];
+                  persist({ method: next, format, unmoderatedType: "" });
+                }}
+                error={methodError}
+                disabled={disabled}
+                expandable
+              />
+            )}
           </div>
 
           <div className={styles.objectiveBlock}>

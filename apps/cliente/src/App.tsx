@@ -5,6 +5,7 @@ import { WorkspaceDetailPage } from "./features/workspaces/WorkspaceDetailPage";
 import { WorkspaceListPage } from "./features/workspaces/WorkspaceListPage";
 import { AcceptInvitePage } from "./pages/AcceptInvitePage";
 import { CreateStudyPage } from "./pages/CreateStudyPage";
+import { QuestionnaireBuilderPage } from "./pages/QuestionnaireBuilderPage";
 import { EstudosPage } from "./pages/EstudosPage";
 import { FinanceiroPage } from "./pages/FinanceiroPage";
 import { GestaoGuard } from "./pages/GestaoGuard";
@@ -28,6 +29,10 @@ export default function App() {
         <Route index element={<Navigate to="/estudos" replace />} />
         <Route path="estudos" element={<EstudosPage />} />
         <Route path="estudos/:studyId/criar" element={<CreateStudyPage />} />
+        <Route
+          path="estudos/:studyId/questionario"
+          element={<QuestionnaireBuilderPage />}
+        />
         <Route path="estudos/:studyId/base-cliente" element={<ClientBasePage />} />
         <Route path="estudos/:studyId" element={<StudyDetailPage />} />
         <Route path="financeiro" element={<FinanceiroPage />} />

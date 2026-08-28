@@ -55,6 +55,12 @@ export interface StudyStep3FormProps {
   showParticipantBlocks?: boolean;
   /** Requisitos de participação + configurações adicionais. Default: true. */
   showRequirementsAndSettings?: boolean;
+  /** Badge de créditos no público-alvo. Default: true. */
+  showCreditBadge?: boolean;
+  /** Seção de requisitos para participação. Default: true. */
+  showParticipationRequirements?: boolean;
+  /** Toggle de termo de consentimento próprio. Default: true. */
+  showCustomConsent?: boolean;
   onStudyChange: (patch: UpdateStudyDraftInput) => void;
   onPersist: (patch: UpdateStudyDraftInput) => void;
 }
@@ -106,6 +112,9 @@ export const StudyStep3Form = forwardRef<
     disabled,
     showParticipantBlocks = true,
     showRequirementsAndSettings = true,
+    showCreditBadge = true,
+    showParticipationRequirements = true,
+    showCustomConsent = true,
     onStudyChange,
     onPersist,
   },
@@ -157,7 +166,12 @@ export const StudyStep3Form = forwardRef<
   const [creditB2c, setCreditB2c] = useState<number | null>(null);
   const [creditB2b, setCreditB2b] = useState<number | null>(null);
 
-  const showCredits = canSeeTeamCredits(user.role) && Boolean(currentTeam);
+  const showCredits =
+    showCreditBadge && canSeeTeamCredits(user.role) && Boolean(currentTeam);
+
+  const showRequirements =
+    showRequirementsAndSettings && showParticipationRequirements;
+  const showAdditional = showRequirementsAndSettings;
 
   const loadCredits = useCallback(async () => {
     if (!currentTeam || !canSeeTeamCredits(user.role)) {
@@ -210,8 +224,8 @@ export const StudyStep3Form = forwardRef<
       exclusionProfile: exclusionEnabled ? exclusionProfile : "",
       recruitmentSource,
       ownBaseFile: recruitmentSource === "own" ? ownBaseFile : null,
-      ...(requirementsRef.current?.getPatch() ?? {}),
-      ...(additionalRef.current?.getPatch() ?? {}),
+      ...(showRequirements ? (requirementsRef.current?.getPatch() ?? {}) : {}),
+      ...(showAdditional ? (additionalRef.current?.getPatch() ?? {}) : {}),
     };
   };
 
@@ -313,7 +327,8 @@ export const StudyStep3Form = forwardRef<
           }
         }
 
-        const additionalOk = additionalRef.current?.validate() ?? true;
+        const additionalOk =
+          !showAdditional || (additionalRef.current?.validate() ?? true);
         if (!additionalOk) ok = false;
 
         if (!ok && first) {
@@ -736,7 +751,7 @@ export const StudyStep3Form = forwardRef<
         </>
       ) : null}
 
-      {showRequirementsAndSettings ? (
+      {showRequirements ? (
         <>
       <ParticipationRequirementsSection
         ref={requirementsRef}
@@ -752,6 +767,11 @@ export const StudyStep3Form = forwardRef<
         onPersist={onPersist}
       />
 
+        </>
+      ) : null}
+
+      {showAdditional ? (
+        <>
       <AdditionalSettingsSection
         ref={additionalRef}
         customConsentEnabled={Boolean(study.customConsentEnabled)}
@@ -759,6 +779,7 @@ export const StudyStep3Form = forwardRef<
         incentivesEnabled={Boolean(study.incentivesEnabled)}
         incentiveResponsible={study.incentiveResponsible ?? ""}
         incentiveValue={study.incentiveValue ?? ""}
+        showCustomConsent={showCustomConsent}
         disabled={disabled}
         onChange={onStudyChange}
         onPersist={onPersist}

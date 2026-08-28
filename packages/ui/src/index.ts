@@ -240,6 +240,7 @@ export {
   CalendarIcon,
   EyeIcon,
   UploadIcon,
+  DownloadIcon,
   TrashIcon,
   FileIcon,
   UserPlusIcon,

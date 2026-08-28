@@ -1,6 +1,7 @@
 import { messages } from "./messages";
 import {
   canDeleteCollector,
+  createCashpointCollector,
   createDefaultCollector,
   customCollectorUrl,
   DEFAULT_EMAIL_INVITE,
@@ -83,6 +84,23 @@ export async function fetchScreenerShare(
   await assertCanManageShare();
   if (!studyId) throw new NotFoundError("Estudo não encontrado.");
   return cloneState(ensureState(studyId));
+}
+
+/** Divulgação do questionário online (CX) — link padrão + CashPoint. */
+export async function fetchQuestionnaireShare(
+  studyId: string,
+): Promise<ScreenerShareState> {
+  await delay(280);
+  await assertCanManageShare();
+  if (!studyId) throw new NotFoundError("Estudo não encontrado.");
+  const state = ensureState(studyId);
+  if (!state.collectors.some((item) => item.kind === "default_link")) {
+    state.collectors.push(createDefaultCollector(studyId));
+  }
+  if (!state.collectors.some((item) => item.kind === "cashpoint")) {
+    state.collectors.push(createCashpointCollector(studyId));
+  }
+  return cloneState(state);
 }
 
 export async function saveScreenerShareSettings(

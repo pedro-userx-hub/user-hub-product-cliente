@@ -8,7 +8,7 @@ import {
   type ScreenerGlobalStatus,
   type ScreenerShareState,
 } from "../lib/screenerShare";
-import { fetchScreenerShare } from "../lib/screenerShareApi";
+import { fetchScreenerShare, fetchQuestionnaireShare } from "../lib/screenerShareApi";
 import { messages } from "../lib/messages";
 
 export type ScreenerShareLoadState = "idle" | "loading" | "ready" | "error";
@@ -75,5 +75,39 @@ export function useScreenerShare(studyId: string, enabled: boolean) {
     reload,
     globalStatus,
     tooltip,
+  };
+}
+
+/** Divulgação do questionário online (CX). */
+export function useQuestionnaireShare(studyId: string, enabled: boolean) {
+  const [share, setShare] = useState<ScreenerShareState | null>(null);
+  const [loadState, setLoadState] = useState<ScreenerShareLoadState>("idle");
+
+  const reload = useCallback(async () => {
+    if (!enabled || !studyId) {
+      setShare(null);
+      setLoadState("idle");
+      return;
+    }
+    setLoadState("loading");
+    try {
+      const next = await fetchQuestionnaireShare(studyId);
+      setShare(next);
+      setLoadState("ready");
+    } catch {
+      setShare(null);
+      setLoadState("error");
+    }
+  }, [enabled, studyId]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  return {
+    share,
+    setShare,
+    loadState,
+    reload,
   };
 }

@@ -233,6 +233,30 @@ export function createDefaultCollector(studyId: string): ScreenerCollector {
   };
 }
 
+export function createCashpointCollector(studyId: string): ScreenerCollector {
+  return {
+    id: `col-cashpoint-${studyId}`,
+    kind: "cashpoint",
+    name: "CashPoint",
+    url: cashpointCollectorUrl(studyId),
+    enabled: false,
+    publishDate: "",
+    closeDate: "",
+    createdAt: new Date().toISOString(),
+    views: 0,
+    opens: 0,
+    responses: 0,
+    points: null,
+    limitResponses: false,
+    maxResponses: null,
+  };
+}
+
+export const QUESTIONNAIRE_SHARE_COLLECTOR_KINDS = [
+  "default_link",
+  "cashpoint",
+] as const;
+
 export function formatMetricCount(n: number): string {
   return n.toLocaleString("pt-BR");
 }

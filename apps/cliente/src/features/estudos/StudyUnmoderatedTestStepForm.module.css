@@ -1,0 +1,153 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 798px;
+  margin: 0 auto;
+  padding: var(--space-8);
+  min-width: 0;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-text-muted);
+}
+
+.linksBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.sectionSubtitle {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-text-muted);
+}
+
+.versionCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle, #e5e7eb);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-surface, #fff);
+}
+
+.versionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.versionLabel {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.removeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.removeBtn:hover:not(:disabled) {
+  background: var(--color-surface-muted, #fafafa);
+  color: var(--color-text);
+}
+
+.removeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: var(--color-text-secondary, #404040);
+  font-family: var(--font-family);
+  font-size: var(--font-base);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-base);
+  cursor: pointer;
+}
+
+.addBtn:hover:not(:disabled) {
+  background: var(--color-surface-muted, #fafafa);
+}
+
+.addBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.instructionsBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.formError {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--color-danger);
+}

@@ -35,6 +35,8 @@ export interface AdditionalSettingsSectionProps {
   incentivesEnabled: boolean;
   incentiveResponsible: StudyIncentiveResponsible | "";
   incentiveValue: string;
+  /** Exibe toggle/upload de termo de consentimento próprio. Default: true. */
+  showCustomConsent?: boolean;
   disabled?: boolean;
   onChange: (patch: UpdateStudyDraftInput) => void;
   onPersist: (patch: UpdateStudyDraftInput) => void;
@@ -70,6 +72,7 @@ export const AdditionalSettingsSection = forwardRef<
     incentivesEnabled: incentivesEnabledProp,
     incentiveResponsible: responsibleProp,
     incentiveValue: valueProp,
+    showCustomConsent = true,
     disabled,
     onChange,
     onPersist,
@@ -121,8 +124,12 @@ export const AdditionalSettingsSection = forwardRef<
   };
 
   const buildPatch = (): UpdateStudyDraftInput => ({
-    customConsentEnabled: consentEnabled,
-    consentFile: consentEnabled ? consentFile : null,
+    ...(showCustomConsent
+      ? {
+          customConsentEnabled: consentEnabled,
+          consentFile: consentEnabled ? consentFile : null,
+        }
+      : {}),
     incentivesEnabled,
     incentiveResponsible: incentivesEnabled ? responsible : "",
     incentiveValue: incentivesEnabled ? value.trim() : "",
@@ -228,6 +235,8 @@ export const AdditionalSettingsSection = forwardRef<
       </h3>
 
       <div className={styles.block}>
+        {showCustomConsent ? (
+          <>
         <Toggle
           label={messages.estudosConsentToggle}
           description={messages.estudosConsentDescription}
@@ -323,6 +332,8 @@ export const AdditionalSettingsSection = forwardRef<
             )}
           </div>
         )}
+          </>
+        ) : null}
       </div>
 
       <div className={styles.block}>

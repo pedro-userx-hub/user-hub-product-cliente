@@ -9,6 +9,14 @@ import { useTeamContext } from "../../lib/TeamContext";
 import { AppSidebar } from "./AppSidebar";
 import styles from "./AppLayout.module.css";
 
+function isStudyFocusPath(pathname: string): boolean {
+  return (
+    /^\/estudos\/[^/]+\/criar\/?$/.test(pathname) ||
+    /^\/estudos\/[^/]+\/questionario\/?$/.test(pathname) ||
+    /^\/estudos\/[^/]+\/?$/.test(pathname)
+  );
+}
+
 function routeAllowed(
   pathname: string,
   ctx: VisibilityContext,
@@ -66,9 +74,7 @@ export function AppLayout() {
     [],
   );
 
-  const isStudyFocus =
-    /^\/estudos\/[^/]+\/criar\/?$/.test(location.pathname) ||
-    /^\/estudos\/[^/]+\/?$/.test(location.pathname);
+  const isStudyFocus = isStudyFocusPath(location.pathname);
 
   /** Lista usa o padding padrão do shell; criar/detalhe ficam full-bleed. */
   const isWorkspacesFocus = /^\/workspaces\/.+/.test(location.pathname);
@@ -78,10 +84,11 @@ export function AppLayout() {
   const isFullWidthSurface =
     isWorkspacesSurface || isParticipantesSurface || isPainelSurface;
 
-  // Troca de lente → Estudos (CX agregada ou Cliente)
+  // Troca de lente → Estudos (CX agregada ou Cliente), exceto em rotas de estudo (demo).
   useEffect(() => {
     if (prevLens.current === lens) return;
     prevLens.current = lens;
+    if (isStudyFocusPath(location.pathname)) return;
     if (lens === "cx") {
       navigate("/estudos", { replace: true });
     } else if (

@@ -330,6 +330,9 @@ function CollectorMetricsConfig({
   const [maxResponses, setMaxResponses] = useState(
     collector.maxResponses == null ? "" : String(collector.maxResponses),
   );
+  const [points, setPoints] = useState(
+    collector.points == null ? "" : String(collector.points),
+  );
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [warning, setWarning] = useState<string | undefined>();
@@ -344,18 +347,22 @@ function CollectorMetricsConfig({
     setMaxResponses(
       collector.maxResponses == null ? "" : String(collector.maxResponses),
     );
+    setPoints(collector.points == null ? "" : String(collector.points));
     setError(undefined);
     setWarning(undefined);
   }, [collector]);
 
   const maxNumber = maxResponses.trim() === "" ? null : Number(maxResponses);
+  const pointsNumber = points.trim() === "" ? null : Number(points);
+  const isCashpoint = collector.kind === "cashpoint";
   const dirty =
     publishDate !== collector.publishDate ||
     closeDate !== collector.closeDate ||
     limitResponses !== Boolean(collector.limitResponses) ||
     (limitResponses
       ? maxNumber !== (collector.maxResponses ?? null)
-      : Boolean(collector.limitResponses));
+      : Boolean(collector.limitResponses)) ||
+    (isCashpoint ? pointsNumber !== (collector.points ?? null) : false);
 
   useEffect(() => {
     onDirtyChange(dirty);
@@ -379,6 +386,7 @@ function CollectorMetricsConfig({
         closeDate,
         limitResponses,
         maxResponses: limitResponses ? maxNumber : null,
+        ...(isCashpoint ? { points: pointsNumber } : {}),
       });
       onUpdated(next);
       showToast({ type: "success", title: messages.screenerShareChangesSaved });
@@ -508,6 +516,28 @@ function CollectorMetricsConfig({
             }
             onChange={(e) => {
               setMaxResponses(e.target.value);
+              setError(undefined);
+            }}
+            disabled={saving}
+          />
+        )}
+
+        {isCashpoint && (
+          <Input
+            label={messages.screenerShareCashPointPoints}
+            helperText={messages.screenerShareCashPointPointsHint}
+            type="number"
+            min={1}
+            step={1}
+            value={points}
+            error={
+              error === messages.screenerShareCashPointPointsRequired ||
+              error === messages.screenerShareCashPointPointsInvalid
+                ? error
+                : undefined
+            }
+            onChange={(e) => {
+              setPoints(e.target.value);
               setError(undefined);
             }}
             disabled={saving}

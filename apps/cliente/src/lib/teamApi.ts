@@ -835,6 +835,27 @@ export type StudyModality = "moderated" | "unmoderated";
 /** Método do estudo moderado (Story 3). */
 export type StudyMethod = "individual" | "group";
 
+/** Tipo do estudo não moderado (Passo 1 — visão cliente). */
+export type UnmoderatedStudyType =
+  | "online_survey"
+  | "usability_test"
+  | "ab_test";
+
+export const UNMODERATED_TYPE_LABELS: Record<UnmoderatedStudyType, string> = {
+  online_survey: "Questionário online",
+  usability_test: "Teste de usabilidade",
+  ab_test: "Teste A/B",
+};
+
+export const UNMODERATED_TYPE_DESCRIPTIONS: Record<UnmoderatedStudyType, string> =
+  {
+    online_survey: "Coleta de respostas estruturadas em massa.",
+    usability_test:
+      "Avaliação de fluxos e interfaces sem moderação, realizada de forma independente.",
+    ab_test:
+      "Comparação entre diferentes versões para identificar qual apresenta melhor resultado.",
+  };
+
 /** Canal de contato do responsável (Story 5). */
 export type StudyContactChannel = "email" | "phone" | "slack" | "teams";
 
@@ -848,6 +869,39 @@ export type StudyParticipantType = "b2c" | "b2b";
 export type StudyRecruitmentSource = "userx" | "own" | "combined";
 
 export type StudyIncentiveResponsible = "client" | "userx" | "shared";
+
+/** Modo de configuração do questionário online (estudo não moderado). */
+export type QuestionnaireSetupMode = "file" | "link" | "scratch" | "";
+
+export interface StudyQuestionnaireImport {
+  id: string;
+  kind: "file" | "link";
+  label: string;
+  url?: string;
+  file?: StudyConsentFile;
+  /** 0–100; 100 = pronto para lançamento. */
+  progressPct: number;
+}
+
+export interface StudyQuestionnaireDraft {
+  pages: Array<{
+    id: string;
+    title: string;
+    questions: Array<{ id: string; type: string; title: string }>;
+  }>;
+}
+
+/** Link de protótipo / versão (teste de usabilidade ou A/B). */
+export interface StudyUnmoderatedTestLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
+export const STUDY_UNMODERATED_TEST_INSTRUCTIONS_MAX = 2000;
+
+export const STUDY_QUESTIONNAIRE_FILE_MAX_BYTES = 10 * 1024 * 1024;
+export const STUDY_QUESTIONNAIRE_FILE_ACCEPT = ".pdf";
 
 export type {
   StudyScreener,
@@ -926,6 +980,17 @@ export interface TeamStudy {
   /** Formato/método exibido no subtítulo (label de StudyMethod). */
   format?: string;
   method?: StudyMethod | "";
+  /** Tipo do estudo não moderado (Passo 1). */
+  unmoderatedType?: UnmoderatedStudyType | "";
+  /** Modo escolhido no passo de questionário online. */
+  questionnaireSetup?: QuestionnaireSetupMode;
+  questionnaireImports?: StudyQuestionnaireImport[];
+  questionnaireDraft?: StudyQuestionnaireDraft | null;
+  /** Cliente saiu do construtor para a home de configuração do questionário. */
+  questionnaireHubEntered?: boolean;
+  /** Links do teste não moderado (usabilidade / A/B). */
+  unmoderatedTestLinks?: StudyUnmoderatedTestLink[];
+  unmoderatedTestInstructions?: string;
   objective?: string;
   ownerId?: string;
   contactChannel?: StudyContactChannel | "";
@@ -1015,6 +1080,121 @@ export function studyDisplayName(study: Pick<TeamStudy, "name">): string {
 
 export function studyModalityLabel(modality: StudyModality): string {
   return modality === "moderated" ? "Estudo moderado" : "Estudo não moderado";
+}
+
+export function hasQuestionnaireLaunchReady(
+  study: Pick<TeamStudy, "questionnaireSetup" | "questionnaireImports">,
+): boolean {
+  const setup = study.questionnaireSetup;
+  if (setup !== "file" && setup !== "link") return false;
+  const imports = study.questionnaireImports ?? [];
+  return imports.some((item) => item.progressPct >= 100);
+}
+
+export function isOnlineSurveyScratchStudy(
+  study: Pick<
+    TeamStudy,
+    "modality" | "unmoderatedType" | "questionnaireSetup"
+  >,
+): boolean {
+  return (
+    study.modality === "unmoderated" &&
+    study.unmoderatedType === "online_survey" &&
+    study.questionnaireSetup === "scratch"
+  );
+}
+
+export function questionnaireDraftHasContent(
+  draft?: StudyQuestionnaireDraft | null,
+): boolean {
+  if (!draft?.pages?.length) return false;
+  return draft.pages.some((page) => page.questions.length > 0);
+}
+
+export function isUnmoderatedTestStudy(
+  study: Pick<TeamStudy, "modality" | "unmoderatedType">,
+): boolean {
+  return (
+    study.modality === "unmoderated" &&
+    (study.unmoderatedType === "usability_test" ||
+      study.unmoderatedType === "ab_test")
+  );
+}
+
+export function isValidUnmoderatedTestUrl(value: string): boolean {
+  const t = value.trim();
+  if (!t) return false;
+  try {
+    const url = new URL(t);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+export function hasUnmoderatedTestLaunchReady(
+  study: Pick<TeamStudy, "unmoderatedType" | "unmoderatedTestLinks">,
+): boolean {
+  const links = (study.unmoderatedTestLinks ?? []).filter((item) =>
+    isValidUnmoderatedTestUrl(item.url),
+  );
+  if (study.unmoderatedType === "ab_test") return links.length >= 2;
+  if (study.unmoderatedType === "usability_test") return links.length >= 1;
+  return false;
+}
+
+export function showsOnlineSurveySetupHub(
+  study: Pick<
+    TeamStudy,
+    | "modality"
+    | "unmoderatedType"
+    | "questionnaireSetup"
+    | "questionnaireHubEntered"
+  >,
+): boolean {
+  return (
+    isOnlineSurveyScratchStudy(study) &&
+    study.questionnaireHubEntered === true
+  );
+}
+
+export function isOnlineSurveyImportStudy(
+  study: Pick<
+    TeamStudy,
+    "modality" | "unmoderatedType" | "questionnaireSetup"
+  >,
+): boolean {
+  return (
+    study.modality === "unmoderated" &&
+    study.unmoderatedType === "online_survey" &&
+    (study.questionnaireSetup === "file" || study.questionnaireSetup === "link")
+  );
+}
+
+/** Estudo quantitativo (arquivo/link) já lançado — tela de leitura dos dados da criação. */
+export function showsOnlineSurveyImportDetail(
+  study: Pick<
+    TeamStudy,
+    "modality" | "unmoderatedType" | "questionnaireSetup" | "status"
+  >,
+): boolean {
+  return isOnlineSurveyImportStudy(study) && study.status !== "Rascunho";
+}
+
+/** Estudo não moderado lançado — painel lateral com dados da criação. */
+export function showsUnmoderatedLaunchedDetail(
+  study: Pick<
+    TeamStudy,
+    | "modality"
+    | "unmoderatedType"
+    | "questionnaireSetup"
+    | "status"
+  >,
+): boolean {
+  if (study.modality !== "unmoderated" || study.status === "Rascunho") {
+    return false;
+  }
+  return isOnlineSurveyImportStudy(study) || isUnmoderatedTestStudy(study);
 }
 
 const mockStudies: TeamStudy[] = [
@@ -1320,6 +1500,13 @@ export async function createStudyDraft(input: {
     modality: input.modality,
     format: "",
     method: "",
+    unmoderatedType: "",
+    questionnaireSetup: "",
+    questionnaireImports: [],
+    questionnaireDraft: null,
+    questionnaireHubEntered: false,
+    unmoderatedTestLinks: [],
+    unmoderatedTestInstructions: "",
     objective: "",
     ownerId: "",
     contactChannel: "",
@@ -1390,6 +1577,13 @@ export interface UpdateStudyDraftInput {
   name?: string;
   format?: string;
   method?: StudyMethod | "";
+  unmoderatedType?: UnmoderatedStudyType | "";
+  questionnaireSetup?: QuestionnaireSetupMode;
+  questionnaireImports?: StudyQuestionnaireImport[];
+  questionnaireDraft?: StudyQuestionnaireDraft | null;
+  questionnaireHubEntered?: boolean;
+  unmoderatedTestLinks?: StudyUnmoderatedTestLink[];
+  unmoderatedTestInstructions?: string;
   objective?: string;
   ownerId?: string;
   owners?: string[];
@@ -1467,6 +1661,45 @@ export async function updateStudyDraft(
     ...(patch.name !== undefined ? { name: patch.name } : {}),
     ...(patch.format !== undefined ? { format: patch.format } : {}),
     ...(patch.method !== undefined ? { method: patch.method } : {}),
+    ...(patch.unmoderatedType !== undefined
+      ? { unmoderatedType: patch.unmoderatedType }
+      : {}),
+    ...(patch.questionnaireSetup !== undefined
+      ? { questionnaireSetup: patch.questionnaireSetup }
+      : {}),
+    ...(patch.questionnaireImports !== undefined
+      ? {
+          questionnaireImports: patch.questionnaireImports.map((item) => ({
+            ...item,
+            file: item.file ? { ...item.file } : undefined,
+          })),
+        }
+      : {}),
+    ...(patch.questionnaireDraft !== undefined
+      ? {
+          questionnaireDraft: patch.questionnaireDraft
+            ? {
+                pages: patch.questionnaireDraft.pages.map((page) => ({
+                  ...page,
+                  questions: page.questions.map((q) => ({ ...q })),
+                })),
+              }
+            : null,
+        }
+      : {}),
+    ...(patch.questionnaireHubEntered !== undefined
+      ? { questionnaireHubEntered: patch.questionnaireHubEntered }
+      : {}),
+    ...(patch.unmoderatedTestLinks !== undefined
+      ? {
+          unmoderatedTestLinks: patch.unmoderatedTestLinks.map((item) => ({
+            ...item,
+          })),
+        }
+      : {}),
+    ...(patch.unmoderatedTestInstructions !== undefined
+      ? { unmoderatedTestInstructions: patch.unmoderatedTestInstructions }
+      : {}),
     ...(patch.objective !== undefined ? { objective: patch.objective } : {}),
     ...(patch.ownerId !== undefined ? { ownerId: patch.ownerId } : {}),
     ...(patch.owners !== undefined ? { owners: [...patch.owners] } : {}),

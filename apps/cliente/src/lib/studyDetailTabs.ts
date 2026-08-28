@@ -1,4 +1,6 @@
 import { messages } from "./messages";
+import { isUnmoderatedTestStudy } from "./teamApi";
+import type { TeamStudy } from "./teamApi";
 
 /** Ordem do ciclo de vida: Dados → Screener → Recrutamento → Participantes → Arquivos */
 export const STUDY_DETAIL_TABS = [
@@ -109,6 +111,64 @@ export const STUDY_DADOS_SECTION_ITEMS = STUDY_DADOS_SECTIONS.map((id) => ({
   id,
   label: studyDadosSectionLabel(id),
 }));
+
+export const UNMODERATED_SURVEY_DADOS_SECTIONS = [
+  "dados",
+  "publico-alvo",
+  "questionario",
+] as const;
+export type UnmoderatedSurveyDadosSectionId =
+  (typeof UNMODERATED_SURVEY_DADOS_SECTIONS)[number];
+
+export function unmoderatedSurveyDadosSectionLabel(
+  id: UnmoderatedSurveyDadosSectionId,
+  study?: Pick<
+    TeamStudy,
+    "modality" | "unmoderatedType" | "questionnaireSetup"
+  >,
+): string {
+  switch (id) {
+    case "dados":
+      return messages.estudosDadosSectionDados;
+    case "publico-alvo":
+      return messages.estudosDadosSectionPublicoAlvo;
+    case "questionario":
+      if (study && isUnmoderatedTestStudy(study)) {
+        return messages.estudosDadosSectionConfiguracoes;
+      }
+      return messages.estudosDadosSectionQuestionario;
+  }
+}
+
+export function unmoderatedSurveyDadosSectionItems(
+  study?: Pick<
+    TeamStudy,
+    "modality" | "unmoderatedType" | "questionnaireSetup"
+  >,
+) {
+  return UNMODERATED_SURVEY_DADOS_SECTIONS.map((id) => ({
+    id,
+    label: unmoderatedSurveyDadosSectionLabel(id, study),
+  }));
+}
+
+export const UNMODERATED_SURVEY_DADOS_SECTION_ITEMS =
+  UNMODERATED_SURVEY_DADOS_SECTIONS.map((id) => ({
+    id,
+    label: unmoderatedSurveyDadosSectionLabel(id),
+  }));
+
+export function parseUnmoderatedSurveyDadosSection(
+  raw: string | null | undefined,
+): UnmoderatedSurveyDadosSectionId {
+  if (
+    raw &&
+    (UNMODERATED_SURVEY_DADOS_SECTIONS as readonly string[]).includes(raw)
+  ) {
+    return raw as UnmoderatedSurveyDadosSectionId;
+  }
+  return "dados";
+}
 
 export const STUDY_PARTICIPANTES_SUB_ITEMS = STUDY_PARTICIPANTES_SUBTABS.map(
   (id) => ({

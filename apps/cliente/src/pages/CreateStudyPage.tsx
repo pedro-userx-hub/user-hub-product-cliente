@@ -24,6 +24,17 @@ import {
   type StudyStep3FormHandle,
 } from "../features/estudos/StudyStep3Form";
 import {
+  StudyOnlineSurveyStepForm,
+  type StudyOnlineSurveyStepFormHandle,
+} from "../features/estudos/StudyOnlineSurveyStepForm";
+import {
+  StudyUnmoderatedTestStepForm,
+  type StudyUnmoderatedTestStepFormHandle,
+} from "../features/estudos/StudyUnmoderatedTestStepForm";
+import {
+  QuestionnaireBuilderStep,
+} from "../features/estudos/QuestionnaireBuilderStep";
+import {
   StudyStep4Form,
   type StudyStep4FormHandle,
 } from "../features/estudos/StudyStep4Form";
@@ -45,6 +56,8 @@ import {
   discardStudyDraft,
   fetchStudy,
   ForbiddenError,
+  hasQuestionnaireLaunchReady,
+  isUnmoderatedTestStudy,
   launchStudy,
   NotFoundError,
   studyDisplayName,
@@ -55,21 +68,123 @@ import {
 } from "../lib/teamApi";
 import styles from "./CreateStudyPage.module.css";
 
-const STEP_IDS = ["1", "2", "3", "4"] as const;
+const MODERATED_WIZARD_STEPS = [1, 2, 3, 4] as const;
+const UNMODERATED_TEST_WIZARD_STEPS = [1, 3, 5] as const;
+const ONLINE_SURVEY_WIZARD_STEP = 5;
+const QUESTIONNAIRE_BUILDER_STEP = 6;
 
-function stepLabel(id: string): string {
-  switch (id) {
-    case "1":
-      return messages.estudosStep1Label;
-    case "2":
-      return messages.estudosStep2Label;
-    case "3":
-      return messages.estudosStep3Label;
-    case "4":
-      return messages.estudosStep4Label;
-    default:
-      return id;
+interface WizardContext {
+  isUnmoderated: boolean;
+  isOnlineSurvey: boolean;
+  isUnmoderatedTest: boolean;
+}
+
+function getWizardContext(study: TeamStudy): WizardContext {
+  const isUnmoderated = study.modality === "unmoderated";
+  return {
+    isUnmoderated,
+    isOnlineSurvey:
+      isUnmoderated && study.unmoderatedType === "online_survey",
+    isUnmoderatedTest: isUnmoderatedTestStudy(study),
+  };
+}
+
+function includesQuestionnaireBuilder(study: TeamStudy): boolean {
+  return (
+    study.questionnaireSetup === "scratch" ||
+    (study.wizardStep ?? 1) >= QUESTIONNAIRE_BUILDER_STEP ||
+    (study.wizardMaxStep ?? 1) >= QUESTIONNAIRE_BUILDER_STEP
+  );
+}
+
+function getWizardSteps(study: TeamStudy): readonly number[] {
+  const ctx = getWizardContext(study);
+  if (!ctx.isUnmoderated) return MODERATED_WIZARD_STEPS;
+  if (ctx.isOnlineSurvey) {
+    return includesQuestionnaireBuilder(study)
+      ? [1, 3, ONLINE_SURVEY_WIZARD_STEP, QUESTIONNAIRE_BUILDER_STEP]
+      : [1, 3, ONLINE_SURVEY_WIZARD_STEP];
   }
+  if (ctx.isUnmoderatedTest) return UNMODERATED_TEST_WIZARD_STEPS;
+  return [1, 3];
+}
+
+function launchWizardStep(study: TeamStudy): number {
+  const ctx = getWizardContext(study);
+  if (!ctx.isUnmoderated) return 4;
+  if (ctx.isOnlineSurvey) {
+    return study.questionnaireSetup === "scratch"
+      ? QUESTIONNAIRE_BUILDER_STEP
+      : ONLINE_SURVEY_WIZARD_STEP;
+  }
+  if (ctx.isUnmoderatedTest) return ONLINE_SURVEY_WIZARD_STEP;
+  return 3;
+}
+
+function wizardStepLabel(wizardStep: number, study?: TeamStudy): string {
+  switch (wizardStep) {
+    case 1:
+      return messages.estudosStep1Label;
+    case 2:
+      return messages.estudosStep2Label;
+    case 3:
+      return messages.estudosStep3Label;
+    case 4:
+      return messages.estudosStep4Label;
+    case 5:
+      if (study && isUnmoderatedTestStudy(study)) {
+        return messages.estudosDadosSectionConfiguracoes;
+      }
+      return messages.estudosStepOnlineSurveyLabel;
+    case 6:
+      return messages.estudosQuestionnaireBuilderLabel;
+    default:
+      return String(wizardStep);
+  }
+}
+
+function wizardStepToDisplayIndex(
+  wizardStep: number,
+  study: TeamStudy,
+): number {
+  const steps = getWizardSteps(study);
+  const idx = steps.indexOf(wizardStep);
+  return idx >= 0 ? idx + 1 : 1;
+}
+
+function displayIndexToWizardStep(
+  displayIndex: number,
+  study: TeamStudy,
+): number {
+  const steps = getWizardSteps(study);
+  return steps[displayIndex - 1] ?? steps[0];
+}
+
+function wizardMaxToDisplayMax(wizardMax: number, study: TeamStudy): number {
+  const ctx = getWizardContext(study);
+  if (!ctx.isUnmoderated) return wizardMax;
+  const steps = getWizardSteps(study);
+  let displayMax = 1;
+  for (const step of steps) {
+    if (step <= wizardMax) {
+      displayMax = wizardStepToDisplayIndex(step, study);
+    }
+  }
+  return displayMax;
+}
+
+function nextWizardStep(current: number, study: TeamStudy): number {
+  const steps = getWizardSteps(study);
+  const idx = steps.indexOf(current);
+  if (idx < 0 || idx >= steps.length - 1) return current;
+  return steps[idx + 1];
+}
+
+function prevWizardStep(current: number, study: TeamStudy): number {
+  const steps = getWizardSteps(study);
+  const idx = steps.indexOf(current);
+  if (idx <= 0) return steps[0];
+  return steps[idx - 1];
 }
 
 /**
@@ -84,6 +199,8 @@ export function CreateStudyPage() {
   const step2Ref = useRef<StudyStep2FormHandle>(null);
   const step3Ref = useRef<StudyStep3FormHandle>(null);
   const step4Ref = useRef<StudyStep4FormHandle>(null);
+  const onlineSurveyRef = useRef<StudyOnlineSurveyStepFormHandle>(null);
+  const unmoderatedTestRef = useRef<StudyUnmoderatedTestStepFormHandle>(null);
 
   const [study, setStudy] = useState<TeamStudy | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">(
@@ -109,7 +226,29 @@ export function CreateStudyPage() {
     }
     setLoadState("loading");
     try {
-      const next = await fetchStudy(studyId);
+      let next = await fetchStudy(studyId);
+      if (next.modality === "unmoderated") {
+        const migration: UpdateStudyDraftInput = {};
+        const maxAllowed = includesQuestionnaireBuilder(next)
+          ? QUESTIONNAIRE_BUILDER_STEP
+          : next.unmoderatedType === "online_survey" ||
+              isUnmoderatedTestStudy(next)
+            ? ONLINE_SURVEY_WIZARD_STEP
+            : 3;
+        if (next.wizardStep === 2 || next.wizardStep === 4) {
+          migration.wizardStep = 3;
+        }
+        if ((next.wizardMaxStep ?? 1) > maxAllowed) {
+          migration.wizardMaxStep = maxAllowed;
+        }
+        if (Object.keys(migration).length > 0) {
+          next = await updateStudyDraft(studyId, migration);
+        }
+      }
+      if (next.questionnaireHubEntered) {
+        navigate(`/estudos/${studyId}`, { replace: true });
+        return;
+      }
       setStudy(next);
       setLoadState("ready");
     } catch (e) {
@@ -242,24 +381,37 @@ export function CreateStudyPage() {
     }
   };
 
-  const runLaunch = async () => {
+  const runLaunch = async (patchOverride?: UpdateStudyDraftInput) => {
     if (!study) return;
     const token = ++launchAbortRef.current;
 
-    if (step4Ref.current) {
-      launchPatchRef.current = step4Ref.current.getPatch();
-    }
-    const patch = launchPatchRef.current;
+    const patch =
+      patchOverride ??
+      (currentStep === ONLINE_SURVEY_WIZARD_STEP &&
+      getWizardContext(study).isOnlineSurvey &&
+      onlineSurveyRef.current
+        ? onlineSurveyRef.current.getPatch()
+        : currentStep === ONLINE_SURVEY_WIZARD_STEP &&
+            getWizardContext(study).isUnmoderatedTest &&
+            unmoderatedTestRef.current
+          ? unmoderatedTestRef.current.getPatch()
+          : step4Ref.current
+            ? step4Ref.current.getPatch()
+            : launchPatchRef.current);
+
+    launchPatchRef.current = patch;
 
     setLaunchError(undefined);
     setLaunchStatus("processing");
     setSaving(true);
 
+    const launchStep = launchWizardStep(study);
+
     try {
       await updateStudyDraft(study.id, {
         ...patch,
-        wizardStep: 4,
-        wizardMaxStep: Math.max(study.wizardMaxStep ?? 4, 4),
+        wizardStep: launchStep,
+        wizardMaxStep: Math.max(study.wizardMaxStep ?? launchStep, launchStep),
       });
 
       const launched = await withLaunchFloor(
@@ -313,10 +465,13 @@ export function CreateStudyPage() {
   };
 
   const handleNext = async () => {
+    if (!study) return;
+    const ctx = getWizardContext(study);
+
     if (currentStep === 1) {
       if (!step1Ref.current?.validateForNext()) return;
       const patch = step1Ref.current.getPatch();
-      await persistStep(2, patch);
+      await persistStep(nextWizardStep(1, study), patch);
       return;
     }
     if (currentStep === 2) {
@@ -328,15 +483,70 @@ export function CreateStudyPage() {
     if (currentStep === 3) {
       if (!step3Ref.current?.validateForNext()) return;
       const patch = step3Ref.current.getPatch();
-      await persistStep(4, patch);
+      if (ctx.isUnmoderated) {
+        if (ctx.isOnlineSurvey || ctx.isUnmoderatedTest) {
+          await persistStep(ONLINE_SURVEY_WIZARD_STEP, patch);
+          return;
+        }
+        await runLaunch(patch);
+        return;
+      }
+      await persistStep(nextWizardStep(3, study), patch);
+      return;
+    }
+    if (currentStep === ONLINE_SURVEY_WIZARD_STEP) {
+      const ctx = getWizardContext(study);
+      if (ctx.isUnmoderatedTest) {
+        if (!unmoderatedTestRef.current?.validateForLaunch()) return;
+        await runLaunch(unmoderatedTestRef.current.getPatch());
+        return;
+      }
+      const patch = onlineSurveyRef.current?.getPatch() ?? {};
+      const setup = patch.questionnaireSetup ?? study.questionnaireSetup;
+      if (setup === "scratch") {
+        if (!onlineSurveyRef.current?.validateForNext()) return;
+        const ok = await persistStep(QUESTIONNAIRE_BUILDER_STEP, {
+          ...patch,
+          questionnaireDraft: study.questionnaireDraft ?? { pages: [] },
+        });
+        if (ok) {
+          showToast({
+            type: "success",
+            title: messages.estudosCreateStudyDataSaved,
+          });
+        }
+        return;
+      }
+      if (!onlineSurveyRef.current?.validateForLaunch()) return;
+      await runLaunch(patch);
       return;
     }
     if (currentStep === 4) {
       if (!step4Ref.current?.validateForNext()) return;
-      if (!study) return;
       await runLaunch();
     }
   };
+
+  const exitToQuestionnaireHub = useCallback(
+    async (patch: UpdateStudyDraftInput, showSuccessToast: boolean) => {
+      if (!study) return;
+      setSaving(true);
+      const ok = await persistStep(QUESTIONNAIRE_BUILDER_STEP, {
+        ...patch,
+        questionnaireHubEntered: true,
+      });
+      setSaving(false);
+      if (!ok) return;
+      if (showSuccessToast) {
+        showToast({
+          type: "success",
+          title: messages.estudosQuestionnaireBuilderSaveSuccess,
+        });
+      }
+      navigate(`/estudos/${study.id}`, { replace: true });
+    },
+    [navigate, persistStep, showToast, study],
+  );
 
   const handleLaunchBack = () => {
     launchAbortRef.current += 1;
@@ -346,6 +556,8 @@ export function CreateStudyPage() {
   };
 
   const handlePrev = async () => {
+    if (!study) return;
+
     if (currentStep <= 1) {
       if (step1Ref.current) {
         void persistFields(step1Ref.current.getPatch());
@@ -358,41 +570,93 @@ export function CreateStudyPage() {
       return;
     }
     if (currentStep === 3 && step3Ref.current) {
-      await persistStep(2, step3Ref.current.getPatch());
+      await persistStep(prevWizardStep(3, study), step3Ref.current.getPatch());
       return;
+    }
+    if (currentStep === QUESTIONNAIRE_BUILDER_STEP) {
+      await persistStep(ONLINE_SURVEY_WIZARD_STEP);
+      return;
+    }
+    if (currentStep === ONLINE_SURVEY_WIZARD_STEP) {
+      const patch =
+        onlineSurveyRef.current?.getPatch() ??
+        unmoderatedTestRef.current?.getPatch();
+      if (patch) {
+        await persistStep(3, patch);
+        return;
+      }
     }
     if (currentStep === 4 && step4Ref.current) {
-      await persistStep(3, step4Ref.current.getPatch());
+      await persistStep(prevWizardStep(4, study), step4Ref.current.getPatch());
       return;
     }
-    await persistStep(currentStep - 1);
+    await persistStep(prevWizardStep(currentStep, study));
   };
 
-  const handleStepSelect = async (stepId: string) => {
-    const n = Number(stepId);
-    if (!Number.isFinite(n) || n < 1 || n > maxStep || n === currentStep) {
+  const handleStepSelect = async (displayStep: number) => {
+    if (!study) return;
+    const targetWizardStep = displayIndexToWizardStep(displayStep, study);
+    const displayMax = wizardMaxToDisplayMax(maxStep, study);
+
+    if (
+      !Number.isFinite(displayStep) ||
+      displayStep < 1 ||
+      displayStep > displayMax ||
+      targetWizardStep === currentStep
+    ) {
       return;
     }
+
     if (currentStep === 1 && step1Ref.current) {
-      if (n > 1 && !step1Ref.current.validateForNext()) return;
-      await persistStep(n, step1Ref.current.getPatch());
+      if (targetWizardStep > 1 && !step1Ref.current.validateForNext()) return;
+      await persistStep(targetWizardStep, step1Ref.current.getPatch());
       return;
     }
     if (currentStep === 2 && step2Ref.current) {
-      if (n > 2 && !step2Ref.current.validateForNext()) return;
-      await persistStep(n, step2Ref.current.getPatch());
+      if (targetWizardStep > 2 && !step2Ref.current.validateForNext()) return;
+      await persistStep(targetWizardStep, step2Ref.current.getPatch());
       return;
     }
     if (currentStep === 3 && step3Ref.current) {
-      if (n > 3 && !step3Ref.current.validateForNext()) return;
-      await persistStep(n, step3Ref.current.getPatch());
+      if (targetWizardStep > 3 && !step3Ref.current.validateForNext()) return;
+      await persistStep(targetWizardStep, step3Ref.current.getPatch());
+      return;
+    }
+    if (currentStep === ONLINE_SURVEY_WIZARD_STEP && onlineSurveyRef.current) {
+      if (
+        targetWizardStep > ONLINE_SURVEY_WIZARD_STEP &&
+        !onlineSurveyRef.current.validateForNext()
+      ) {
+        return;
+      }
+      await persistStep(
+        targetWizardStep,
+        onlineSurveyRef.current.getPatch(),
+      );
+      return;
+    }
+    if (currentStep === ONLINE_SURVEY_WIZARD_STEP && unmoderatedTestRef.current) {
+      if (
+        targetWizardStep > ONLINE_SURVEY_WIZARD_STEP &&
+        !unmoderatedTestRef.current.validateForLaunch()
+      ) {
+        return;
+      }
+      await persistStep(
+        targetWizardStep,
+        unmoderatedTestRef.current.getPatch(),
+      );
+      return;
+    }
+    if (currentStep === QUESTIONNAIRE_BUILDER_STEP) {
+      await persistStep(targetWizardStep);
       return;
     }
     if (currentStep === 4 && step4Ref.current) {
-      await persistStep(n, step4Ref.current.getPatch());
+      await persistStep(targetWizardStep, step4Ref.current.getPatch());
       return;
     }
-    await persistStep(n);
+    await persistStep(targetWizardStep);
   };
 
   const handleDiscard = async () => {
@@ -432,7 +696,35 @@ export function CreateStudyPage() {
 
   const title = studyDisplayName(study);
   const launching = launchStatus != null;
-  const currentStepLabel = stepLabel(String(currentStep));
+  const wizardCtx = getWizardContext(study);
+  const displayStep = wizardStepToDisplayIndex(currentStep, study);
+  const displayMaxStep = wizardMaxToDisplayMax(maxStep, study);
+  const currentStepLabel = wizardStepLabel(currentStep, study);
+  const onOnlineSurveySetupStep =
+    currentStep === ONLINE_SURVEY_WIZARD_STEP && wizardCtx.isOnlineSurvey;
+  const onUnmoderatedTestStep =
+    currentStep === ONLINE_SURVEY_WIZARD_STEP && wizardCtx.isUnmoderatedTest;
+  const setupMode = study.questionnaireSetup ?? "";
+  const canLaunchOnlineSurvey =
+    wizardCtx.isOnlineSurvey && hasQuestionnaireLaunchReady(study);
+  const canProceedToBuilder = onOnlineSurveySetupStep && setupMode === "scratch";
+  const isLastWizardStep = wizardCtx.isUnmoderatedTest
+    ? onUnmoderatedTestStep
+    : wizardCtx.isOnlineSurvey
+      ? onOnlineSurveySetupStep && canLaunchOnlineSurvey
+      : wizardCtx.isUnmoderated
+        ? currentStep === 3
+        : currentStep === 4;
+  const showPrimaryCta =
+    currentStep !== QUESTIONNAIRE_BUILDER_STEP &&
+    (onUnmoderatedTestStep ||
+      !onOnlineSurveySetupStep ||
+      canLaunchOnlineSurvey ||
+      canProceedToBuilder);
+  const stepMenuIds = Array.from(
+    { length: displayMaxStep },
+    (_, i) => i + 1,
+  );
 
   if (launching) {
     return (
@@ -444,6 +736,19 @@ export function CreateStudyPage() {
           onBack={handleLaunchBack}
         />
       </div>
+    );
+  }
+
+  if (currentStep === QUESTIONNAIRE_BUILDER_STEP) {
+    return (
+      <QuestionnaireBuilderStep
+        study={study}
+        disabled={saving}
+        onBack={(patch) => void exitToQuestionnaireHub(patch, false)}
+        onSave={(patch) => void exitToQuestionnaireHub(patch, true)}
+        onStudyChange={applyLocalPatch}
+        onPersist={(patch) => void persistFields(patch)}
+      />
     );
   }
 
@@ -484,7 +789,7 @@ export function CreateStudyPage() {
             onClick={() => setStepMenuOpen((v) => !v)}
           >
             <span className={styles.stepPrefix}>
-              {messages.estudosCreateStepPrefix(currentStep)}
+              {messages.estudosCreateStepPrefix(displayStep)}
             </span>
             <span className={styles.stepPill}>
               <span className={styles.stepPillLabel}>{currentStepLabel}</span>
@@ -496,12 +801,15 @@ export function CreateStudyPage() {
           </button>
           {stepMenuOpen && (
             <ul className={styles.stepMenu} role="listbox">
-              {STEP_IDS.map((id) => {
-                const n = Number(id);
-                const disabled = n > maxStep || saving;
-                const active = n === currentStep;
+              {stepMenuIds.map((displayId) => {
+                const targetWizardStep = displayIndexToWizardStep(
+                  displayId,
+                  study,
+                );
+                const disabled = displayId > displayMaxStep || saving;
+                const active = targetWizardStep === currentStep;
                 return (
-                  <li key={id} role="option" aria-selected={active}>
+                  <li key={displayId} role="option" aria-selected={active}>
                     <button
                       type="button"
                       className={[
@@ -513,13 +821,13 @@ export function CreateStudyPage() {
                       disabled={disabled}
                       onClick={() => {
                         setStepMenuOpen(false);
-                        void handleStepSelect(id);
+                        void handleStepSelect(displayId);
                       }}
                     >
                       <span className={styles.stepMenuPrefix}>
-                        {messages.estudosCreateStepPrefix(n)}
+                        {messages.estudosCreateStepPrefix(displayId)}
                       </span>
-                      {stepLabel(id)}
+                      {wizardStepLabel(targetWizardStep, study)}
                     </button>
                   </li>
                 );
@@ -545,7 +853,7 @@ export function CreateStudyPage() {
         </div>
 
         <div className={styles.topNavRight}>
-          {currentStep > 1 && (
+          {displayStep > 1 && (
             <Button
               variant="clear"
               size="medium"
@@ -556,19 +864,21 @@ export function CreateStudyPage() {
               {messages.estudosCreatePrev}
             </Button>
           )}
+          {showPrimaryCta && (
           <Button
             variant="filled"
             size="medium"
             loading={saving}
             iconRight={
-              currentStep === 4 ? undefined : <ChevronRightIcon size={20} />
+              isLastWizardStep ? undefined : <ChevronRightIcon size={20} />
             }
             onClick={() => void handleNext()}
           >
-            {currentStep === 4
+            {isLastWizardStep
               ? messages.estudosLaunchCta
               : messages.estudosCreateNext}
           </Button>
+          )}
         </div>
       </header>
 
@@ -586,7 +896,8 @@ export function CreateStudyPage() {
             currentStep === 1 ||
             currentStep === 2 ||
             currentStep === 3 ||
-            currentStep === 4
+            currentStep === 4 ||
+            currentStep === ONLINE_SURVEY_WIZARD_STEP
               ? styles.bodyBare
               : "",
           ]
@@ -615,9 +926,30 @@ export function CreateStudyPage() {
               ref={step3Ref}
               study={study}
               disabled={saving}
+              showCreditBadge={!wizardCtx.isUnmoderated}
+              showParticipationRequirements={!wizardCtx.isUnmoderated}
+              showCustomConsent={!wizardCtx.isUnmoderated}
               onStudyChange={applyLocalPatch}
               onPersist={(patch) => void persistFields(patch)}
             />
+          ) : currentStep === ONLINE_SURVEY_WIZARD_STEP ? (
+            wizardCtx.isOnlineSurvey ? (
+              <StudyOnlineSurveyStepForm
+                ref={onlineSurveyRef}
+                study={study}
+                disabled={saving}
+                onStudyChange={applyLocalPatch}
+                onPersist={(patch) => void persistFields(patch)}
+              />
+            ) : (
+              <StudyUnmoderatedTestStepForm
+                ref={unmoderatedTestRef}
+                study={study}
+                disabled={saving}
+                onStudyChange={applyLocalPatch}
+                onPersist={(patch) => void persistFields(patch)}
+              />
+            )
           ) : (
             <StudyStep4Form
               ref={step4Ref}
