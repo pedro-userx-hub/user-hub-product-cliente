@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "npm run dev --workspace @userx/cliente",
     "build": "npm run build --workspace @userx/cliente",
+    "vercel-build": "npm run build --workspace @userx/cliente && node scripts/sync-vercel-dist.mjs",
     "preview": "npm run preview --workspace @userx/cliente",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "dev:cliente": "npm run dev --workspace @userx/cliente",

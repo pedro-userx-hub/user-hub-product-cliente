@@ -11,7 +11,7 @@ import {
   PROTOTYPE_AUTH_COOKIE,
   timingSafeEqual,
   verifyAuthToken,
-} from "../../lib/prototypeAuth";
+} from "./lib/prototypeAuth";
 
 function readJsonBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
