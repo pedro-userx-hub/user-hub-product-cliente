@@ -4,9 +4,6 @@
   "installCommand": "npm install",
   "framework": null,
   "rewrites": [
-    {
-      "source": "/((?!api/|gate\\.html|favicon\\.ico|assets/).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
