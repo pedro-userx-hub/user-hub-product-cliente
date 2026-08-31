@@ -4,6 +4,9 @@
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/|gate\\.html|favicon\\.ico|assets/).*)",
+      "destination": "/index.html"
+    }
   ]
 }
