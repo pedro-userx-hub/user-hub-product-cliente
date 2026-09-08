@@ -48,13 +48,13 @@ export const messages = {
   estudosOnlineSurveyTitle: "Como você quer começar seu questionário?",
   estudosOnlineSurveyFileCardTitle: "Enviar um arquivo",
   estudosOnlineSurveyFileCardDesc:
-    "Envie seu questionário e nós o configuramos para você.",
+    "Envie o arquivo do seu questionário para nossa equipe programar.",
   estudosOnlineSurveyLinkCardTitle: "Enviar um link",
   estudosOnlineSurveyLinkCardDesc:
-    "Envie o link de uma ferramenta externa e nós cuidamos do recrutamento.",
+    "Use um questionário que já está configurado em outra ferramenta, como Maze ou Qualtrics.",
   estudosOnlineSurveyScratchCardTitle: "Criar do zero",
   estudosOnlineSurveyScratchCardDesc:
-    "Você cria as perguntas e define as lógicas diretamente na plataforma.",
+    "Crie e configure seu questionário diretamente da UserX.",
   estudosOnlineSurveyScratchSoon:
     "Em breve você poderá criar o questionário diretamente na plataforma.",
   estudosOnlineSurveyImportModalTitle: "Importar questionário",
@@ -1827,8 +1827,48 @@ export const messages = {
     "Os times deste convite não estão mais disponíveis. Você entrará sem time.",
   acceptLoadError: "Não foi possível carregar o convite.",
   loginTitle: "Entrar",
-  loginSubtitle: "Use sua conta para acessar o workspace.",
+  loginWelcomeLine1: "Boas-vindas ao seu",
+  loginWelcomeLine2: "hub de pesquisa!",
+  loginSubtitle: "Digite seu e-mail corporativo para continuar.",
   loginCta: "Ir para Estudos",
+  loginContinueCta: "Continuar",
+  loginEnterCta: "Entrar",
+  loginEntering: "Entrando…",
+  loginResolving: "Verificando…",
+  loginEmailLabel: "E-mail",
+  loginEmailPlaceholder: "email@empresa.com",
+  loginPasswordLabel: "Senha",
+  loginPasswordRequired: "Informe a senha.",
+  loginPasswordInvalid: "E-mail ou senha incorretos.",
+  loginPasswordStepHint: "Informe a senha da sua conta.",
+  loginChangeEmail: "Alterar",
+  loginEmailInvalid: "Digite um e-mail válido para continuar.",
+  loginOktaTitle: "Entrar com Okta",
+  loginOktaSubtitle: "Continue para autenticar na UserX com sua conta Serasa.",
+  loginOktaSignIn: "Sign In",
+  loginOktaSigningIn: "Autenticando…",
+  loginOktaCancel: "Cancelar",
+  loginOktaDenied:
+    "Não foi possível autenticar. Verifique suas credenciais ou fale com o administrador.",
+  /** Título da transição pós-auth (barra + passos). */
+  loginEnterTitle: "Autenticando…",
+  loginEnterStepGatherStudies: "Reunindo seus estudos…",
+  loginEnterStepBestParticipants: "Buscando os melhores participantes…",
+  loginEnterStepReadyToStart: "Preparando tudo para você começar…",
+  loginEnterStepWorkspace: "Acessando a sua área de trabalho…",
+  loginSsoErrorTitle: "Não foi possível autenticar",
+  loginSsoErrorBody:
+    "Algo deu errado com o login via Okta. Tente novamente.",
+  loginSsoErrorRetry: "Tentar novamente",
+  loginGenericDeniedTitle: "Conta desativada",
+  loginGenericDeniedBody:
+    "Esta conta foi desativada. O acesso do Serasa agora é individual, via SSO — use seu e-mail corporativo.",
+  loginMinimalAccessBannerTitle: "Acesso mínimo",
+  loginMinimalAccessBannerBody:
+    "Você entrou com acesso mínimo. Ainda não há um workspace vinculado à sua conta — o admin foi avisado e vai liberar seu acesso.",
+  loginMinimalAccessEmpty:
+    "Você ainda não tem estudos atribuídos. Assim que seu acesso for liberado, eles aparecem aqui.",
+  loginLogout: "Sair",
   loginHintFromInvite:
     "Este convite já foi aceito. Faça login para continuar.",
   /** Story 4.2 — reenviar / revogar */

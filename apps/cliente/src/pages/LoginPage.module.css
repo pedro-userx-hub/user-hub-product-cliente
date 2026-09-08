@@ -1,0 +1,341 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-background);
+  font-family: var(--font-family);
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.formPane {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-6);
+  background: #fcfcfc;
+}
+
+.formInner {
+  width: 100%;
+  max-width: 424px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.logo {
+  margin: 0;
+  font-size: 28px;
+  line-height: 32px;
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  text-transform: lowercase;
+}
+
+.heading {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: var(--fw-regular);
+  color: #1b181e;
+}
+
+.headingLine {
+  display: block;
+}
+
+.inviteHint {
+  margin: calc(var(--space-3) * -1) 0 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form > :global(button[type="submit"]),
+.statusBlock :global(button) {
+  width: 100%;
+}
+
+.emailBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: var(--font-base);
+  line-height: 20px;
+  font-weight: var(--fw-semibold);
+  color: #171717;
+}
+
+.inputShell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 56px;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid #d1d5db;
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.inputShell:focus-within {
+  border-color: var(--color-action);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-action) 35%, transparent);
+}
+
+.inputShellError {
+  border-color: var(--color-error);
+  box-shadow: var(--shadow-error-ring);
+}
+
+.inputIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  color: #171717;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:focus {
+  outline: none;
+}
+
+.input:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.fieldError {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-error);
+}
+
+.changeEmail {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  width: auto;
+  max-width: max-content;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 0 var(--space-1);
+  font: inherit;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-action);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.changeEmail:hover {
+  color: var(--color-action-hover);
+  text-decoration: underline;
+}
+
+/* Reveal suave do campo de senha */
+.passwordReveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    grid-template-rows 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 360ms ease,
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.passwordRevealOpen {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.passwordInner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 6px;
+  margin: -6px;
+}
+
+.statusBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.statusError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-5);
+  animation: login-status-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes login-status-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.statusErrorIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  background: var(--color-error-surface);
+  color: var(--color-error);
+}
+
+.statusErrorMark {
+  font-size: 40px;
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+
+.statusErrorCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.statusErrorTitle {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.statusErrorBody {
+  margin: 0;
+  font-size: var(--font-xs);
+  line-height: var(--lh-xs);
+  color: var(--color-text-muted);
+  max-width: 28ch;
+}
+
+.retryOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.retryOutline:hover {
+  background: var(--color-muted-surface);
+}
+
+.retryOutline:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.showcase {
+  position: relative;
+  min-height: 100vh;
+  padding: var(--space-8) var(--space-8) var(--space-8) 0;
+  background: #fcfcfc;
+  box-sizing: border-box;
+}
+
+.carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 64px);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #262626;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  opacity: 0;
+  transition: opacity 700ms ease;
+  pointer-events: none;
+}
+
+.slideActive {
+  opacity: 1;
+}
+
+@media (max-width: 960px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase {
+    display: none;
+  }
+
+  .formPane {
+    min-height: 100vh;
+  }
+}

@@ -10,8 +10,10 @@ import {
   Tabs,
   useToast,
   type BadgeColor,
+  AlertCard,
 } from "@userx/ui";
 import { NewStudyMenu } from "../features/estudos/NewStudyMenu";
+import { useAuth } from "../lib/AuthContext";
 import { canAct, canView } from "../lib/featureVisibility";
 import { useLens } from "../lib/LensContext";
 import { messages } from "../lib/messages";
@@ -66,6 +68,7 @@ function statusColor(status: StudyStatus): BadgeColor {
  */
 export function EstudosPage() {
   const { currentTeam, loadState, user } = useTeamContext();
+  const { session } = useAuth();
   const { lens, cxWorkspaceId } = useLens();
   const { getWorkspace } = useWorkspaces();
   const { showToast } = useToast();
@@ -74,13 +77,16 @@ export function EstudosPage() {
   const isCx = lens === "cx";
   const cxAllWorkspaces = isCx && cxWorkspaceId == null;
   const noTeam = !isCx && (loadState === "empty" || !currentTeam);
+  const isMinimalAccess = session?.accessLevel === "minimal";
   const visCtx = {
     lens,
     role: lens === "cliente" ? user.role : null,
     cxWorkspaceId,
   };
   const canCreate =
-    canAct("estudos.novo", visCtx) && canCreateStudy(user.role);
+    !isMinimalAccess &&
+    canAct("estudos.novo", visCtx) &&
+    canCreateStudy(user.role);
   const showCredits = canView("estudos.saldoCriacao", visCtx);
 
   const [cxWorkspaceName, setCxWorkspaceName] = useState<string | null>(null);
@@ -247,6 +253,15 @@ export function EstudosPage() {
         <p className={styles.subtitle}>{subtitle}</p>
       </header>
 
+      {isMinimalAccess && (
+        <AlertCard
+          variant="warning"
+          title={messages.loginMinimalAccessBannerTitle}
+        >
+          {messages.loginMinimalAccessBannerBody}
+        </AlertCard>
+      )}
+
       {(!noTeam || isCx) && (
         <div className={styles.toolbar}>
           <div className={styles.search}>
@@ -312,7 +327,13 @@ export function EstudosPage() {
       )}
 
       {!noTeam && showGlobalEmpty && (
-        <EmptyState title={messages.estudosEmpty} />
+        <EmptyState
+          title={
+            isMinimalAccess
+              ? messages.loginMinimalAccessEmpty
+              : messages.estudosEmpty
+          }
+        />
       )}
 
       {!noTeam && showStatusEmpty && !showGlobalEmpty && (

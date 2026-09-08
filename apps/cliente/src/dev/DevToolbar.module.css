@@ -1,0 +1,182 @@
+.collapsed {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 9999;
+}
+
+.collapsedBtn {
+  border: 0;
+  border-radius: 4px;
+  padding: 6px 10px;
+  background: #171717;
+  color: #fafafa;
+  font: 600 12px/16px "Open Sans", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #171717;
+  color: #f5f5f5;
+  font-family: "Open Sans", sans-serif;
+  border-bottom: 1px solid #404040;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f59e0b;
+  color: #171717;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a3a3a3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.featureList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.chip {
+  border: 1px solid #525252;
+  background: #262626;
+  color: #f5f5f5;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font: 600 12px/16px "Open Sans", sans-serif;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: #a3a3a3;
+}
+
+.chipActive {
+  background: #8f5cb8;
+  border-color: #8f5cb8;
+  color: #fff;
+}
+
+.close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #a3a3a3;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.close:hover {
+  color: #fff;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid #404040;
+}
+
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.hint {
+  font-size: 12px;
+  color: #a3a3a3;
+}
+
+.caseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding-bottom: 4px;
+}
+
+.caseCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #404040;
+  background: #262626;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.caseCard:hover {
+  border-color: #8f5cb8;
+  background: #2e2e2e;
+}
+
+.kind {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.kindState {
+  background: #1e408a;
+  color: #dbe6fe;
+}
+
+.kindEdge {
+  background: #7c360b;
+  color: #fff5c5;
+}
+
+.caseLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.caseDesc {
+  font-size: 11px;
+  line-height: 15px;
+  color: #a3a3a3;
+}

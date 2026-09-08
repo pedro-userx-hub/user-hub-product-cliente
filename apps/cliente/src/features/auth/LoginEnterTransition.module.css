@@ -1,0 +1,162 @@
+/**
+ * LoginEnterTransition — animações e estados do loading pós-auth.
+ * Tokens do design system (packages/ui). Não depende da LoginPage.
+ */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: enter-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes enter-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: var(--fw-regular);
+  color: #1b181e;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-muted-surface);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-action);
+  transition: width 640ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+  opacity: 0.55;
+  transition:
+    color 280ms ease,
+    opacity 280ms ease,
+    font-weight 280ms ease;
+}
+
+.stepReveal {
+  animation: fade-up 420ms ease both;
+}
+
+.stepActive {
+  color: var(--color-text);
+  font-weight: var(--fw-semibold);
+  opacity: 1;
+}
+
+.stepDone {
+  color: var(--color-success);
+  opacity: 1;
+}
+
+.stepLabel {
+  transition: transform 280ms ease;
+}
+
+.stepActive .stepLabel {
+  transform: translateX(2px);
+}
+
+.stepMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  border: var(--border-width) solid var(--color-border);
+  font-size: var(--font-xs);
+  font-weight: var(--fw-semibold);
+  flex-shrink: 0;
+  transition:
+    border-color 280ms ease,
+    background 280ms ease,
+    color 280ms ease,
+    transform 280ms ease;
+}
+
+.stepActive .stepMark {
+  border-color: var(--color-action);
+  background: var(--color-action-surface);
+  color: var(--color-action-emphasis);
+  transform: scale(1.06);
+}
+
+.stepDone .stepMark {
+  border-color: var(--color-success);
+  background: var(--color-success-surface);
+  color: var(--color-success-emphasis);
+}
+
+.stepMark svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  fill: currentColor;
+}
+
+.stepPulse {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-action);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

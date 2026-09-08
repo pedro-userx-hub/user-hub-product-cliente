@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login — loading pós-auth (handoff)</title>
+  <style>
+    :root {
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --radius-sm: 4px;
+      --radius-full: 999px;
+      --border-width: 1.5px;
+      --color-border: #d1d5db;
+      --color-text: #171717;
+      --color-text-muted: #737373;
+      --color-muted-surface: #f5f5f5;
+      --color-action: #8f5cb8;
+      --color-action-surface: #f3e8ff;
+      --color-action-emphasis: #6b21a8;
+      --color-success: #15803d;
+      --color-success-surface: #dcfce7;
+      --color-success-emphasis: #166534;
+      --font: "Open Sans", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: var(--font);
+      background: #fcfcfc;
+      color: var(--color-text);
+    }
+
+    .panel {
+      width: min(420px, 92vw);
+      padding: 32px 24px;
+    }
+
+    .root {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      animation: enter-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes enter-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .title {
+      margin: 0;
+      font-size: 32px;
+      line-height: 40px;
+      font-weight: 400;
+      color: #1b181e;
+    }
+
+    .progressTrack {
+      width: 100%;
+      height: 4px;
+      border-radius: var(--radius-full);
+      background: var(--color-muted-surface);
+      overflow: hidden;
+    }
+
+    .progressFill {
+      height: 100%;
+      width: 0%;
+      border-radius: var(--radius-full);
+      background: var(--color-action);
+      transition: width 640ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .steps {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      width: 100%;
+    }
+
+    .step {
+      display: none;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) 0;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--color-text-muted);
+      opacity: 0.55;
+    }
+
+    .step.is-visible {
+      display: flex;
+      animation: fade-up 420ms ease both;
+    }
+
+    .step.is-active {
+      color: var(--color-text);
+      font-weight: 600;
+      opacity: 1;
+    }
+
+    .step.is-done {
+      color: var(--color-success);
+      opacity: 1;
+    }
+
+    .step.is-active .stepLabel {
+      transform: translateX(2px);
+    }
+
+    .stepLabel {
+      transition: transform 280ms ease;
+    }
+
+    .stepMark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-full);
+      border: var(--border-width) solid var(--color-border);
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+      transition:
+        border-color 280ms ease,
+        background 280ms ease,
+        color 280ms ease,
+        transform 280ms ease;
+    }
+
+    .step.is-active .stepMark {
+      border-color: var(--color-action);
+      background: var(--color-action-surface);
+      color: var(--color-action-emphasis);
+      transform: scale(1.06);
+    }
+
+    .step.is-done .stepMark {
+      border-color: var(--color-success);
+      background: var(--color-success-surface);
+      color: var(--color-success-emphasis);
+    }
+
+    .stepMark svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      fill: currentColor;
+    }
+
+    .stepPulse {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-action);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.45; transform: scale(0.85); }
+      50%      { opacity: 1; transform: scale(1.15); }
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .toolbar {
+      margin-top: 28px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toolbar button {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: var(--radius-sm);
+      border: var(--border-width) solid var(--color-border);
+      background: #fff;
+      font: 600 14px/20px var(--font);
+      cursor: pointer;
+      color: var(--color-text);
+    }
+
+    .toolbar button:hover { background: var(--color-muted-surface); }
+
+    .hint {
+      margin: 12px 0 0;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    code {
+      font-size: 11px;
+      background: var(--color-muted-surface);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="root" id="root" role="status" aria-live="polite">
+      <h1 class="title">Autenticando…</h1>
+      <div class="progressTrack" aria-hidden>
+        <div class="progressFill" id="progress"></div>
+      </div>
+      <ol class="steps" id="steps"></ol>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" id="replay">Reproduzir de novo</button>
+    </div>
+    <p class="hint">
+      Handoff do loading pós-login.<br />
+      Timing: <code>first 420ms</code> · <code>step 900ms</code> · <code>afterLast 550ms</code><br />
+      Passos um a um · ativo = pulso · concluído = ✓ · barra acompanha.
+    </p>
+  </div>
+
+  <script>
+    const STEPS = [
+      "Reunindo seus estudos…",
+      "Buscando os melhores participantes…",
+      "Preparando tudo para você começar…",
+      "Acessando a sua área de trabalho…",
+    ];
+
+    const TIMING = {
+      firstStepMs: 420,
+      stepMs: 900,
+      afterLastMs: 550,
+    };
+
+    const stepsEl = document.getElementById("steps");
+    const progressEl = document.getElementById("progress");
+    const replayBtn = document.getElementById("replay");
+
+    let runId = 0;
+
+    function delay(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    function render(completedCount) {
+      const n = STEPS.length;
+      const pct = Math.min(
+        100,
+        Math.round(((completedCount + (completedCount < n ? 0.4 : 0)) / n) * 100),
+      );
+      progressEl.style.width = pct + "%";
+
+      stepsEl.innerHTML = "";
+      STEPS.forEach((label, index) => {
+        const done = completedCount > index;
+        const active = completedCount < n && completedCount === index;
+        if (!done && !active) return;
+
+        const li = document.createElement("li");
+        li.className =
+          "step is-visible" +
+          (done ? " is-done" : "") +
+          (active ? " is-active" : "");
+
+        const mark = document.createElement("span");
+        mark.className = "stepMark";
+        mark.setAttribute("aria-hidden", "true");
+        if (done) {
+          mark.innerHTML =
+            '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+            '<path d="M9.55 18.2 3.65 12.3l1.4-1.4 4.5 4.5 9.4-9.4 1.4 1.4z"/>' +
+            "</svg>";
+        } else {
+          const pulse = document.createElement("span");
+          pulse.className = "stepPulse";
+          mark.appendChild(pulse);
+        }
+
+        const text = document.createElement("span");
+        text.className = "stepLabel";
+        text.textContent = label;
+
+        li.appendChild(mark);
+        li.appendChild(text);
+        stepsEl.appendChild(li);
+      });
+    }
+
+    async function runSequence() {
+      const id = ++runId;
+      render(0);
+
+      for (let i = 0; i < STEPS.length; i++) {
+        await delay(i === 0 ? TIMING.firstStepMs : TIMING.stepMs);
+        if (id !== runId) return;
+        render(i + 1);
+      }
+
+      await delay(TIMING.afterLastMs);
+      if (id !== runId) return;
+      // Em produção: navegar para Estudos aqui.
+      console.log("Sequência concluída → redirecionar");
+    }
+
+    replayBtn.addEventListener("click", () => {
+      runSequence();
+    });
+
+    runSequence();
+  </script>
+</body>
+</html>

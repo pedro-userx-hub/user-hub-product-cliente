@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { CheckIcon, ChevronDownIcon, UserIcon } from "@userx/ui";
+import { useAuth } from "../../lib/AuthContext";
 import { messages } from "../../lib/messages";
 import { useLens, type AppLens } from "../../lib/LensContext";
 import styles from "./ProfileLensMenu.module.css";
@@ -16,10 +18,12 @@ const LENS_OPTIONS: { id: AppLens; label: string }[] = [
 ];
 
 /**
- * Menu de perfil — troca a lente Cliente / CX (demo).
+ * Menu de perfil — troca a lente Cliente / CX (demo) + sair.
  */
 export function ProfileLensMenu({ name, roleLabel }: ProfileLensMenuProps) {
   const { lens, setLens } = useLens();
+  const { logout, session } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -60,6 +64,7 @@ export function ProfileLensMenu({ name, roleLabel }: ProfileLensMenuProps) {
     panel.style.top = `${trigger.top - panel.offsetHeight - 6}px`;
   }, [open, name]);
 
+  const displayName = session?.displayName || name;
   const lensLabel =
     lens === "cx" ? messages.lensCx : messages.lensCliente;
 
@@ -79,8 +84,8 @@ export function ProfileLensMenu({ name, roleLabel }: ProfileLensMenuProps) {
           <UserIcon size={20} />
         </span>
         <span className={styles.profileText}>
-          <span className={styles.profileName} title={name}>
-            {name}
+          <span className={styles.profileName} title={displayName}>
+            {displayName}
           </span>
           <span className={styles.profileMeta}>
             {roleLabel} · {lensLabel}
@@ -125,7 +130,7 @@ export function ProfileLensMenu({ name, roleLabel }: ProfileLensMenuProps) {
                   }}
                 >
                   <span className={styles.optionLabel}>
-                    {messages.lensOption(name, opt.label)}
+                    {messages.lensOption(displayName, opt.label)}
                   </span>
                   {selected && (
                     <span className={styles.check} aria-hidden>
@@ -135,6 +140,18 @@ export function ProfileLensMenu({ name, roleLabel }: ProfileLensMenuProps) {
                 </button>
               );
             })}
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.option}
+              onClick={() => {
+                close();
+                logout();
+                navigate("/login", { replace: true });
+              }}
+            >
+              <span className={styles.optionLabel}>{messages.loginLogout}</span>
+            </button>
           </div>,
           document.body,
         )}
