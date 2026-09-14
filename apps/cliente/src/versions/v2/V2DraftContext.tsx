@@ -910,7 +910,7 @@ export function V2DraftProvider({ children }: { children: ReactNode }) {
         objective:
           current.objectiveText ||
           "Entender motivações, barreiras e oportunidades do público descrito.",
-        method: "Entrevista",
+        method: "individual",
         participantQuantity: current.ops.quantity,
       });
       const launched = await apiLaunch(study.id);

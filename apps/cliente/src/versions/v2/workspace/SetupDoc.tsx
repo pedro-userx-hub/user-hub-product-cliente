@@ -1,14 +1,21 @@
-import { Input, TextArea } from "@userx/ui";
+import { Input, Select, TextArea } from "@userx/ui";
 import { useEffect, useState } from "react";
 import { messages } from "../../../lib/messages";
 import {
+  STUDY_METHOD_LABELS,
   updateStudyDraft,
+  type StudyMethod,
   type TeamStudy,
+  type UpdateStudyDraftInput,
 } from "../../../lib/teamApi";
 import { WorkspaceDocShell } from "./WorkspaceDocShell";
 import styles from "./tabDocs.module.css";
 
 const OBJECTIVE_MAX = 500;
+
+const METHOD_OPTIONS = (
+  Object.entries(STUDY_METHOD_LABELS) as [StudyMethod, string][]
+).map(([value, label]) => ({ value, label }));
 
 export function SetupDoc({
   study,
@@ -20,7 +27,9 @@ export function SetupDoc({
   readOnly?: boolean;
 }) {
   const [name, setName] = useState(study.name);
-  const [method, setMethod] = useState(study.method || "Entrevista");
+  const [method, setMethod] = useState<StudyMethod | "">(
+    study.method || "individual",
+  );
   const [objective, setObjective] = useState(study.objective ?? "");
   const [notes, setNotes] = useState<string[]>([]);
   const [examplesOpen, setExamplesOpen] = useState(false);
@@ -28,15 +37,11 @@ export function SetupDoc({
 
   useEffect(() => {
     setName(study.name);
-    setMethod(study.method || "Entrevista");
+    setMethod(study.method || "individual");
     setObjective(study.objective ?? "");
   }, [study.id, study.name, study.method, study.objective]);
 
-  const persist = async (patch: {
-    name?: string;
-    method?: string;
-    objective?: string;
-  }) => {
+  const persist = async (patch: UpdateStudyDraftInput) => {
     if (readOnly) return;
     setSaving(true);
     try {
@@ -77,14 +82,17 @@ export function SetupDoc({
 
       <label className={styles.field}>
         <span className={styles.label}>{messages.v4SetupMethod}</span>
-        <Input
-          value={method}
+        <Select
+          aria-label={messages.v4SetupMethod}
+          options={METHOD_OPTIONS}
+          value={method || undefined}
           disabled={readOnly || saving}
-          onChange={(e) => setMethod(e.target.value)}
-          onBlur={() => {
-            if (method !== (study.method || "Entrevista")) {
-              void persist({ method });
-            }
+          expandable
+          placement="inline"
+          onChange={(v) => {
+            const next = v as StudyMethod;
+            setMethod(next);
+            if (next !== study.method) void persist({ method: next });
           }}
         />
       </label>

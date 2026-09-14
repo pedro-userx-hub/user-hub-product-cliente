@@ -91,11 +91,18 @@ export function deriveBlocksFromCriteria(
 ): { blocks: DocBlock[]; ops: StudyOps; screener: ScreenerQuestion[] } {
   const base = defaultOps(objectiveText);
   const ops: StudyOps = { ...base, ...existingOps };
-  // sync modality ↔ sessionFormat
-  if (ops.sessionFormat === "in_person") ops.modality = "presencial";
-  else if (ops.sessionFormat === "remote") ops.modality = "remoto";
-  else if (ops.modality === "presencial") ops.sessionFormat = "in_person";
-  else ops.sessionFormat = "remote";
+  // sync modality ↔ sessionFormat (híbrido preservado)
+  if (ops.sessionFormat === "in_person") {
+    ops.modality = "presencial";
+  } else if (ops.sessionFormat === "hybrid") {
+    ops.modality = "presencial";
+  } else if (ops.sessionFormat === "remote") {
+    ops.modality = "remoto";
+  } else if (ops.modality === "presencial") {
+    ops.sessionFormat = "in_person";
+  } else {
+    ops.sessionFormat = "remote";
+  }
 
   const blocks: DocBlock[] = [];
 
