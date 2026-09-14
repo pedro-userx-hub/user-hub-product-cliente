@@ -935,6 +935,12 @@ export const STUDY_BRIEFING_ACCEPT = ".pdf,.doc,.docx,.ppt,.pptx";
 
 export type StudyAddressRequiredDoc = "id_card" | "cpf" | "other";
 
+/** Local da sessão presencial (spec 11/09/2026). */
+export type StudyInPersonLocationType =
+  | "userx_office"
+  | "client_office"
+  | "participant_home";
+
 export interface SavedStudyAddress {
   id: string;
   /** Nome do local (exibido no select). */
@@ -947,13 +953,19 @@ export interface SavedStudyAddress {
   state: string;
   complement?: string;
   parking?: boolean;
-  placeName: string;
+  placeName?: string;
   department?: string;
-  room: string;
+  room?: string;
   capacity?: string;
-  onSiteContact: string;
+  onSiteContact?: string;
   requiredDocs?: StudyAddressRequiredDoc[];
   notes?: string;
+}
+
+/** Rótulo da lista: Nome do local · Cidade/UF (fallback: Endereço). */
+export function formatSavedStudyAddressLabel(a: SavedStudyAddress): string {
+  const name = (a.placeName || a.street || a.label).trim();
+  return `${name} · ${a.city}/${a.state}`;
 }
 
 export const STUDY_METHOD_LABELS: Record<StudyMethod, string> = {
@@ -1014,6 +1026,8 @@ export interface TeamStudy {
   maxSessionsPerDay?: number | null;
   /** Formato das sessões (Story 3 Passo 2). */
   sessionFormat?: StudySessionFormat | "";
+  /** Onde a sessão presencial ocorre (UserX / cliente / casa). */
+  inPersonLocationType?: StudyInPersonLocationType | "";
   addressId?: string;
   remotePlatform?: StudyRemotePlatform | "";
   remoteLink?: string;
@@ -1523,6 +1537,7 @@ export async function createStudyDraft(input: {
     limitSessionsPerDay: false,
     maxSessionsPerDay: null,
     sessionFormat: "",
+    inPersonLocationType: "",
     addressId: "",
     remotePlatform: "",
     remoteLink: "",
@@ -1599,6 +1614,7 @@ export interface UpdateStudyDraftInput {
   limitSessionsPerDay?: boolean;
   maxSessionsPerDay?: number | null;
   sessionFormat?: StudySessionFormat | "";
+  inPersonLocationType?: StudyInPersonLocationType | "";
   addressId?: string;
   remotePlatform?: StudyRemotePlatform | "";
   remoteLink?: string;
@@ -1742,6 +1758,9 @@ export async function updateStudyDraft(
       : {}),
     ...(patch.sessionFormat !== undefined
       ? { sessionFormat: patch.sessionFormat }
+      : {}),
+    ...(patch.inPersonLocationType !== undefined
+      ? { inPersonLocationType: patch.inPersonLocationType }
       : {}),
     ...(patch.addressId !== undefined ? { addressId: patch.addressId } : {}),
     ...(patch.remotePlatform !== undefined
@@ -2001,33 +2020,33 @@ export interface AddSavedStudyAddressInput {
   state: string;
   complement?: string;
   parking?: boolean;
-  placeName: string;
+  placeName?: string;
   department?: string;
-  room: string;
+  room?: string;
   capacity?: string;
-  onSiteContact: string;
+  onSiteContact?: string;
   requiredDocs?: StudyAddressRequiredDoc[];
   notes?: string;
 }
 
-export async function addSavedStudyAddress(
+function buildAddressFromInput(
+  id: string,
   input: AddSavedStudyAddressInput,
-): Promise<SavedStudyAddress> {
-  await delay(160);
-  await fetchSessionUser();
+): SavedStudyAddress {
   const street = input.street.trim();
   const cep = input.cep.trim();
   const city = input.city.trim();
   const state = input.state.trim().toUpperCase();
-  const placeName = input.placeName.trim();
-  const room = input.room.trim();
-  const onSiteContact = input.onSiteContact.trim();
-  if (!street || !cep || !city || !state || !placeName || !room || !onSiteContact) {
+  const placeName = input.placeName?.trim() || undefined;
+  const room = input.room?.trim() || undefined;
+  const onSiteContact = input.onSiteContact?.trim() || undefined;
+  if (!street || !cep || !city || !state) {
     throw new Error("invalid_address");
   }
-  const address: SavedStudyAddress = {
-    id: `addr-${Date.now().toString(36)}`,
-    label: placeName,
+  const label = placeName || street;
+  return {
+    id,
+    label,
     detail: `${street} — ${city}, ${state}`,
     street,
     cep,
@@ -2043,8 +2062,69 @@ export async function addSavedStudyAddress(
     requiredDocs: input.requiredDocs?.length ? [...input.requiredDocs] : [],
     notes: input.notes?.trim() || undefined,
   };
+}
+
+export async function addSavedStudyAddress(
+  input: AddSavedStudyAddressInput,
+): Promise<SavedStudyAddress> {
+  await delay(160);
+  await fetchSessionUser();
+  const address = buildAddressFromInput(
+    `addr-${Date.now().toString(36)}`,
+    input,
+  );
   mockSavedAddresses = [address, ...mockSavedAddresses];
   return { ...address };
+}
+
+export async function updateSavedStudyAddress(
+  id: string,
+  input: AddSavedStudyAddressInput,
+): Promise<SavedStudyAddress> {
+  await delay(160);
+  await fetchSessionUser();
+  const idx = mockSavedAddresses.findIndex((a) => a.id === id);
+  if (idx < 0) throw new NotFoundError("Este escritório não existe mais.");
+  const address = buildAddressFromInput(id, input);
+  mockSavedAddresses = mockSavedAddresses.map((a) =>
+    a.id === id ? address : a,
+  );
+  return { ...address };
+}
+
+/** Quantos estudos (mock) referenciam o escritório — aviso de edição compartilhada. */
+export async function countStudiesUsingAddress(
+  addressId: string,
+): Promise<number> {
+  await delay(80);
+  await fetchSessionUser();
+  const live = mockStudies.filter(
+    (s) => s.addressId === addressId && s.status !== "Rascunho",
+  ).length;
+  // Seed: escritório Paulista aparece como compartilhado no protótipo.
+  if (addressId === "addr-1") return Math.max(live, 2);
+  return live;
+}
+
+/**
+ * Auto-preenchimento CEP (mock OQ #6).
+ * Retorna null quando o CEP é válido em formato mas não encontrado.
+ */
+export async function lookupAddressCep(
+  cep: string,
+): Promise<{ city: string; state: string } | null> {
+  await delay(220);
+  const digits = cep.replace(/\D/g, "");
+  if (digits.length !== 8) {
+    throw new Error("invalid_cep");
+  }
+  const MOCK: Record<string, { city: string; state: string }> = {
+    "01310100": { city: "São Paulo", state: "SP" },
+    "01305000": { city: "São Paulo", state: "SP" },
+    "22041080": { city: "Rio de Janeiro", state: "RJ" },
+    "30130000": { city: "Belo Horizonte", state: "MG" },
+  };
+  return MOCK[digits] ?? null;
 }
 
 export async function discardStudyDraft(studyId: string): Promise<void> {

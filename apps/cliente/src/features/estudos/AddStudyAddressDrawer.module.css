@@ -64,6 +64,26 @@
   color: var(--color-danger, #c62828);
 }
 
+.viewRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.viewLabel {
+  font-size: var(--font-xs);
+  line-height: var(--lh-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+}
+
+.viewValue {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text);
+}
+
 @media (max-width: 480px) {
   .rowCityState,
   .rowTwo {

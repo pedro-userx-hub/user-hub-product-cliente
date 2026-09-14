@@ -23,10 +23,11 @@ import styles from "./AppSidebar.module.css";
 
 type SidebarMode = "main" | "gestao";
 
-function navClass(isActive: boolean) {
+function navClass(isActive: boolean, compact: boolean) {
   return [
     getMenuItemClassName(isActive ? "selected" : "default"),
     styles.navLink,
+    compact ? styles.compactLink : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -34,9 +35,9 @@ function navClass(isActive: boolean) {
 
 /**
  * Shell sidebar — nav pelo contrato de visibilidade (lente + role).
- * CX: Estudos, Financeiro + Gestão de Workspaces no menu.
+ * Em /v2: rail compacto (só ícones).
  */
-export function AppSidebar() {
+export function AppSidebar({ compact = false }: { compact?: boolean }) {
   const { user } = useTeamContext();
   const { lens, cxWorkspaceId } = useLens();
   const location = useLocation();
@@ -67,6 +68,8 @@ export function AppSidebar() {
   const showGestaoTimes = canView("gestaoTimes", visCtx);
   const showGestaoMembros = canView("gestaoMembros", visCtx);
 
+  const estudosHref = compact ? "/v2" : "/estudos";
+
   const openGestao = () => {
     setMode("gestao");
     navigate(showBalanco ? "/gestao/balanco" : "/gestao/times");
@@ -75,21 +78,22 @@ export function AppSidebar() {
   const closeGestao = () => {
     setMode("main");
     if (location.pathname.startsWith("/gestao")) {
-      navigate("/estudos");
+      navigate(compact ? "/v2" : "/estudos");
     }
   };
 
   if (mode === "gestao" && showGestaoCliente) {
     return (
-      <Sidebar aria-label={messages.gestaoWorkspace}>
+      <Sidebar aria-label={messages.gestaoWorkspace} compact={compact}>
         <SidebarSubnav
-          title={messages.gestaoWorkspace}
+          title={compact ? "" : messages.gestaoWorkspace}
           onBack={closeGestao}
         >
           {showBalanco && (
             <NavLink
               to="/gestao/balanco"
-              className={({ isActive }) => navClass(isActive)}
+              title={messages.gestaoBalanco}
+              className={({ isActive }) => navClass(isActive, compact)}
             >
               <span className={styles.navIcon} aria-hidden>
                 <WalletIcon size={20} />
@@ -100,7 +104,8 @@ export function AppSidebar() {
           {showGestaoTimes && (
             <NavLink
               to="/gestao/times"
-              className={({ isActive }) => navClass(isActive)}
+              title={messages.gestaoTimes}
+              className={({ isActive }) => navClass(isActive, compact)}
             >
               <span className={styles.navIcon} aria-hidden>
                 <UsersIcon size={20} />
@@ -111,7 +116,8 @@ export function AppSidebar() {
           {showGestaoMembros && (
             <NavLink
               to="/gestao/membros"
-              className={({ isActive }) => navClass(isActive)}
+              title={messages.gestaoMembros}
+              className={({ isActive }) => navClass(isActive, compact)}
             >
               <span className={styles.navIcon} aria-hidden>
                 <UserIcon size={20} />
@@ -127,19 +133,33 @@ export function AppSidebar() {
   return (
     <Sidebar
       aria-label="Menu principal"
+      compact={compact}
+      className={compact ? styles.compact : undefined}
       logo={
-        <div className={styles.logo}>
-          User<span className={styles.logoMark}>X</span>
-        </div>
+        compact ? (
+          <div className={styles.logoCompact} aria-label="UserX">
+            X
+          </div>
+        ) : (
+          <div className={styles.logo}>
+            User<span className={styles.logoMark}>X</span>
+          </div>
+        )
       }
-      team={<ContextSelector />}
+      team={compact ? undefined : <ContextSelector />}
       nav={
         <>
           {showEstudos && (
             <NavLink
-              to="/estudos"
-              className={({ isActive }) => navClass(isActive)}
-              end
+              to={estudosHref}
+              title="Estudos"
+              className={({ isActive }) =>
+                navClass(
+                  isActive || location.pathname.startsWith("/v2"),
+                  compact,
+                )
+              }
+              end={!compact}
             >
               <span className={styles.navIcon} aria-hidden>
                 <BookOpenIcon size={20} />
@@ -150,7 +170,8 @@ export function AppSidebar() {
           {showFinanceiro && (
             <NavLink
               to="/financeiro"
-              className={({ isActive }) => navClass(isActive)}
+              title="Financeiro"
+              className={({ isActive }) => navClass(isActive, compact)}
             >
               <span className={styles.navIcon} aria-hidden>
                 <WalletIcon size={20} />
@@ -161,7 +182,8 @@ export function AppSidebar() {
           {showTime && (
             <NavLink
               to="/time"
-              className={({ isActive }) => navClass(isActive)}
+              title={messages.navMembros}
+              className={({ isActive }) => navClass(isActive, compact)}
             >
               <span className={styles.navIcon} aria-hidden>
                 <UsersIcon size={20} />
@@ -179,8 +201,12 @@ export function AppSidebar() {
           {showPainel && (
             <NavLink
               to="/painel/campanhas"
+              title={messages.cxPainelNav}
               className={({ isActive }) =>
-                navClass(isActive || location.pathname.startsWith("/painel"))
+                navClass(
+                  isActive || location.pathname.startsWith("/painel"),
+                  compact,
+                )
               }
             >
               <span className={styles.navIcon} aria-hidden>
@@ -192,7 +218,8 @@ export function AppSidebar() {
           {showParticipantes && (
             <NavLink
               to="/participantes"
-              className={({ isActive }) => navClass(isActive)}
+              title={messages.participantBaseNav}
+              className={({ isActive }) => navClass(isActive, compact)}
             >
               <span className={styles.navIcon} aria-hidden>
                 <UserIcon size={20} />
@@ -205,7 +232,8 @@ export function AppSidebar() {
           {showCxWorkspaces && (
             <NavLink
               to="/workspaces"
-              className={({ isActive }) => navClass(isActive)}
+              title={messages.cxWorkspacesNav}
+              className={({ isActive }) => navClass(isActive, compact)}
             >
               <span className={styles.navIcon} aria-hidden>
                 <BuildingIcon size={20} />
@@ -219,7 +247,7 @@ export function AppSidebar() {
       }
       footer={
         <>
-          {showGestaoCliente && (
+          {showGestaoCliente && !compact && (
             <>
               <MenuItem icon={<BuildingIcon size={20} />} onClick={openGestao}>
                 {messages.gestaoWorkspace}
@@ -227,9 +255,21 @@ export function AppSidebar() {
               <div className={styles.footerDivider} aria-hidden />
             </>
           )}
+          {showGestaoCliente && compact && (
+            <button
+              type="button"
+              className={styles.iconBtn}
+              title={messages.gestaoWorkspace}
+              aria-label={messages.gestaoWorkspace}
+              onClick={openGestao}
+            >
+              <BuildingIcon size={20} />
+            </button>
+          )}
           <ProfileLensMenu
             name={user.name}
             roleLabel={lens === "cx" ? messages.lensCx : user.role}
+            compact={compact}
           />
         </>
       }

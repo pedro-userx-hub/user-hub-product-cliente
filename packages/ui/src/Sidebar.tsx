@@ -10,6 +10,8 @@ export interface SidebarProps extends HTMLAttributes<HTMLElement> {
   nav?: ReactNode;
   /** Bottom zone (profile, Gestão do Workspace, …). */
   footer?: ReactNode;
+  /** Rail estreito — só ícones (V2 / espaços apertados). */
+  compact?: boolean;
 }
 
 /**
@@ -21,17 +23,25 @@ export function Sidebar({
   team,
   nav,
   footer,
+  compact = false,
   className,
   children,
   ...rest
 }: SidebarProps) {
   return (
     <aside
-      className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
+      className={[
+        styles.root,
+        compact ? styles.compact : "",
+        className ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      data-compact={compact ? "true" : undefined}
       {...rest}
     >
       {logo != null && <div className={styles.logo}>{logo}</div>}
-      {team != null && <div className={styles.team}>{team}</div>}
+      {team != null && !compact && <div className={styles.team}>{team}</div>}
       {nav != null && <nav className={styles.nav}>{nav}</nav>}
       {children}
       {footer != null && <div className={styles.footer}>{footer}</div>}

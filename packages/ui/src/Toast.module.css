@@ -48,6 +48,28 @@
   margin-top: 2px;
 }
 
+.action {
+  appearance: none;
+  display: inline-flex;
+  margin-top: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: 600 var(--font-sm) / var(--lh-sm) var(--font-family);
+  color: var(--color-action);
+  cursor: pointer;
+}
+
+.action:hover {
+  color: var(--color-action-hover);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .close {
   flex-shrink: 0;
   display: inline-flex;

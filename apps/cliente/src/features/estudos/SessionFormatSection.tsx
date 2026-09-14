@@ -3,27 +3,32 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
 } from "react";
 import {
+  AlertCard,
   Button,
   Input,
   Modal,
-  PlusIcon,
   Select,
+  Tabs,
   type SelectOption,
 } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import {
   listSavedStudyAddresses,
   type SavedStudyAddress,
+  type StudyInPersonLocationType,
   type StudyRemotePlatform,
   type StudySessionFormat,
   type UpdateStudyDraftInput,
 } from "../../lib/teamApi";
-import { AddStudyAddressDrawer } from "./AddStudyAddressDrawer";
+import {
+  ClientOfficeDrawer,
+  type ClientOfficeDrawerMode,
+} from "./ClientOfficeDrawer";
+import { ClientOfficeList } from "./ClientOfficeList";
 import styles from "./SessionFormatSection.module.css";
 
 export interface SessionFormatSectionHandle {
@@ -33,6 +38,7 @@ export interface SessionFormatSectionHandle {
 
 export interface SessionFormatSectionProps {
   sessionFormat: StudySessionFormat | "";
+  inPersonLocationType: StudyInPersonLocationType | "";
   addressId: string;
   remotePlatform: StudyRemotePlatform | "";
   remoteLink: string;
@@ -43,19 +49,37 @@ export interface SessionFormatSectionProps {
 
 const FORMAT_OPTIONS = [
   {
-    id: "in_person",
+    id: "in_person" as const,
     title: messages.estudosFormatInPerson,
     description: messages.estudosFormatInPersonDesc,
   },
   {
-    id: "remote",
+    id: "remote" as const,
     title: messages.estudosFormatRemote,
     description: messages.estudosFormatRemoteDesc,
   },
   {
-    id: "hybrid",
+    id: "hybrid" as const,
     title: messages.estudosFormatHybrid,
     description: messages.estudosFormatHybridDesc,
+  },
+];
+
+const LOCATION_SELECT_OPTIONS: SelectOption[] = [
+  {
+    value: "userx_office",
+    label: messages.estudosInPersonLocUserx,
+    description: messages.estudosInPersonLocUserxDesc,
+  },
+  {
+    value: "client_office",
+    label: messages.estudosInPersonLocClient,
+    description: messages.estudosInPersonLocClientDesc,
+  },
+  {
+    value: "participant_home",
+    label: messages.estudosInPersonLocHome,
+    description: messages.estudosInPersonLocHomeDesc,
   },
 ];
 
@@ -75,22 +99,35 @@ function isValidHttpUrl(value: string): boolean {
   }
 }
 
+function needsInPerson(format: StudySessionFormat | ""): boolean {
+  return format === "in_person" || format === "hybrid";
+}
+
+function needsRemote(format: StudySessionFormat | ""): boolean {
+  return format === "remote" || format === "hybrid";
+}
+
 function hasFormatData(
   format: StudySessionFormat | "",
+  locationType: StudyInPersonLocationType | "",
   addressId: string,
   remotePlatform: StudyRemotePlatform | "",
   remoteLink: string,
 ): boolean {
   if (!format) return false;
-  if (format === "in_person") return Boolean(addressId);
+  if (format === "in_person") {
+    return Boolean(locationType || addressId);
+  }
   if (format === "remote") {
     return Boolean(remotePlatform || remoteLink.trim());
   }
-  return Boolean(addressId || remotePlatform || remoteLink.trim());
+  return Boolean(
+    locationType || addressId || remotePlatform || remoteLink.trim(),
+  );
 }
 
 /**
- * Passo 2 Story 3 — formato das sessões + configs reveladas.
+ * Passo 2 — formato das sessões + local presencial (spec 11/09/2026).
  */
 export const SessionFormatSection = forwardRef<
   SessionFormatSectionHandle,
@@ -98,6 +135,7 @@ export const SessionFormatSection = forwardRef<
 >(function SessionFormatSection(
   {
     sessionFormat,
+    inPersonLocationType,
     addressId,
     remotePlatform,
     remoteLink,
@@ -108,11 +146,15 @@ export const SessionFormatSection = forwardRef<
   ref,
 ) {
   const formatWrapRef = useRef<HTMLDivElement>(null);
-  const addressWrapRef = useRef<HTMLDivElement>(null);
+  const locationWrapRef = useRef<HTMLDivElement>(null);
+  const officeWrapRef = useRef<HTMLDivElement>(null);
   const platformWrapRef = useRef<HTMLDivElement>(null);
   const linkRef = useRef<HTMLInputElement>(null);
 
   const [format, setFormat] = useState<StudySessionFormat | "">(sessionFormat);
+  const [locationType, setLocationType] = useState<
+    StudyInPersonLocationType | ""
+  >(inPersonLocationType);
   const [addrId, setAddrId] = useState(addressId);
   const [platform, setPlatform] = useState<StudyRemotePlatform | "">(
     remotePlatform,
@@ -120,12 +162,13 @@ export const SessionFormatSection = forwardRef<
   const [link, setLink] = useState(remoteLink);
 
   const [formatError, setFormatError] = useState<string | undefined>();
+  const [locationError, setLocationError] = useState<string | undefined>();
   const [addressError, setAddressError] = useState<string | undefined>();
   const [platformError, setPlatformError] = useState<string | undefined>();
   const [linkError, setLinkError] = useState<string | undefined>();
 
-  const [addresses, setAddresses] = useState<SavedStudyAddress[]>([]);
-  const [addrState, setAddrState] = useState<
+  const [offices, setOffices] = useState<SavedStudyAddress[]>([]);
+  const [officeState, setOfficeState] = useState<
     "loading" | "ready" | "empty" | "error"
   >("loading");
 
@@ -133,57 +176,67 @@ export const SessionFormatSection = forwardRef<
   const [pendingFormat, setPendingFormat] = useState<StudySessionFormat | null>(
     null,
   );
-  const [addOpen, setAddOpen] = useState(false);
 
-  const loadAddresses = useCallback(async () => {
-    setAddrState("loading");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] =
+    useState<ClientOfficeDrawerMode>("create");
+  const [drawerOffice, setDrawerOffice] = useState<SavedStudyAddress | null>(
+    null,
+  );
+  const [hybridTab, setHybridTab] = useState<"in_person" | "remote">(
+    "in_person",
+  );
+
+  const loadOffices = useCallback(async () => {
+    setOfficeState("loading");
     try {
       const list = await listSavedStudyAddresses();
-      setAddresses(list);
-      setAddrState(list.length === 0 ? "empty" : "ready");
+      setOffices(list);
+      setOfficeState(list.length === 0 ? "empty" : "ready");
       if (addrId && !list.some((a) => a.id === addrId)) {
-        setAddressError(messages.estudosAddressInvalid);
+        setAddressError(messages.estudosOfficeInvalid);
       }
     } catch {
-      setAddrState("error");
+      setOfficeState("error");
     }
   }, [addrId]);
 
   useEffect(() => {
-    void loadAddresses();
-  }, [loadAddresses]);
+    void loadOffices();
+  }, [loadOffices]);
 
   useEffect(() => {
     setFormat(sessionFormat);
+    setLocationType(inPersonLocationType);
     setAddrId(addressId);
     setPlatform(remotePlatform);
     setLink(remoteLink);
-  }, [sessionFormat, addressId, remotePlatform, remoteLink]);
-
-  const addressOptions: SelectOption[] = useMemo(
-    () =>
-      addresses.map((a) => ({
-        value: a.id,
-        label: `${a.label} — ${a.detail}`,
-      })),
-    [addresses],
-  );
+  }, [
+    sessionFormat,
+    inPersonLocationType,
+    addressId,
+    remotePlatform,
+    remoteLink,
+  ]);
 
   const buildPatch = useCallback(
     (
       overrides: Partial<{
         format: StudySessionFormat | "";
+        inPersonLocationType: StudyInPersonLocationType | "";
         addressId: string;
         remotePlatform: StudyRemotePlatform | "";
         remoteLink: string;
       }> = {},
     ): UpdateStudyDraftInput => ({
       sessionFormat: overrides.format ?? format,
+      inPersonLocationType:
+        overrides.inPersonLocationType ?? locationType,
       addressId: overrides.addressId ?? addrId,
       remotePlatform: overrides.remotePlatform ?? platform,
       remoteLink: overrides.remoteLink ?? link,
     }),
-    [format, addrId, platform, link],
+    [format, locationType, addrId, platform, link],
   );
 
   const persist = (patch: UpdateStudyDraftInput) => {
@@ -191,32 +244,56 @@ export const SessionFormatSection = forwardRef<
     onPersist(patch);
   };
 
+  /** Troca de formato: preserva local presencial (AC edge) e limpa só o que sobra do lado remoto. */
   const applyFormat = (next: StudySessionFormat) => {
-    const cleared: UpdateStudyDraftInput = {
-      sessionFormat: next,
-      addressId: "",
-      remotePlatform: "",
-      remoteLink: "",
-    };
+    const leavingRemote = needsRemote(format) && !needsRemote(next);
+    const nextPlatform = leavingRemote ? "" : platform;
+    const nextLink = leavingRemote ? "" : link;
+
     setFormat(next);
-    setAddrId("");
-    setPlatform("");
-    setLink("");
+    setPlatform(nextPlatform);
+    setLink(nextLink);
     setFormatError(undefined);
-    setAddressError(undefined);
     setPlatformError(undefined);
     setLinkError(undefined);
-    persist(cleared);
+    if (next === "hybrid") setHybridTab("in_person");
+    if (!needsInPerson(next)) {
+      setLocationError(undefined);
+      setAddressError(undefined);
+    }
+    persist({
+      sessionFormat: next,
+      inPersonLocationType: locationType,
+      addressId: addrId,
+      remotePlatform: nextPlatform,
+      remoteLink: nextLink,
+    });
   };
 
   const requestFormatChange = (next: StudySessionFormat) => {
     if (next === format) return;
-    if (hasFormatData(format, addrId, platform, link)) {
+    if (hasFormatData(format, locationType, addrId, platform, link)) {
       setPendingFormat(next);
       setSwitchOpen(true);
       return;
     }
     applyFormat(next);
+  };
+
+  const selectLocationType = (next: StudyInPersonLocationType) => {
+    if (next === locationType) return;
+    // AC5: trocar opção desvincula escritório da configuração (não apaga o registro)
+    const clearedAddr = "";
+    setLocationType(next);
+    setAddrId(clearedAddr);
+    setLocationError(undefined);
+    setAddressError(undefined);
+    persist(
+      buildPatch({
+        inPersonLocationType: next,
+        addressId: clearedAddr,
+      }),
+    );
   };
 
   useImperativeHandle(
@@ -235,33 +312,46 @@ export const SessionFormatSection = forwardRef<
           setFormatError(undefined);
         }
 
-        const needsAddress = format === "in_person" || format === "hybrid";
-        const needsRemote = format === "remote" || format === "hybrid";
-
-        if (needsAddress) {
-          if (!addrId) {
-            setAddressError(messages.estudosAddressRequired);
+        if (needsInPerson(format)) {
+          if (!locationType) {
+            setLocationError(messages.estudosInPersonWhereRequired);
             ok = false;
             if (!first) {
-              first = addressWrapRef.current?.querySelector("button") ?? null;
-            }
-          } else if (!addresses.some((a) => a.id === addrId)) {
-            setAddressError(messages.estudosAddressInvalid);
-            ok = false;
-            if (!first) {
-              first = addressWrapRef.current?.querySelector("button") ?? null;
+              first =
+                locationWrapRef.current?.querySelector("button") ?? null;
             }
           } else {
-            setAddressError(undefined);
+            setLocationError(undefined);
+          }
+
+          if (locationType === "client_office") {
+            if (!addrId) {
+              setAddressError(messages.estudosOfficeRequired);
+              ok = false;
+              if (!first) {
+                first =
+                  officeWrapRef.current?.querySelector("button") ?? null;
+              }
+            } else if (!offices.some((a) => a.id === addrId)) {
+              setAddressError(messages.estudosOfficeInvalid);
+              ok = false;
+              if (!first) {
+                first =
+                  officeWrapRef.current?.querySelector("button") ?? null;
+              }
+            } else {
+              setAddressError(undefined);
+            }
           }
         }
 
-        if (needsRemote) {
+        if (needsRemote(format)) {
           if (!platform) {
             setPlatformError(messages.estudosRemotePlatformRequired);
             ok = false;
             if (!first) {
-              first = platformWrapRef.current?.querySelector("button") ?? null;
+              first =
+                platformWrapRef.current?.querySelector("button") ?? null;
             }
           } else {
             setPlatformError(undefined);
@@ -286,70 +376,77 @@ export const SessionFormatSection = forwardRef<
         return ok;
       },
     }),
-    [format, addrId, platform, link, addresses, buildPatch],
+    [format, locationType, addrId, platform, link, offices, buildPatch],
   );
 
-  const openAddAddress = () => setAddOpen(true);
+  const openCreateOffice = () => {
+    setDrawerMode("create");
+    setDrawerOffice(null);
+    setDrawerOpen(true);
+  };
 
-  const addressField = (
-    <div className={styles.nestedFields} ref={addressWrapRef}>
+  const openViewOffice = (office: SavedStudyAddress) => {
+    setDrawerMode("view");
+    setDrawerOffice(office);
+    setDrawerOpen(true);
+  };
+
+  const openEditOffice = (office: SavedStudyAddress) => {
+    setDrawerMode("edit");
+    setDrawerOffice(office);
+    setDrawerOpen(true);
+  };
+
+  const inPersonBlock = (
+    <div className={styles.nestedFields} ref={locationWrapRef}>
       <Select
-        label={messages.estudosAddressLabel}
-        placeholder={messages.estudosAddressPlaceholder}
-        options={addressOptions}
-        value={addrId || undefined}
-        error={addressError}
+        label={messages.estudosInPersonWhereLabel}
+        placeholder={messages.estudosInPersonWherePlaceholder}
+        options={LOCATION_SELECT_OPTIONS}
+        value={locationType || undefined}
+        error={locationError}
         disabled={disabled}
-        searchable={addresses.length >= 8}
-        searchPlaceholder={messages.estudosAddressSearch}
-        panelState={
-          addrState === "loading"
-            ? "loading"
-            : addrState === "empty"
-              ? "empty"
-              : addrState === "error"
-                ? "error"
-                : "default"
-        }
-        emptyMessage={
-          <span>
-            {messages.estudosAddressEmpty}
-            {" — "}
-            <button
-              type="button"
-              className={styles.inlineLink}
-              onClick={openAddAddress}
-            >
-              {messages.estudosAddressAddCta}
-            </button>
-          </span>
-        }
-        onRetry={() => void loadAddresses()}
         expandable
         placement="inline"
-        actions={[
-          {
-            id: "add-address",
-            label: messages.estudosAddressAddCta,
-            tone: "action",
-            icon: <PlusIcon size={20} />,
-            onSelect: openAddAddress,
-          },
-        ]}
-        onChange={(v) => {
-          setAddrId(v);
-          setAddressError(undefined);
-          persist(buildPatch({ addressId: v }));
-        }}
+        onChange={(v) =>
+          selectLocationType(v as StudyInPersonLocationType)
+        }
       />
-      <Button
-        variant="clear"
-        size="medium"
-        disabled={disabled}
-        onClick={openAddAddress}
-      >
-        {messages.estudosAddressAddCta}
-      </Button>
+
+      {locationType === "userx_office" && (
+        <AlertCard variant="warning">
+          <p>{messages.estudosInPersonAlertUserx}</p>
+        </AlertCard>
+      )}
+      {locationType === "participant_home" && (
+        <AlertCard variant="warning">
+          <p>{messages.estudosInPersonAlertHome}</p>
+        </AlertCard>
+      )}
+      {locationType === "client_office" && (
+        <div ref={officeWrapRef}>
+          <ClientOfficeList
+            offices={offices}
+            selectedId={addrId}
+            state={officeState}
+            disabled={disabled}
+            onSelect={(id) => {
+              setAddrId(id);
+              setAddressError(undefined);
+              persist(buildPatch({ addressId: id }));
+            }}
+            onAdd={openCreateOffice}
+            onView={openViewOffice}
+            onEdit={openEditOffice}
+            onRetry={() => void loadOffices()}
+          />
+          {addressError && (
+            <p className={styles.formatError} role="alert">
+              {addressError}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -426,10 +523,9 @@ export const SessionFormatSection = forwardRef<
       >
         {FORMAT_OPTIONS.map((opt) => {
           const selected = format === opt.id;
-          const showAddrInCard =
-            selected && (opt.id === "in_person" || opt.id === "hybrid");
-          const showRemoteInCard =
-            selected && (opt.id === "remote" || opt.id === "hybrid");
+          const showInPerson = selected && opt.id === "in_person";
+          const showRemote = selected && opt.id === "remote";
+          const showHybrid = selected && opt.id === "hybrid";
 
           return (
             <div
@@ -473,8 +569,30 @@ export const SessionFormatSection = forwardRef<
                 </span>
               </button>
 
-              {showAddrInCard && addressField}
-              {showRemoteInCard && remoteFields}
+              {showInPerson && inPersonBlock}
+              {showRemote && remoteFields}
+              {showHybrid && (
+                <div className={styles.hybridPane}>
+                  <Tabs
+                    aria-label={messages.estudosFormatHybrid}
+                    value={hybridTab}
+                    onChange={(id) =>
+                      setHybridTab(id as "in_person" | "remote")
+                    }
+                    items={[
+                      {
+                        id: "in_person",
+                        label: messages.estudosHybridTabInPerson,
+                      },
+                      {
+                        id: "remote",
+                        label: messages.estudosHybridTabRemote,
+                      },
+                    ]}
+                  />
+                  {hybridTab === "in_person" ? inPersonBlock : remoteFields}
+                </div>
+              )}
             </div>
           );
         })}
@@ -522,18 +640,27 @@ export const SessionFormatSection = forwardRef<
         <p className={styles.modalCopy}>{messages.estudosFormatSwitchBody}</p>
       </Modal>
 
-      <AddStudyAddressDrawer
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        onCreated={(created) => {
-          setAddresses((prev) => [
-            created,
-            ...prev.filter((a) => a.id !== created.id),
+      <ClientOfficeDrawer
+        open={drawerOpen}
+        mode={drawerMode}
+        office={drawerOffice}
+        onClose={() => setDrawerOpen(false)}
+        onRequestEdit={openEditOffice}
+        onGone={() => {
+          setDrawerOpen(false);
+          void loadOffices();
+        }}
+        onSaved={(saved) => {
+          setOffices((prev) => [
+            saved,
+            ...prev.filter((a) => a.id !== saved.id),
           ]);
-          setAddrState("ready");
-          setAddrId(created.id);
-          setAddressError(undefined);
-          persist(buildPatch({ addressId: created.id }));
+          setOfficeState("ready");
+          if (drawerMode === "create" || !addrId) {
+            setAddrId(saved.id);
+            setAddressError(undefined);
+            persist(buildPatch({ addressId: saved.id }));
+          }
         }}
       />
     </section>

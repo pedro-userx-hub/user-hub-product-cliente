@@ -50,12 +50,39 @@
   color: var(--color-text-muted);
 }
 
-.label {
+.labelWrap {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.description {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-regular);
+  color: var(--color-text-muted);
+  white-space: normal;
+}
+
+.withDescription {
+  height: auto;
+  min-height: 48px;
+  align-items: flex-start;
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.withDescription .label {
+  white-space: normal;
 }
 
 .trailing {

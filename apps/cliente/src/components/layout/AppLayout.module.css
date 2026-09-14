@@ -118,3 +118,16 @@
   flex-direction: column;
 }
 
+/* V2 entrada: full-bleed + scroll da página (hero → estudos) */
+.contentV2 {
+  padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.contentInnerV2 {
+  max-width: none;
+  width: 100%;
+}
+

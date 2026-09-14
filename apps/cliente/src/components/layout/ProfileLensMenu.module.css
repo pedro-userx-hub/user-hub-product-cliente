@@ -4,6 +4,10 @@
   min-width: 0;
 }
 
+.wrapCompact {
+  width: auto;
+}
+
 .trigger {
   display: flex;
   align-items: center;
@@ -20,6 +24,13 @@
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
+}
+
+.triggerCompact {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
 }
 
 .trigger:hover {

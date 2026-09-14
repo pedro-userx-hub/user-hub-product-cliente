@@ -146,6 +146,12 @@ export function matchesParticipantFilter(
   }
 }
 
+export function maskName(name: string): string {
+  const t = name.trim();
+  if (!t) return "•••";
+  return `${t.slice(0, 1)}•••`;
+}
+
 export function maskEmail(email: string): string {
   const [user, domain] = email.split("@");
   if (!user || !domain) return email;

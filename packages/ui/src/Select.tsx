@@ -18,6 +18,8 @@ export interface SelectOption {
   label: string;
   /** Conteúdo à esquerda do label (ex.: Avatar com iniciais do time). */
   leading?: ReactNode;
+  /** Descrição curta abaixo do rótulo (ex.: tipo de local presencial). */
+  description?: string;
   disabled?: boolean;
 }
 
@@ -114,7 +116,11 @@ export function Select({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return options;
-    return options.filter((o) => o.label.toLowerCase().includes(q));
+    return options.filter(
+      (o) =>
+        o.label.toLowerCase().includes(q) ||
+        (o.description?.toLowerCase().includes(q) ?? false),
+    );
   }, [options, query]);
 
   const close = useCallback(() => {
@@ -247,6 +253,7 @@ export function Select({
                       }
                       icon={opt.leading}
                       title={opt.label}
+                      description={opt.description}
                       trailing={isSelected ? <CheckIcon /> : undefined}
                       aria-selected={isSelected}
                       onClick={() => {

@@ -14,6 +14,7 @@ import {
   todayISODate,
 } from "../../lib/studySchedule";
 import type {
+  StudyInPersonLocationType,
   StudyRemotePlatform,
   StudyScheduleSlot,
   StudySessionFormat,
@@ -107,6 +108,9 @@ export const StudyStep2Form = forwardRef<
   const [sessionFormat, setSessionFormat] = useState<StudySessionFormat | "">(
     study.sessionFormat ?? "",
   );
+  const [inPersonLocationType, setInPersonLocationType] = useState<
+    StudyInPersonLocationType | ""
+  >(study.inPersonLocationType ?? "");
   const [addressId, setAddressId] = useState(study.addressId ?? "");
   const [remotePlatform, setRemotePlatform] = useState<
     StudyRemotePlatform | ""
@@ -130,6 +134,7 @@ export const StudyStep2Form = forwardRef<
       study.maxSessionsPerDay != null ? String(study.maxSessionsPerDay) : "",
     );
     setSessionFormat(study.sessionFormat ?? "");
+    setInPersonLocationType(study.inPersonLocationType ?? "");
     setAddressId(study.addressId ?? "");
     setRemotePlatform(study.remotePlatform ?? "");
     setRemoteLink(study.remoteLink ?? "");
@@ -180,6 +185,7 @@ export const StudyStep2Form = forwardRef<
       maxSessionsPerDay:
         limit && Number.isFinite(maxNum) && maxNum > 0 ? maxNum : null,
       sessionFormat,
+      inPersonLocationType,
       addressId,
       remotePlatform,
       remoteLink,
@@ -283,6 +289,7 @@ export const StudyStep2Form = forwardRef<
       limitPerDay,
       maxPerDay,
       sessionFormat,
+      inPersonLocationType,
       addressId,
       remotePlatform,
       remoteLink,
@@ -438,6 +445,7 @@ export const StudyStep2Form = forwardRef<
       <SessionFormatSection
         ref={formatRef}
         sessionFormat={sessionFormat}
+        inPersonLocationType={inPersonLocationType}
         addressId={addressId}
         remotePlatform={remotePlatform}
         remoteLink={remoteLink}
@@ -445,6 +453,9 @@ export const StudyStep2Form = forwardRef<
         onChange={(patch) => {
           if (patch.sessionFormat !== undefined) {
             setSessionFormat(patch.sessionFormat);
+          }
+          if (patch.inPersonLocationType !== undefined) {
+            setInPersonLocationType(patch.inPersonLocationType);
           }
           if (patch.addressId !== undefined) setAddressId(patch.addressId);
           if (patch.remotePlatform !== undefined) {

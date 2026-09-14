@@ -1,0 +1,179 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+  background: var(--color-surface);
+  font-family: var(--font-family);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.context {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}
+
+.collapse,
+.expand {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: 600 var(--font-xs) / var(--lh-xs) var(--font-family);
+  cursor: pointer;
+}
+
+.collapse:hover {
+  color: var(--color-action);
+}
+
+.expand {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding: var(--space-3);
+  height: 100%;
+  color: var(--color-action);
+}
+
+.log {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.empty {
+  margin: auto 0;
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.rowAi,
+.rowUser {
+  display: flex;
+  gap: var(--space-2);
+  max-width: 100%;
+}
+
+.rowAi {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.rowUser {
+  align-self: flex-end;
+  justify-content: flex-end;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-action) 18%, white);
+  color: var(--color-action);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+}
+
+.bubbleUser,
+.bubbleAi {
+  max-width: min(100%, 320px);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+}
+
+.bubbleUser {
+  background: var(--color-muted-surface);
+  color: var(--color-text);
+  border-bottom-right-radius: 2px;
+}
+
+.bubbleAi {
+  background: transparent;
+  padding: var(--space-1) 0;
+  color: var(--color-text);
+}
+
+.bubbleText {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.typing {
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.composerWrap {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.composerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.composerInput {
+  width: 100%;
+  border: 0;
+  resize: none;
+  outline: none;
+  background: transparent;
+  font: var(--fw-regular) var(--font-sm) / var(--lh-sm) var(--font-family);
+  color: var(--color-text);
+  padding: 0;
+}
+
+.composerInput::placeholder {
+  color: var(--color-text-muted);
+}

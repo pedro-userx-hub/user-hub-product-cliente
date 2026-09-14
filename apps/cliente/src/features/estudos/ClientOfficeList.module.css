@@ -1,0 +1,186 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  overflow: auto;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.card:hover:not(.cardDisabled) {
+  border-color: var(--color-text-muted);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 6%));
+}
+
+.card:hover:not(.cardDisabled) .cardActions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cardSelected {
+  border-width: 2.5px;
+  border-color: var(--color-action);
+  background: var(--color-action-surface, #f3ebf8);
+}
+
+.cardDisabled {
+  opacity: 0.55;
+}
+
+.cardMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4);
+  padding-right: 72px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cardMain:disabled {
+  cursor: not-allowed;
+}
+
+.cardMain:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: -2px;
+  border-radius: var(--radius-md);
+}
+
+.cardTitle {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.cardDetail {
+  font-size: var(--font-xs);
+  line-height: var(--lh-xs);
+  color: var(--color-text-muted);
+}
+
+.cardActions {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.iconBtn:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-muted-surface, #f3f4f6);
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+.iconBtn:disabled {
+  cursor: not-allowed;
+}
+
+/* Teclado / touch: ações sempre acessíveis */
+@media (hover: none) {
+  .cardActions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.skeleton {
+  height: 72px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-muted-surface, #f3f4f6) 0%,
+    #ececec 50%,
+    var(--color-muted-surface, #f3f4f6) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.1s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .card,
+  .cardActions {
+    animation: none;
+    transition: none;
+  }
+}

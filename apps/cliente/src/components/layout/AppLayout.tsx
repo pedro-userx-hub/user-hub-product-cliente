@@ -45,6 +45,9 @@ function routeAllowed(
   if (pathname.startsWith("/estudos")) {
     return canView("estudos", ctx);
   }
+  if (pathname.startsWith("/v2")) {
+    return canView("estudos", ctx);
+  }
   return true;
 }
 
@@ -111,6 +114,8 @@ export function AppLayout() {
   }, [user.role, lens, cxWorkspaceId]);
 
   const hideSidebar = isStudyFocus;
+  const isV2Entry = location.pathname === "/v2" || location.pathname === "/v2/";
+  const sidebarCompact = isV2Entry;
 
   return (
     <div className={styles.root}>
@@ -130,7 +135,7 @@ export function AppLayout() {
         </div>
       )}
       <div className={styles.shell} key={shellKey}>
-        {!hideSidebar && <AppSidebar />}
+        {!hideSidebar && <AppSidebar compact={sidebarCompact} />}
         <div
           className={[
             styles.main,
@@ -144,6 +149,7 @@ export function AppLayout() {
               styles.content,
               isStudyFocus ? styles.contentFocus : "",
               isWorkspacesFocus ? styles.contentWorkspaces : "",
+              isV2Entry ? styles.contentV2 : "",
             ]
               .filter(Boolean)
               .join(" ")}
@@ -153,6 +159,7 @@ export function AppLayout() {
                 styles.contentInner,
                 isStudyFocus ? styles.contentInnerFocus : "",
                 isFullWidthSurface ? styles.contentInnerWorkspaces : "",
+                isV2Entry ? styles.contentInnerV2 : "",
               ]
                 .filter(Boolean)
                 .join(" ")}

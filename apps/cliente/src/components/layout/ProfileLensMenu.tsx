@@ -10,6 +10,7 @@ import styles from "./ProfileLensMenu.module.css";
 export interface ProfileLensMenuProps {
   name: string;
   roleLabel: string;
+  compact?: boolean;
 }
 
 const LENS_OPTIONS: { id: AppLens; label: string }[] = [
@@ -20,7 +21,11 @@ const LENS_OPTIONS: { id: AppLens; label: string }[] = [
 /**
  * Menu de perfil — troca a lente Cliente / CX (demo) + sair.
  */
-export function ProfileLensMenu({ name, roleLabel }: ProfileLensMenuProps) {
+export function ProfileLensMenu({
+  name,
+  roleLabel,
+  compact = false,
+}: ProfileLensMenuProps) {
   const { lens, setLens } = useLens();
   const { logout, session } = useAuth();
   const navigate = useNavigate();
@@ -69,36 +74,43 @@ export function ProfileLensMenu({ name, roleLabel }: ProfileLensMenuProps) {
     lens === "cx" ? messages.lensCx : messages.lensCliente;
 
   return (
-    <div className={styles.wrap}>
+    <div className={[styles.wrap, compact ? styles.wrapCompact : ""].join(" ")}>
       <button
         ref={triggerRef}
         type="button"
-        className={styles.trigger}
+        className={[styles.trigger, compact ? styles.triggerCompact : ""]
+          .filter(Boolean)
+          .join(" ")}
         aria-label={messages.lensMenuAria}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
+        title={displayName}
         onClick={() => setOpen((v) => !v)}
       >
         <span className={styles.profileIcon} aria-hidden>
           <UserIcon size={20} />
         </span>
-        <span className={styles.profileText}>
-          <span className={styles.profileName} title={displayName}>
-            {displayName}
-          </span>
-          <span className={styles.profileMeta}>
-            {roleLabel} · {lensLabel}
-          </span>
-        </span>
-        <span
-          className={[styles.chevron, open ? styles.chevronOpen : ""]
-            .filter(Boolean)
-            .join(" ")}
-          aria-hidden
-        >
-          <ChevronDownIcon size={16} />
-        </span>
+        {!compact && (
+          <>
+            <span className={styles.profileText}>
+              <span className={styles.profileName} title={displayName}>
+                {displayName}
+              </span>
+              <span className={styles.profileMeta}>
+                {roleLabel} · {lensLabel}
+              </span>
+            </span>
+            <span
+              className={[styles.chevron, open ? styles.chevronOpen : ""]
+                .filter(Boolean)
+                .join(" ")}
+              aria-hidden
+            >
+              <ChevronDownIcon size={16} />
+            </span>
+          </>
+        )}
       </button>
 
       {open &&

@@ -11,24 +11,27 @@ import { InviteProvider } from "./lib/InviteContext";
 import { LensProvider } from "./lib/LensContext";
 import { TeamProvider } from "./lib/TeamContext";
 import { WorkspaceProvider } from "./features/workspaces/lib/store";
+import { ProductVersionProvider } from "./versions/ProductVersionContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <ToastProvider>
-        <AuthProvider>
-          <TeamProvider>
-            <LensProvider>
-              <WorkspaceProvider>
-                <InviteProvider>
-                  <CreateTeamProvider>
-                    <App />
-                  </CreateTeamProvider>
-                </InviteProvider>
-              </WorkspaceProvider>
-            </LensProvider>
-          </TeamProvider>
-        </AuthProvider>
+        <ProductVersionProvider>
+          <AuthProvider>
+            <TeamProvider>
+              <LensProvider>
+                <WorkspaceProvider>
+                  <InviteProvider>
+                    <CreateTeamProvider>
+                      <App />
+                    </CreateTeamProvider>
+                  </InviteProvider>
+                </WorkspaceProvider>
+              </LensProvider>
+            </TeamProvider>
+          </AuthProvider>
+        </ProductVersionProvider>
       </ToastProvider>
     </BrowserRouter>
   </React.StrictMode>,

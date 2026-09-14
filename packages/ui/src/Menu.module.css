@@ -45,6 +45,10 @@
   /* Acima de Drawer (100); abaixo de Modal (200). */
   z-index: 150;
   min-width: 180px;
+  max-width: min(320px, calc(100vw - 16px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border-subtle);
   border-radius: var(--radius-md);
@@ -53,6 +57,15 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  box-sizing: border-box;
+}
+
+.submenuPanel {
+  z-index: 151;
+}
+
+.submenuWrap {
+  position: relative;
 }
 
 .destructive {

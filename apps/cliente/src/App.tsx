@@ -20,72 +20,82 @@ import { ClientBasePage } from "./pages/ClientBasePage";
 import { CxPainelPage } from "./pages/CxPainelPage";
 import { StudyDetailPage } from "./pages/StudyDetailPage";
 import { TimePage } from "./pages/TimePage";
+import { useProductVersion } from "./versions/ProductVersionContext";
+import { V2App } from "./versions/v2/V2App";
+
+function V1Routes() {
+  return (
+    <Routes>
+      <Route path="convite/:token" element={<AcceptInvitePage />} />
+      <Route path="login" element={<LoginPage />} />
+
+      <Route element={<RequireAuth />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<Navigate to="/estudos" replace />} />
+          <Route path="estudos" element={<EstudosPage />} />
+          <Route path="estudos/:studyId/criar" element={<CreateStudyPage />} />
+          <Route
+            path="estudos/:studyId/questionario"
+            element={<QuestionnaireBuilderPage />}
+          />
+          <Route
+            path="estudos/:studyId/base-cliente"
+            element={<ClientBasePage />}
+          />
+          <Route path="estudos/:studyId" element={<StudyDetailPage />} />
+          <Route path="financeiro" element={<FinanceiroPage />} />
+          <Route path="time" element={<TimePage />} />
+          <Route path="participantes" element={<ParticipantesPage />} />
+          <Route
+            path="painel"
+            element={<Navigate to="/painel/campanhas" replace />}
+          />
+          <Route path="painel/:view" element={<CxPainelPage />} />
+          <Route path="workspaces" element={<WorkspaceListPage />} />
+          <Route path="workspaces/novo" element={<WorkspaceCreatePage />} />
+          <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
+          <Route
+            path="gestao/times"
+            element={
+              <GestaoGuard section="times">
+                <GestaoTimesPage />
+              </GestaoGuard>
+            }
+          />
+          <Route
+            path="gestao/membros"
+            element={
+              <GestaoGuard section="membros">
+                <GestaoMembrosPage />
+              </GestaoGuard>
+            }
+          />
+          <Route
+            path="gestao/balanco"
+            element={
+              <GestaoGuard section="balanco">
+                <GestaoBalancoPage />
+              </GestaoGuard>
+            }
+          />
+          <Route
+            path="gestao"
+            element={<Navigate to="/gestao/times" replace />}
+          />
+        </Route>
+      </Route>
+      <Route path="*" element={<Navigate to="/estudos" replace />} />
+    </Routes>
+  );
+}
 
 export default function App() {
+  const { versionId } = useProductVersion();
+
   return (
     <>
       <DevToolbar />
-      <Routes>
-        <Route path="convite/:token" element={<AcceptInvitePage />} />
-        <Route path="login" element={<LoginPage />} />
-
-        <Route element={<RequireAuth />}>
-          <Route element={<AppLayout />}>
-            <Route index element={<Navigate to="/estudos" replace />} />
-            <Route path="estudos" element={<EstudosPage />} />
-            <Route path="estudos/:studyId/criar" element={<CreateStudyPage />} />
-            <Route
-              path="estudos/:studyId/questionario"
-              element={<QuestionnaireBuilderPage />}
-            />
-            <Route
-              path="estudos/:studyId/base-cliente"
-              element={<ClientBasePage />}
-            />
-            <Route path="estudos/:studyId" element={<StudyDetailPage />} />
-            <Route path="financeiro" element={<FinanceiroPage />} />
-            <Route path="time" element={<TimePage />} />
-            <Route path="participantes" element={<ParticipantesPage />} />
-            <Route
-              path="painel"
-              element={<Navigate to="/painel/campanhas" replace />}
-            />
-            <Route path="painel/:view" element={<CxPainelPage />} />
-            <Route path="workspaces" element={<WorkspaceListPage />} />
-            <Route path="workspaces/novo" element={<WorkspaceCreatePage />} />
-            <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
-            <Route
-              path="gestao/times"
-              element={
-                <GestaoGuard section="times">
-                  <GestaoTimesPage />
-                </GestaoGuard>
-              }
-            />
-            <Route
-              path="gestao/membros"
-              element={
-                <GestaoGuard section="membros">
-                  <GestaoMembrosPage />
-                </GestaoGuard>
-              }
-            />
-            <Route
-              path="gestao/balanco"
-              element={
-                <GestaoGuard section="balanco">
-                  <GestaoBalancoPage />
-                </GestaoGuard>
-              }
-            />
-            <Route
-              path="gestao"
-              element={<Navigate to="/gestao/times" replace />}
-            />
-          </Route>
-        </Route>
-        <Route path="*" element={<Navigate to="/estudos" replace />} />
-      </Routes>
+      {versionId === "2.0" ? <V2App /> : <V1Routes />}
     </>
   );
 }

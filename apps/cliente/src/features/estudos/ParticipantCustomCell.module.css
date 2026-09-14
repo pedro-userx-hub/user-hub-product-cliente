@@ -1,0 +1,73 @@
+.read,
+.display {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.display {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border-radius: var(--radius-sm);
+  cursor: text;
+  min-height: 28px;
+}
+
+.display:hover,
+.display:focus {
+  background: transparent;
+  box-shadow: none;
+}
+
+.placeholder {
+  color: var(--color-text-muted);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.emptyCopy {
+  margin: 0;
+  font-size: var(--font-xs);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.editor {
+  min-width: 140px;
+}
+
+.editorError :global(input) {
+  border-color: var(--color-error);
+}
+
+.saving {
+  opacity: 0.72;
+}

@@ -1,0 +1,113 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  min-height: 0;
+  padding: var(--space-4);
+  border-right: var(--border-width) solid var(--color-border-subtle);
+  background: var(--color-surface);
+  font-family: var(--font-family);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-base);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.context {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}
+
+.collapse,
+.expand {
+  border: 0;
+  background: transparent;
+  color: var(--color-action);
+  font: 600 var(--font-xs) / var(--lh-xs) var(--font-family);
+  cursor: pointer;
+}
+
+.expand {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding: var(--space-3);
+  border-right: var(--border-width) solid var(--color-border-subtle);
+  background: var(--color-surface);
+  height: 100%;
+}
+
+.hints {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hint {
+  text-align: left;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  padding: var(--space-2) var(--space-3);
+  font: 600 var(--font-xs) / var(--lh-xs) var(--font-family);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.hint:hover {
+  border-color: var(--color-action);
+  color: var(--color-action);
+}
+
+.log {
+  flex: 1;
+  min-height: 120px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.bubbleUser,
+.bubbleAi {
+  max-width: 95%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+}
+
+.bubbleUser {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--color-action) 14%, white);
+  color: var(--color-text);
+}
+
+.bubbleAi {
+  align-self: flex-start;
+  background: var(--color-muted-surface);
+  color: var(--color-text);
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

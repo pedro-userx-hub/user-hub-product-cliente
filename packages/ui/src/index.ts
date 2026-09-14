@@ -25,7 +25,7 @@ export { NoAccess } from "./NoAccess";
 export type { NoAccessProps } from "./NoAccess";
 
 export { ToastProvider, useToast } from "./Toast";
-export type { ToastInput, ToastVariant } from "./Toast";
+export type { ToastAction, ToastInput, ToastVariant } from "./Toast";
 
 export { Badge } from "./Badge";
 export type { BadgeProps, BadgeColor, BadgeSize } from "./Badge";
@@ -227,6 +227,9 @@ export {
   AlertTriangleIcon,
   InfoIcon,
   CheckCircleIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  ChevronsUpDownIcon,
   MoreVerticalIcon,
   UserIcon,
   BookOpenIcon,
@@ -238,6 +241,8 @@ export {
   EditIcon,
   HelpCircleIcon,
   CalendarIcon,
+  HashIcon,
+  TypeIcon,
   EyeIcon,
   UploadIcon,
   DownloadIcon,

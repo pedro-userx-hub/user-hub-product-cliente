@@ -1,0 +1,88 @@
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Base roxa suave (tokens de marca) */
+.base {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      120% 80% at 50% -10%,
+      color-mix(in srgb, var(--color-action) 28%, #f7f2fb) 0%,
+      #f3ebf8 42%,
+      #efe6f6 70%,
+      #f8f5fa 100%
+    );
+}
+
+.blobA,
+.blobB,
+.blobC {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);
+  will-change: transform;
+}
+
+.blobA {
+  width: min(70vw, 680px);
+  height: min(70vw, 680px);
+  top: -18%;
+  left: 8%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-action) 55%, transparent) 0%,
+    color-mix(in srgb, #9b6ac9 25%, transparent) 45%,
+    transparent 70%
+  );
+  opacity: 0.85;
+}
+
+.blobB {
+  width: min(58vw, 560px);
+  height: min(58vw, 560px);
+  right: -12%;
+  top: 18%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, #c4a0e0 60%, transparent) 0%,
+    color-mix(in srgb, var(--color-action) 30%, transparent) 50%,
+    transparent 72%
+  );
+  opacity: 0.75;
+}
+
+.blobC {
+  width: min(48vw, 440px);
+  height: min(48vw, 440px);
+  left: 28%;
+  bottom: -16%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, #8f5cb8 40%, transparent) 0%,
+    color-mix(in srgb, #d4b8e8 35%, transparent) 48%,
+    transparent 70%
+  );
+  opacity: 0.7;
+}
+
+.veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 50% 42%,
+      color-mix(in srgb, #fff 55%, transparent) 0%,
+      transparent 68%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in srgb, #f8f5fa 40%, transparent) 100%
+    );
+}

@@ -1,0 +1,253 @@
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-height: 100%;
+  max-width: 720px;
+}
+
+.docHead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.docTitle {
+  margin: 0;
+  font-size: var(--font-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+}
+
+.docLead {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border-subtle);
+}
+
+.notionStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.notionTitle {
+  width: 100%;
+  border: 0;
+  padding: var(--space-1) 0;
+  font: var(--fw-bold) var(--font-xl, 1.5rem) / 1.35 var(--font-family);
+  color: var(--color-text);
+  background: transparent;
+}
+
+.notionTitle::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.notionTitle:focus {
+  outline: none;
+}
+
+.notionBody {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  border: 0;
+  padding: var(--space-1) 0;
+  font: var(--fw-regular) var(--font-base) / var(--lh-base) var(--font-family);
+  color: var(--color-text);
+  background: transparent;
+}
+
+.notionBody::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.notionBody:focus {
+  outline: none;
+}
+
+.placeholder {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.audienceList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.audienceRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-4);
+  align-items: start;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.audienceMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.audienceLabelRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.audienceLabel {
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.audienceValue {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+}
+
+.audienceRaw {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}
+
+.audienceMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.audienceCount {
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-action);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.audienceActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.linkBtn {
+  border: 0;
+  background: transparent;
+  color: var(--color-action);
+  font: 600 var(--font-xs) / var(--lh-xs) var(--font-family);
+  cursor: pointer;
+  padding: 0;
+}
+
+.remove {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.footer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  margin-top: auto;
+}
+
+.slashHint {
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}
+
+.menu {
+  position: absolute;
+  left: 48px;
+  bottom: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  z-index: 3;
+}
+
+.menu button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font: 600 var(--font-sm) / var(--lh-sm) var(--font-family);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.menu button:hover {
+  background: var(--color-muted-surface);
+}
+
+@media (max-width: 720px) {
+  .audienceRow {
+    grid-template-columns: 1fr;
+  }
+
+  .audienceMeta {
+    align-items: flex-start;
+  }
+
+  .audienceActions {
+    justify-content: flex-start;
+  }
+}

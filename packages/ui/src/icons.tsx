@@ -23,6 +23,24 @@ export const SwapVertIcon = (p: IconProps) => (
   </svg>
 );
 
+export const ArrowUpIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 19V5M5 12l7-7 7 7" />
+  </svg>
+);
+
+export const ArrowDownIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 5v14M19 12l-7 7-7-7" />
+  </svg>
+);
+
+export const ChevronsUpDownIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="m7 15 5 5 5-5M7 9l5-5 5 5" />
+  </svg>
+);
+
 export const ChevronDownIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="m6 9 6 6 6-6" />
@@ -164,6 +182,18 @@ export const HelpCircleIcon = (p: IconProps) => (
   <svg {...base({ size: 20, ...p })}>
     <circle cx="12" cy="12" r="10" />
     <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2-3 4M12 17h.01" />
+  </svg>
+);
+
+export const HashIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M5 9h14M5 15h14M10 4 8 20M16 4l-2 16" />
+  </svg>
+);
+
+export const TypeIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 6h16M12 6v12M8 18h8" />
   </svg>
 );
 

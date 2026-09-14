@@ -10,8 +10,22 @@
   color: var(--color-action);
 }
 
+.logoCompact {
+  font-size: 18px;
+  font-weight: var(--fw-bold);
+  color: var(--color-action);
+  letter-spacing: -0.02em;
+}
+
 .navLink {
   gap: var(--space-3);
+}
+
+.compact .navLink {
+  justify-content: center;
+  gap: 0;
+  padding-inline: var(--space-2);
+  width: 44px;
 }
 
 .navIcon {
@@ -33,6 +47,19 @@
   white-space: nowrap;
 }
 
+.compact .navLabel,
+.compact .navNewBadge {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .navNewBadge {
   flex-shrink: 0;
   border-radius: var(--radius-sm);
@@ -46,11 +73,40 @@
   margin: var(--space-1) 0;
 }
 
+.compact .footerDivider {
+  display: none;
+}
+
 .collectionHint {
   margin: 0;
   padding: var(--space-3);
   font-size: var(--font-sm);
   line-height: var(--lh-sm);
   color: var(--color-text-muted);
+}
+
+.compactLink {
+  justify-content: center;
+  gap: 0;
+  width: 44px;
+  padding-inline: var(--space-2);
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  background: var(--color-background);
+  color: var(--color-text);
 }
 

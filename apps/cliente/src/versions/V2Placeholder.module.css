@@ -1,0 +1,68 @@
+.page {
+  min-height: calc(100vh - 48px);
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(ellipse at 20% 0%, #2a1840 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 20%, #12253f 0%, transparent 50%),
+    #0c0c0f;
+  color: #f5f5f5;
+  font-family: "Open Sans", system-ui, sans-serif;
+}
+
+.card {
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 24px;
+  border-radius: 12px;
+  border: 1px solid #3f3f46;
+  background: rgba(24, 24, 27, 0.88);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.badge {
+  margin: 0;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #8f5cb8;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #a3a3a3;
+}
+
+.back {
+  margin-top: 8px;
+  align-self: flex-start;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 4px;
+  border: 1.5px solid #d1d5db;
+  background: transparent;
+  color: #fafafa;
+  font: 600 14px/20px "Open Sans", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.back:hover {
+  background: rgba(255, 255, 255, 0.06);
+}

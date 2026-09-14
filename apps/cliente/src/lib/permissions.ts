@@ -15,6 +15,14 @@ export function canCreateStudy(role: WorkspaceRole): boolean {
 }
 
 /**
+ * Spec tabela customizável — expor contato ao cliente (Gestor CX).
+ * Mapeamento: Gestor = Dono / Administrador; Operador = Editor.
+ */
+export function canExposeParticipantContact(role: WorkspaceRole): boolean {
+  return role === "Dono do Workspace" || role === "Administrador";
+}
+
+/**
  * Todas as funções podem inserir pessoas na sua faixa de convite.
  * Faixa em si é da Story 3.2 — aqui só a visibilidade do entry point.
  */

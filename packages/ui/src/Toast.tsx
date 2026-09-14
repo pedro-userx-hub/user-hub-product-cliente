@@ -17,10 +17,17 @@ import styles from "./Toast.module.css";
 
 export type ToastVariant = "success" | "error" | "warning" | "info";
 
+export interface ToastAction {
+  label: string;
+  onSelect: () => void;
+}
+
 export interface ToastInput {
   type: ToastVariant;
   title: string;
   message?: string;
+  /** Ação no próprio toast (ex.: Desfazer). */
+  action?: ToastAction;
 }
 
 interface ToastItem extends ToastInput {
@@ -43,6 +50,7 @@ const ICONS: Record<ToastVariant, ReactNode> = {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const idRef = useRef(0);
+  const timeoutRef = useRef<number | null>(null);
 
   const remove = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -50,10 +58,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const showToast = useCallback(
     (t: ToastInput) => {
+      if (timeoutRef.current != null) {
+        window.clearTimeout(timeoutRef.current);
+      }
       idRef.current += 1;
       const id = idRef.current;
-      setToasts((prev) => [...prev, { ...t, id }]);
-      window.setTimeout(() => remove(id), 5000);
+      setToasts([{ ...t, id }]);
+      timeoutRef.current = window.setTimeout(
+        () => remove(id),
+        t.action ? 8000 : 5000,
+      );
     },
     [remove],
   );
@@ -74,6 +88,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div className={styles.content}>
               <p className={styles.title}>{t.title}</p>
               {t.message && <p className={styles.message}>{t.message}</p>}
+              {t.action && (
+                <button
+                  type="button"
+                  className={styles.action}
+                  onClick={() => {
+                    t.action?.onSelect();
+                    remove(t.id);
+                  }}
+                >
+                  {t.action.label}
+                </button>
+              )}
             </div>
             <button
               type="button"

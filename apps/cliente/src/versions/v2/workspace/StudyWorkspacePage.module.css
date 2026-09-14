@@ -1,0 +1,113 @@
+.page {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  height: calc(100vh - 52px);
+  min-height: 0;
+  background: var(--color-background);
+  font-family: var(--font-family);
+}
+
+.pageCollapsed {
+  /* maestro rail estreito */
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+  background: var(--color-surface);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.back {
+  border: 0;
+  background: transparent;
+  color: var(--color-action);
+  font: 600 var(--font-sm) / var(--lh-sm) var(--font-family);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.titleBlock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabs {
+  justify-self: end;
+}
+
+.readOnlyBanner {
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-warning-surface, #fffbeb);
+  color: var(--color-warning-text, #a16207);
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) 1fr;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pageCollapsed .workspace {
+  grid-template-columns: 48px 1fr;
+}
+
+.doc {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-5);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 960px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .pageCollapsed .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    justify-self: start;
+    overflow: auto;
+    max-width: 100%;
+  }
+}
