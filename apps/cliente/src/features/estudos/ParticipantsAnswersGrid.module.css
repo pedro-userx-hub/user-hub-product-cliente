@@ -6,22 +6,13 @@
   max-width: 100%;
 }
 
-.stickyBar {
-  position: sticky;
-  top: 0;
-  z-index: 6;
+.toolbarBar {
   margin-inline: 0;
   padding-inline: 0;
   padding-block: var(--space-3);
   background: var(--color-background);
-  border-bottom: 1px solid var(--color-border);
   box-sizing: border-box;
-  /* Estende o fundo até as bordas do padding da página sem ampliar o scroll. */
-  box-shadow:
-    -100vw 0 0 0 var(--color-background),
-    100vw 0 0 0 var(--color-background),
-    0 1px 0 0 var(--color-border);
-  border-bottom: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .stickyInner {
@@ -191,14 +182,38 @@
   width: calc(100% + 2 * var(--space-8, 32px));
   max-width: calc(100% + 2 * var(--space-8, 32px));
   border: 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 0;
   border-radius: 0;
   background: var(--color-surface);
   max-height: none;
   overscroll-behavior-x: contain;
-  /* Fundo full-bleed; conteúdo (checkbox / +) dentro do padding da página. */
   padding-inline: var(--space-8, 32px);
   box-sizing: border-box;
+  /* Scrollbar nativo escondido — usamos a barra sticky embaixo. */
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.hScrollBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 20px;
+  box-sizing: border-box;
+  background: var(--color-background);
+  border-top: 1px solid var(--color-border);
+  /* left/width aplicados via JS para alinhar com a tabela e colar no fundo do browser */
+}
+
+.hScrollBarInner {
+  height: 1px;
+  pointer-events: none;
 }
 
 .table {
@@ -218,16 +233,23 @@
   font-size: var(--font-sm);
   line-height: var(--lh-sm);
   color: var(--color-text);
+  box-sizing: border-box;
+  overflow: hidden;
+  max-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .th {
-  position: sticky;
-  top: 0;
-  z-index: 3;
   font-weight: var(--fw-semibold);
   background: var(--color-surface-subtle, #f9fafb);
   white-space: nowrap;
-  overflow: visible;
+}
+
+.th.addTh,
+.td.addTd {
+  max-width: none;
+  overflow: hidden;
 }
 
 .resizeHandle {
@@ -270,30 +292,11 @@
   min-width: 0;
 }
 
-.nameBtn {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font: inherit;
-  font-weight: var(--fw-semibold);
-  color: var(--color-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 140px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.nameBtn:hover {
-  color: var(--color-action);
-}
-
 .statusTrigger {
   display: inline-flex;
   min-width: 0;
   max-width: 100%;
+  overflow: hidden;
 }
 
 .statusBadgeWrap {
@@ -355,12 +358,14 @@
 .stickyCheck {
   position: sticky;
   left: 0;
-  z-index: 4;
+  top: auto;
+  z-index: 5;
   min-width: 48px;
   max-width: 48px;
   width: 48px;
   background: var(--color-surface);
   box-shadow: 1px 0 0 var(--color-border);
+  overflow: hidden;
 }
 
 thead .stickyCheck {
@@ -370,7 +375,8 @@ thead .stickyCheck {
 
 .stickyCol {
   position: sticky;
-  z-index: 3;
+  top: auto;
+  z-index: 4;
   background: var(--color-surface);
   box-shadow: 1px 0 0 var(--color-border);
 }
@@ -418,6 +424,8 @@ thead .stickyCol {
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .name {
@@ -425,7 +433,30 @@ thead .stickyCol {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 140px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.nameBtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nameBtn:hover {
+  color: var(--color-action);
 }
 
 .adherence {
@@ -448,6 +479,11 @@ thead .stickyCol {
 .muted {
   color: var(--color-text-muted);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .contacts,
@@ -456,17 +492,34 @@ thead .stickyCol {
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .contactLine,
 .availLine {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
   color: var(--color-text-muted);
   font-size: var(--font-xs);
   line-height: var(--lh-sm);
-  white-space: nowrap;
+}
+
+.contactLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.contactLine > :not(:first-child),
+.availLine {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .availIndex {

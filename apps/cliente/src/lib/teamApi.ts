@@ -96,7 +96,7 @@ const mockTeamRunningStudies = new Set<string>();
 
 /** Contagem mock de estudos por time (exige destino na exclusão se > 0). */
 const mockTeamStudyCount: Record<string, number> = {
-  "t-pesquisa": 4,
+  "t-pesquisa": 5,
   "t-produto": 2,
   "t-longo": 1,
   "t-descoberta": 3,
@@ -913,7 +913,7 @@ export type {
 } from "./screenerModel";
 import type { StudyScreener } from "./screenerModel";
 import { cloneScreener } from "./screenerModel";
-import { createDemoScreener } from "./screenerDemo";
+import { createDemoScreener, createNovoFluxoScreener } from "./screenerDemo";
 
 export interface StudyConsentFile {
   id: string;
@@ -1293,6 +1293,60 @@ const mockStudies: TeamStudy[] = [
     incentivesEnabled: true,
     incentiveResponsible: "userx",
     incentiveValue: "R$ 80",
+  },
+  {
+    id: "s-pesquisa-novo-fluxo",
+    teamId: "t-pesquisa",
+    name: "Teste Novo Fluxo",
+    status: "Em recrutamento",
+    owners: ["Ana Silva"],
+    sentAt: "2026-09-14T15:00:00.000Z",
+    participants: 16,
+    sessions: 0,
+    completionPct: 0,
+    modality: "moderated",
+    method: "individual",
+    format: STUDY_METHOD_LABELS.individual,
+    objective:
+      "Entender uso de apps financeiros, hábitos no app e frequência de Pix entre clientes da base.",
+    ownerId: "u-ana",
+    contactChannel: "email",
+    contactValue: "ana@empresa.com",
+    cxOwnerId: "",
+    cxOwnerName: "",
+    briefingEnabled: false,
+    scheduleStart: "2026-09-20",
+    scheduleEnd: "2026-10-31",
+    sessionDurationMin: 45,
+    sessionGapMin: 15,
+    limitSessionsPerDay: true,
+    maxSessionsPerDay: 6,
+    sessionFormat: "remote",
+    remotePlatform: "meet",
+    remoteLink: "https://meet.google.com/teste-novo-fluxo",
+    scheduleSlots: [
+      { id: "slot-nf-1", weekday: "tue", startTime: "09:00", endTime: "12:00" },
+      { id: "slot-nf-2", weekday: "thu", startTime: "14:00", endTime: "18:00" },
+    ],
+    participantType: "b2c",
+    participantQuantity: 16,
+    desiredProfile:
+      "Pessoas de 22–45 anos que usam apps financeiros e fazem Pix com frequência.",
+    exclusionEnabled: true,
+    exclusionProfile: "Funcionários de bancos ou fintechs concorrentes.",
+    recruitmentSource: "userx",
+    reqDevicesEnabled: true,
+    reqDevices: ["smartphone"],
+    reqSessionEnabled: true,
+    reqSession: ["camera", "mic"],
+    reqActionsEnabled: false,
+    reqActions: [],
+    customConsentEnabled: false,
+    consentFile: null,
+    incentivesEnabled: true,
+    incentiveResponsible: "userx",
+    incentiveValue: "R$ 100",
+    screener: createNovoFluxoScreener(),
   },
   {
     id: "s-pesquisa-3",

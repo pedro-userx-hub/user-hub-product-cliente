@@ -304,6 +304,10 @@ export function ParticipantsAnswersGrid({
 }: ParticipantsAnswersGridProps) {
   const { showToast } = useToast();
   const tableRef = useRef<HTMLTableElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const hScrollBarRef = useRef<HTMLDivElement>(null);
+  const hScrollInnerRef = useRef<HTMLDivElement>(null);
+  const hScrollSyncing = useRef(false);
   const dragRef = useRef<{
     id: ColId;
     startX: number;
@@ -634,6 +638,62 @@ export function ParticipantsAnswersGrid({
       window.removeEventListener("mouseup", onUp);
     };
   }, []);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const bar = hScrollBarRef.current;
+    const inner = hScrollInnerRef.current;
+    if (!scroller || !bar || !inner) return;
+
+    const syncWidth = () => {
+      inner.style.width = `${scroller.scrollWidth}px`;
+    };
+
+    const syncGeometry = () => {
+      const rect = scroller.getBoundingClientRect();
+      const tableBottom = tableRef.current?.getBoundingClientRect().bottom ?? rect.bottom;
+      const tableTop = tableRef.current?.getBoundingClientRect().top ?? rect.top;
+      const inView = tableBottom > 0 && tableTop < window.innerHeight;
+      bar.style.left = `${rect.left}px`;
+      bar.style.width = `${rect.width}px`;
+      bar.style.display = inView ? "block" : "none";
+      syncWidth();
+    };
+
+    syncGeometry();
+
+    const ro = new ResizeObserver(syncGeometry);
+    ro.observe(scroller);
+    if (tableRef.current) ro.observe(tableRef.current);
+
+    const onScrollerScroll = () => {
+      if (hScrollSyncing.current) return;
+      hScrollSyncing.current = true;
+      bar.scrollLeft = scroller.scrollLeft;
+      hScrollSyncing.current = false;
+    };
+    const onBarScroll = () => {
+      if (hScrollSyncing.current) return;
+      hScrollSyncing.current = true;
+      scroller.scrollLeft = bar.scrollLeft;
+      hScrollSyncing.current = false;
+    };
+
+    const onWindowScroll = () => syncGeometry();
+
+    scroller.addEventListener("scroll", onScrollerScroll, { passive: true });
+    bar.addEventListener("scroll", onBarScroll, { passive: true });
+    window.addEventListener("resize", syncGeometry);
+    window.addEventListener("scroll", onWindowScroll, true);
+
+    return () => {
+      ro.disconnect();
+      scroller.removeEventListener("scroll", onScrollerScroll);
+      bar.removeEventListener("scroll", onBarScroll);
+      window.removeEventListener("resize", syncGeometry);
+      window.removeEventListener("scroll", onWindowScroll, true);
+    };
+  }, [cols, orderedRows.length, viewAsClient, visibleCols.length]);
 
   useEffect(() => {
     const onUp = () => {
@@ -1257,7 +1317,7 @@ export function ParticipantsAnswersGrid({
   return (
     <div className={styles.wrap}>
       {!viewAsClient ? (
-        <div className={styles.stickyBar}>
+        <div className={styles.toolbarBar}>
           <div className={styles.stickyInner}>
             <div className={styles.searchSlot}>
               {onSearchChange ? (
@@ -1315,7 +1375,8 @@ export function ParticipantsAnswersGrid({
       ) : participants.length === 0 ? (
         <EmptyState title={messages.participantesEmptyFilter} />
       ) : (
-        <div className={styles.scroller}>
+        <>
+        <div className={styles.scroller} ref={scrollerRef}>
           <table ref={tableRef} className={styles.table}>
             <thead>
               <tr>
@@ -1437,6 +1498,14 @@ export function ParticipantsAnswersGrid({
             </tbody>
           </table>
         </div>
+        <div
+          className={styles.hScrollBar}
+          ref={hScrollBarRef}
+          aria-hidden
+        >
+          <div className={styles.hScrollBarInner} ref={hScrollInnerRef} />
+        </div>
+      </>
       )}
     </div>
   );

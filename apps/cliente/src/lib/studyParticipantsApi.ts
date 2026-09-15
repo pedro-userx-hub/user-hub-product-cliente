@@ -8,7 +8,7 @@ import {
   type ParticipantTriageStatus,
   type StudyParticipant,
 } from "./studyParticipants";
-import { createDemoScreener } from "./screenerDemo";
+import { createDemoScreener, createNovoFluxoScreener } from "./screenerDemo";
 import {
   ForbiddenError,
   NotFoundError,
@@ -640,6 +640,9 @@ function seedForStudy(study: TeamStudy): StudyParticipant[] {
 }
 
 function seedForStudyId(studyId: string, studyName: string): StudyParticipant[] {
+  if (studyId === "s-pesquisa-novo-fluxo") {
+    return seedNovoFluxoParticipants();
+  }
   const study = {
     id: studyId,
     name: studyName,
@@ -654,11 +657,252 @@ function seedForStudyId(studyId: string, studyName: string): StudyParticipant[] 
   return seedForStudy(study);
 }
 
+function seedNovoFluxoParticipants(): StudyParticipant[] {
+  const studyId = "s-pesquisa-novo-fluxo";
+  const study = {
+    id: studyId,
+    name: "Teste Novo Fluxo",
+    screener: createNovoFluxoScreener(),
+    method: "individual" as const,
+    sessionDurationMin: 45,
+    remoteLink: "https://meet.google.com/teste-novo-fluxo",
+  } as TeamStudy;
+
+  const heavy = {
+    "q-nf-apps": ["o-nf-apps-nubank", "o-nf-apps-picpay", "o-nf-apps-inter"],
+    "q-nf-uso": ["o-nf-uso-diario"],
+    "q-nf-pix": ["o-nf-pix-diario"],
+    "q-nf-device": ["o-nf-dev-phone"],
+    "q-nf-banco": ["o-nf-banco-digital"],
+    "q-nf-cartao": ["o-nf-cartao-semana"],
+    "q-nf-invest": ["o-nf-invest-sim"],
+    "q-nf-open": ["o-nf-open-sim"],
+    "q-nf-motivos": ["o-nf-mot-pix", "o-nf-mot-pagar", "o-nf-mot-investir"],
+  };
+  const regular = {
+    "q-nf-apps": ["o-nf-apps-nubank", "o-nf-apps-itau"],
+    "q-nf-uso": ["o-nf-uso-semana"],
+    "q-nf-pix": ["o-nf-pix-semana"],
+    "q-nf-device": ["o-nf-dev-phone"],
+    "q-nf-banco": ["o-nf-banco-ambos"],
+    "q-nf-cartao": ["o-nf-cartao-mes"],
+    "q-nf-invest": ["o-nf-invest-nao"],
+    "q-nf-open": ["o-nf-open-ouviu"],
+    "q-nf-motivos": ["o-nf-mot-pix", "o-nf-mot-cartao"],
+  };
+  const light = {
+    "q-nf-apps": ["o-nf-apps-inter"],
+    "q-nf-uso": ["o-nf-uso-mes"],
+    "q-nf-pix": ["o-nf-pix-mes"],
+    "q-nf-device": ["o-nf-dev-pc"],
+    "q-nf-banco": ["o-nf-banco-tradicional"],
+    "q-nf-cartao": ["o-nf-cartao-raro"],
+    "q-nf-invest": ["o-nf-invest-nao"],
+    "q-nf-open": ["o-nf-open-nao"],
+    "q-nf-motivos": ["o-nf-mot-pagar"],
+  };
+  const disqualified = {
+    "q-nf-apps": ["o-nf-apps-none"],
+    "q-nf-uso": ["o-nf-uso-raro"],
+    "q-nf-pix": ["o-nf-pix-raro"],
+    "q-nf-device": ["o-nf-dev-tablet"],
+    "q-nf-banco": ["o-nf-banco-nenhum"],
+    "q-nf-cartao": ["o-nf-cartao-nao"],
+    "q-nf-invest": ["o-nf-invest-nao"],
+    "q-nf-open": ["o-nf-open-nao"],
+    "q-nf-motivos": ["o-nf-mot-outro"],
+  };
+
+  return [
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-1`,
+      name: "Juliana Prado",
+      email: "juliana.prado@exemplo.com",
+      phone: "11995551234",
+      availability: ["22/09/2026 às 10:00", "24/09/2026 às 15:00"],
+      respondedAt: "2026-09-12T11:20:00.000Z",
+      status: null,
+      selections: heavy,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-2`,
+      name: "Thiago Martins",
+      email: "thiago.martins@exemplo.com",
+      phone: "21998877665",
+      availability: ["22/09/2026 às 10:00", "25/09/2026 às 09:00"],
+      respondedAt: "2026-09-12T14:05:00.000Z",
+      status: null,
+      selections: heavy,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-3`,
+      name: "Larissa Nogueira",
+      email: "larissa.nogueira@exemplo.com",
+      phone: "11984443322",
+      availability: ["23/09/2026 às 16:00"],
+      respondedAt: "2026-09-13T08:40:00.000Z",
+      status: null,
+      selections: regular,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-4`,
+      name: "Felipe Andrade",
+      email: "felipe.andrade@exemplo.com",
+      phone: "31997766554",
+      availability: ["24/09/2026 às 15:00", "26/09/2026 às 11:00"],
+      respondedAt: "2026-09-13T16:10:00.000Z",
+      status: null,
+      selections: regular,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-5`,
+      name: "Beatriz Campos",
+      email: "beatriz.campos@exemplo.com",
+      phone: "41996655443",
+      availability: ["25/09/2026 às 09:00"],
+      respondedAt: "2026-09-14T10:25:00.000Z",
+      status: null,
+      selections: light,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-6`,
+      name: "André Vasconcelos",
+      email: "andre.vasconcelos@exemplo.com",
+      phone: "51995544332",
+      availability: ["22/09/2026 às 10:00"],
+      respondedAt: "2026-09-14T12:50:00.000Z",
+      status: null,
+      selections: light,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-7`,
+      name: "Sofia Ribeiro",
+      email: "sofia.ribeiro@exemplo.com",
+      phone: "61994433221",
+      availability: ["26/09/2026 às 11:00"],
+      respondedAt: "2026-09-14T18:15:00.000Z",
+      status: null,
+      selections: disqualified,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-8`,
+      name: "Mateus Oliveira",
+      email: "mateus.oliveira@exemplo.com",
+      phone: "11993322110",
+      availability: ["23/09/2026 às 16:00", "25/09/2026 às 09:00"],
+      respondedAt: "2026-09-15T09:05:00.000Z",
+      status: null,
+      selections: {
+        "q-nf-apps": ["o-nf-apps-nubank", "o-nf-apps-picpay"],
+        "q-nf-uso": ["o-nf-uso-diario"],
+        "q-nf-pix": ["o-nf-pix-semana"],
+        "q-nf-device": ["o-nf-dev-phone"],
+        "q-nf-banco": ["o-nf-banco-digital"],
+        "q-nf-cartao": ["o-nf-cartao-semana"],
+        "q-nf-invest": ["o-nf-invest-sim"],
+        "q-nf-open": ["o-nf-open-ouviu"],
+        "q-nf-motivos": ["o-nf-mot-pix", "o-nf-mot-pagar", "o-nf-mot-cartao"],
+      },
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-9`,
+      name: "Carla Menezes",
+      email: "carla.menezes@exemplo.com",
+      phone: "11992211009",
+      availability: ["24/09/2026 às 15:00"],
+      respondedAt: "2026-09-15T10:12:00.000Z",
+      status: null,
+      selections: heavy,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-10`,
+      name: "Pedro Henrique Santos",
+      email: "pedro.santos@exemplo.com",
+      phone: "21991100998",
+      availability: ["22/09/2026 às 10:00", "26/09/2026 às 11:00"],
+      respondedAt: "2026-09-15T11:30:00.000Z",
+      status: null,
+      selections: regular,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-11`,
+      name: "Amanda Figueiredo",
+      email: "amanda.figueiredo@exemplo.com",
+      phone: "11990099887",
+      availability: ["25/09/2026 às 09:00"],
+      respondedAt: "2026-09-15T12:05:00.000Z",
+      status: null,
+      selections: light,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-12`,
+      name: "Ricardo Teixeira",
+      email: "ricardo.teixeira@exemplo.com",
+      phone: "31998877665",
+      availability: ["23/09/2026 às 16:00", "24/09/2026 às 15:00"],
+      respondedAt: "2026-09-15T13:40:00.000Z",
+      status: null,
+      selections: heavy,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-13`,
+      name: "Natália Borges",
+      email: "natalia.borges@exemplo.com",
+      phone: "41997766554",
+      availability: ["26/09/2026 às 11:00"],
+      respondedAt: "2026-09-15T14:22:00.000Z",
+      status: null,
+      selections: regular,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-14`,
+      name: "Gustavo Pires",
+      email: "gustavo.pires@exemplo.com",
+      phone: "51996655443",
+      availability: ["22/09/2026 às 10:00"],
+      respondedAt: "2026-09-15T15:10:00.000Z",
+      status: null,
+      selections: light,
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-15`,
+      name: "Isabela Freitas",
+      email: "isabela.freitas@exemplo.com",
+      phone: "61995544332",
+      availability: ["25/09/2026 às 09:00", "26/09/2026 às 11:00"],
+      respondedAt: "2026-09-15T16:00:00.000Z",
+      status: null,
+      selections: {
+        "q-nf-apps": ["o-nf-apps-picpay", "o-nf-apps-inter"],
+        "q-nf-uso": ["o-nf-uso-semana"],
+        "q-nf-pix": ["o-nf-pix-diario"],
+        "q-nf-device": ["o-nf-dev-phone"],
+        "q-nf-banco": ["o-nf-banco-digital"],
+        "q-nf-cartao": ["o-nf-cartao-mes"],
+        "q-nf-invest": ["o-nf-invest-nao"],
+        "q-nf-open": ["o-nf-open-sim"],
+        "q-nf-motivos": ["o-nf-mot-pix", "o-nf-mot-investir"],
+      },
+    }),
+    mkParticipant(studyId, study, {
+      id: `p-${studyId}-16`,
+      name: "Lucas Azevedo",
+      email: "lucas.azevedo@exemplo.com",
+      phone: "11994433221",
+      availability: ["24/09/2026 às 15:00"],
+      respondedAt: "2026-09-15T16:45:00.000Z",
+      status: null,
+      selections: disqualified,
+    }),
+  ];
+}
+
 /** Seed alinhado aos estudos mock com Screener. */
 function seedDemoParticipants(): void {
   const entries: { id: string; name: string }[] = [
     { id: "s-pesquisa-1", name: "Grupo focal — jornada Q2" },
     { id: "s-pesquisa-2", name: "Teste de usabilidade — checkout" },
+    { id: "s-pesquisa-novo-fluxo", name: "Teste Novo Fluxo" },
     { id: "s-descoberta-1", name: "Diary study — hábitos de uso" },
     { id: "s-concorrentes-1", name: "Benchmark concorrentes" },
   ];

@@ -106,3 +106,255 @@ export function createDemoScreener(studyTitle: string): StudyScreener {
     ],
   };
 }
+
+/** Screener fintech — IDs fixos para o estudo demo “Teste Novo Fluxo”. */
+export function createNovoFluxoScreener(): StudyScreener {
+  return {
+    welcomeTitle: DEFAULT_WELCOME_TITLE,
+    welcomeMessage:
+      'Olá!\n\nObrigado pelo interesse em participar de "Teste Novo Fluxo". Responda às perguntas a seguir para conhecermos seu uso de apps financeiros.',
+    thanksMessage: DEFAULT_THANKS_MESSAGE,
+    pages: [
+      {
+        id: "page-nf-1",
+        name: "Uso financeiro",
+        questions: [
+          {
+            id: "q-nf-apps",
+            internalTitle: "Apps financeiros",
+            prompt:
+              "Quais apps financeiros você usa hoje? (marque todas que se aplicam)",
+            type: "multiple",
+            options: [
+              { id: "o-nf-apps-nubank", label: "Nubank", eligibility: "qualify" },
+              { id: "o-nf-apps-picpay", label: "PicPay", eligibility: "qualify" },
+              { id: "o-nf-apps-inter", label: "Inter", eligibility: "qualify" },
+              { id: "o-nf-apps-itau", label: "Itaú", eligibility: "neutral" },
+              {
+                id: "o-nf-apps-none",
+                label: "Nenhum dos anteriores",
+                eligibility: "disqualify",
+              },
+            ],
+          },
+          {
+            id: "q-nf-uso",
+            internalTitle: "Frequência de uso do app",
+            prompt: "Com que frequência você usa o app financeiro principal?",
+            type: "single",
+            options: [
+              {
+                id: "o-nf-uso-diario",
+                label: "Todos os dias",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-uso-semana",
+                label: "Algumas vezes por semana",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-uso-mes",
+                label: "Algumas vezes por mês",
+                eligibility: "neutral",
+              },
+              {
+                id: "o-nf-uso-raro",
+                label: "Raramente ou nunca",
+                eligibility: "disqualify",
+              },
+            ],
+          },
+          {
+            id: "q-nf-pix",
+            internalTitle: "Frequência de Pix",
+            prompt: "Com que frequência você faz Pix?",
+            type: "single",
+            options: [
+              {
+                id: "o-nf-pix-diario",
+                label: "Todos os dias",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-pix-semana",
+                label: "Várias vezes por semana",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-pix-mes",
+                label: "Algumas vezes por mês",
+                eligibility: "neutral",
+              },
+              {
+                id: "o-nf-pix-raro",
+                label: "Raramente ou nunca",
+                eligibility: "disqualify",
+              },
+            ],
+          },
+          {
+            id: "q-nf-device",
+            internalTitle: "Dispositivo do app",
+            prompt:
+              "Qual dispositivo você usa com mais frequência para acessar o app?",
+            type: "single",
+            options: [
+              {
+                id: "o-nf-dev-phone",
+                label: "Smartphone",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-dev-pc",
+                label: "Computador",
+                eligibility: "neutral",
+              },
+              {
+                id: "o-nf-dev-tablet",
+                label: "Tablet",
+                eligibility: "neutral",
+              },
+            ],
+          },
+          {
+            id: "q-nf-banco",
+            internalTitle: "Banco principal",
+            prompt: "Qual é o seu banco ou conta principal hoje?",
+            type: "single",
+            options: [
+              {
+                id: "o-nf-banco-digital",
+                label: "Banco digital (Nubank, Inter, C6…)",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-banco-tradicional",
+                label: "Banco tradicional (Itaú, Bradesco, BB…)",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-banco-ambos",
+                label: "Uso os dois com frequência parecida",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-banco-nenhum",
+                label: "Não tenho conta bancária",
+                eligibility: "disqualify",
+              },
+            ],
+          },
+          {
+            id: "q-nf-cartao",
+            internalTitle: "Uso de cartão",
+            prompt: "Com que frequência você usa cartão de crédito no app?",
+            type: "single",
+            options: [
+              {
+                id: "o-nf-cartao-semana",
+                label: "Toda semana",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-cartao-mes",
+                label: "Algumas vezes por mês",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-cartao-raro",
+                label: "Raramente",
+                eligibility: "neutral",
+              },
+              {
+                id: "o-nf-cartao-nao",
+                label: "Não tenho / não uso cartão de crédito",
+                eligibility: "neutral",
+              },
+            ],
+          },
+          {
+            id: "q-nf-invest",
+            internalTitle: "Investimentos",
+            prompt: "Você já investiu pelo aplicativo nos últimos 6 meses?",
+            type: "single",
+            options: [
+              {
+                id: "o-nf-invest-sim",
+                label: "Sim",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-invest-nao",
+                label: "Não",
+                eligibility: "neutral",
+              },
+              {
+                id: "o-nf-invest-nao-sei",
+                label: "Não me lembro",
+                eligibility: "neutral",
+              },
+            ],
+          },
+          {
+            id: "q-nf-open",
+            internalTitle: "Open Finance",
+            prompt: "Você já conectou contas via Open Finance / compartilhamento de dados?",
+            type: "single",
+            options: [
+              {
+                id: "o-nf-open-sim",
+                label: "Sim, já conectei",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-open-ouviu",
+                label: "Já ouvi falar, mas nunca usei",
+                eligibility: "neutral",
+              },
+              {
+                id: "o-nf-open-nao",
+                label: "Não conheço / nunca usei",
+                eligibility: "neutral",
+              },
+            ],
+          },
+          {
+            id: "q-nf-motivos",
+            internalTitle: "Motivos de uso",
+            prompt:
+              "Para que você mais usa o app financeiro? (marque todas que se aplicam)",
+            type: "multiple",
+            options: [
+              {
+                id: "o-nf-mot-pix",
+                label: "Enviar e receber Pix",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-mot-pagar",
+                label: "Pagar contas / boletos",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-mot-cartao",
+                label: "Acompanhar fatura do cartão",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-mot-investir",
+                label: "Investir",
+                eligibility: "qualify",
+              },
+              {
+                id: "o-nf-mot-outro",
+                label: "Outro",
+                eligibility: "neutral",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
