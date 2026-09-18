@@ -258,7 +258,7 @@ export function StudyAvailabilityView({
       );
       const scheduled = scheduledIds.has(s.id);
       let status: SlotUiStatus = "available";
-      let label = messages.estudosAvailabilityHorarioDisponivel;
+      let label: string = messages.estudosAvailabilityHorarioDisponivel;
       if (scheduled && busy) {
         status = "conflictSession";
         label = messages.estudosAvailabilityScheduledLabel;

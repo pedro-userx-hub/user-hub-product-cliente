@@ -983,7 +983,7 @@ export function CreateStudyPage() {
         open={hostsDrawerOpen}
         onClose={() => setHostsDrawerOpen(false)}
         hosts={study.hosts ?? []}
-        onApply={(next, patch) => {
+        onApply={(_next, patch) => {
           applyLocalPatch(patch);
           void persistFields(patch);
         }}

@@ -70,7 +70,6 @@ import type {
   StudyWeekday,
   TeamStudy,
 } from "../../lib/teamApi";
-import { STUDY_WEEKDAYS } from "../../lib/teamApi";
 import { AvailabilityBlockPopover } from "./AvailabilityBlockPopover";
 import { CalendarConnectionModal } from "./CalendarConnectionModal";
 import { ParticipantPreviewDrawer } from "./ParticipantPreviewDrawer";

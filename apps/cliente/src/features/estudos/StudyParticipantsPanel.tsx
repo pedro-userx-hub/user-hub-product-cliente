@@ -499,7 +499,9 @@ export function StudyParticipantsPanel({
     cells: { participantId: string; columnId: string }[],
     text: string,
   ) => {
-    const byId = new Map(customTable.columns.map((c) => [c.id, c]));
+    const byId = new Map(
+      customTable.columns.map((c) => [c.id as string, c] as const),
+    );
     const prepared = preparePasteIntoCells(customTable, cells, text, byId);
     const firstCol = cells[0] ? byId.get(cells[0].columnId) : undefined;
     queueMass({ ...prepared, columnName: firstCol?.name });
