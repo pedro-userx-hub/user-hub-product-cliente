@@ -1,34 +1,53 @@
 import { useMemo, useState } from "react";
 import {
+  AlertCard,
+  Button,
   CheckCircleIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   GoogleCalendarIcon,
   OutlookIcon,
+  useToast,
 } from "@userx/ui";
 import { messages } from "../../lib/messages";
+import {
+  type AvailabilityOverride,
+  type CalendarIntegrationState,
+  EMPTY_CALENDAR_STATE,
+  buildMockBusyEvents,
+} from "../../lib/availabilityCalendar";
+import {
+  startOfWeekMonday,
+  weekDatesForFilter,
+  type DayFilterMode,
+  type BookedSessionRange,
+} from "../../lib/availabilityGrid";
 import { listAvailableSessionSlots } from "../../lib/studyParticipants";
 import {
   addDaysISO,
   parseISODate,
   parseTimeToMinutes,
 } from "../../lib/studySchedule";
-import type { TeamStudy } from "../../lib/teamApi";
+import {
+  updateStudyAvailability,
+  type TeamStudy,
+} from "../../lib/teamApi";
+import { AvailabilityGridDrawer } from "./AvailabilityGridDrawer";
 import styles from "./StudyAvailabilityView.module.css";
 
 export interface StudyAvailabilityViewProps {
   study: TeamStudy;
+  onStudyChange?: (study: TeamStudy) => void;
 }
 
-type SlotUiStatus = "available" | "unavailable" | "busy" | "scheduled";
-
-interface BusyEvent {
-  date: string;
-  startTime: string;
-  endTime: string;
-  title: string;
-}
+type SlotUiStatus =
+  | "available"
+  | "unavailable"
+  | "busy"
+  | "scheduled"
+  | "conflict"
+  | "conflictSession";
 
 interface GridBlock {
   id: string;
@@ -37,11 +56,9 @@ interface GridBlock {
   endTime: string;
   status: SlotUiStatus;
   label: string;
-  eventTitle?: string;
 }
 
 const HOUR_START = 7;
-/** Fim exclusivo da grade (rótulos 07:00–18:00). */
 const HOUR_END = 19;
 const HOUR_PX = 56;
 const GRID_MINUTES = (HOUR_END - HOUR_START) * 60;
@@ -66,23 +83,6 @@ function pad2(n: number): string {
 
 function formatHour(h: number): string {
   return `${pad2(h)}:00`;
-}
-
-function startOfWeekMonday(iso: string): string {
-  const p = parseISODate(iso);
-  if (!p) return iso;
-  const js = new Date(p.year, p.month - 1, p.day).getDay();
-  const delta = js === 0 ? -6 : 1 - js;
-  return addDaysISO(iso, delta) ?? iso;
-}
-
-function businessDays(weekStart: string): string[] {
-  const days: string[] = [];
-  for (let i = 0; i < 5; i++) {
-    const d = addDaysISO(weekStart, i);
-    if (d) days.push(d);
-  }
-  return days;
 }
 
 function formatDayMonth(iso: string): string {
@@ -134,59 +134,75 @@ function blockStyle(
   return { top, height };
 }
 
-function mockBusyEvents(
-  sessions: { date: string; startTime: string; endTime: string }[],
-): BusyEvent[] {
-  if (sessions.length === 0) return [];
-  return [sessions[1], sessions[5], sessions[9]]
-    .filter(Boolean)
-    .map((s, i) => ({
-      date: s.date,
-      startTime: s.startTime,
-      endTime: s.endTime,
-      title:
-        i === 0
-          ? "Reunião de alinhamento"
-          : i === 1
-            ? "Compromisso externo"
-            : "Bloqueio na agenda",
-    }));
-}
-
 /**
- * Setup CX — grade semanal (Figma), com slots livres / indisponíveis.
- * Sem CTA “Editar disponibilidade”.
+ * Disponibilidade pós-lançamento — calendário de leitura + edição pela drawer.
  */
-export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
+export function StudyAvailabilityView({
+  study,
+  onStudyChange,
+}: StudyAvailabilityViewProps) {
+  const { showToast } = useToast();
+  const [localStudy, setLocalStudy] = useState(study);
+  const studyKey = `${study.id}:${study.scheduleSlots?.length ?? 0}:${study.scheduleStart}`;
+  const [syncedKey, setSyncedKey] = useState(studyKey);
+  if (syncedKey !== studyKey) {
+    setSyncedKey(studyKey);
+    setLocalStudy(study);
+  }
+
   const allSessions = useMemo(
-    () => listAvailableSessionSlots(study, []),
-    [study],
+    () => listAvailableSessionSlots(localStudy, []),
+    [localStudy],
   );
 
-  const busyEvents = useMemo(
-    () => mockBusyEvents(allSessions),
-    [allSessions],
+  const [calendar, setCalendar] = useState<CalendarIntegrationState>(
+    EMPTY_CALENDAR_STATE,
   );
+  const [overrides, setOverrides] = useState<AvailabilityOverride[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [dayFilter, setDayFilter] = useState<DayFilterMode>("business");
 
-  const rangeStart = study.scheduleStart?.trim() || allSessions[0]?.date || "";
+  const busyEvents = useMemo(() => {
+    if (calendar.readEnabled && calendar.selectedCalendarIds.length > 0) {
+      return buildMockBusyEvents(
+        calendar.selectedCalendarIds,
+        localStudy.scheduleStart ?? "",
+        localStudy.scheduleEnd ?? "",
+      ).map((b) => ({
+        date: b.date,
+        startTime: b.startTime,
+        endTime: b.endTime,
+      }));
+    }
+    // Demo CX: conflitos simulados a partir de slots (sem nome de evento)
+    if (allSessions.length === 0) return [];
+    return [allSessions[1], allSessions[5], allSessions[9]]
+      .filter(Boolean)
+      .map((s) => ({
+        date: s.date,
+        startTime: s.startTime,
+        endTime: s.endTime,
+      }));
+  }, [
+    calendar.readEnabled,
+    calendar.selectedCalendarIds,
+    localStudy.scheduleStart,
+    localStudy.scheduleEnd,
+    allSessions,
+  ]);
+
+  const rangeStart =
+    localStudy.scheduleStart?.trim() || allSessions[0]?.date || "";
   const rangeEnd =
-    study.scheduleEnd?.trim() ||
+    localStudy.scheduleEnd?.trim() ||
     allSessions[allSessions.length - 1]?.date ||
     "";
 
   const initialWeek = startOfWeekMonday(rangeStart || "2026-07-01");
   const [weekStart, setWeekStart] = useState(initialWeek);
-  const [manualOff, setManualOff] = useState<Set<string>>(() => new Set());
 
-  const studyKey = `${study.id}:${rangeStart}`;
-  const [syncedKey, setSyncedKey] = useState(studyKey);
-  if (syncedKey !== studyKey) {
-    setSyncedKey(studyKey);
-    setWeekStart(initialWeek);
-    setManualOff(new Set());
-  }
-
-  const days = businessDays(weekStart);
+  const days = weekDatesForFilter(weekStart, dayFilter);
 
   /** Primeiros slots livres mockados como “agendados”. */
   const scheduledIds = useMemo(() => {
@@ -206,28 +222,52 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
     return ids;
   }, [allSessions, busyEvents]);
 
+  const bookedSessions: BookedSessionRange[] = useMemo(
+    () =>
+      allSessions
+        .filter((s) => scheduledIds.has(s.id))
+        .map((s) => ({
+          date: s.date,
+          startTime: s.startTime,
+          endTime: s.endTime,
+        })),
+    [allSessions, scheduledIds],
+  );
+
+  const sessionConflicts = useMemo(() => {
+    return allSessions.filter((s) => {
+      if (!scheduledIds.has(s.id)) return false;
+      return busyEvents.some(
+        (e) =>
+          e.date === s.date &&
+          rangesOverlap(s.startTime, s.endTime, e.startTime, e.endTime),
+      );
+    });
+  }, [allSessions, scheduledIds, busyEvents]);
+
   const blocksByDate = useMemo(() => {
     const map = new Map<string, GridBlock[]>();
     for (const day of days) map.set(day, []);
 
     for (const s of allSessions) {
       if (!map.has(s.date)) continue;
-      const busy = busyEvents.find(
+      const busy = busyEvents.some(
         (e) =>
           e.date === s.date &&
           rangesOverlap(s.startTime, s.endTime, e.startTime, e.endTime),
       );
+      const scheduled = scheduledIds.has(s.id);
       let status: SlotUiStatus = "available";
-      let label = `${s.startTime} - ${s.endTime}`;
-      if (busy) {
-        status = "busy";
-        label = messages.estudosAvailabilityIndisponivel;
-      } else if (manualOff.has(s.id)) {
-        status = "unavailable";
-        label = messages.estudosAvailabilityIndisponivel;
-      } else if (scheduledIds.has(s.id)) {
+      let label = messages.estudosAvailabilityHorarioDisponivel;
+      if (scheduled && busy) {
+        status = "conflictSession";
+        label = messages.estudosAvailabilityScheduledLabel;
+      } else if (scheduled) {
         status = "scheduled";
         label = messages.estudosAvailabilityScheduledLabel;
+      } else if (busy) {
+        status = "conflict";
+        label = messages.estudosAvailabilityStatusConflict;
       }
 
       map.get(s.date)?.push({
@@ -237,11 +277,28 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
         endTime: s.endTime,
         status,
         label,
-        eventTitle: busy?.title,
       });
     }
+
+    // Eventos da agenda sem slot — só “Indisponível”
+    for (const e of busyEvents) {
+      if (!map.has(e.date)) continue;
+      const covered = (map.get(e.date) ?? []).some((b) =>
+        rangesOverlap(b.startTime, b.endTime, e.startTime, e.endTime),
+      );
+      if (covered) continue;
+      map.get(e.date)?.push({
+        id: `busy-${e.date}-${e.startTime}`,
+        date: e.date,
+        startTime: e.startTime,
+        endTime: e.endTime,
+        status: "busy",
+        label: messages.estudosAvailabilityIndisponivelAgenda,
+      });
+    }
+
     return map;
-  }, [allSessions, busyEvents, days, manualOff, scheduledIds]);
+  }, [allSessions, busyEvents, days, scheduledIds]);
 
   const scheduledCount = scheduledIds.size;
   const freeCount = useMemo(() => {
@@ -253,14 +310,14 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
           e.date === s.date &&
           rangesOverlap(s.startTime, s.endTime, e.startTime, e.endTime),
       );
-      if (busy || manualOff.has(s.id)) continue;
+      if (busy) continue;
       n += 1;
     }
     return n;
-  }, [allSessions, busyEvents, manualOff, scheduledIds]);
+  }, [allSessions, busyEvents, scheduledIds]);
 
   const hasAgenda =
-    allSessions.length > 0 || (study.scheduleSlots?.length ?? 0) > 0;
+    allSessions.length > 0 || (localStudy.scheduleSlots?.length ?? 0) > 0;
 
   const periodLabel =
     rangeStart && rangeEnd
@@ -278,14 +335,24 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
     return nextStart != null && nextStart <= rangeEnd;
   })();
 
-  const toggleBlock = (block: GridBlock) => {
-    if (block.status === "busy" || block.status === "scheduled") return;
-    setManualOff((prev) => {
-      const next = new Set(prev);
-      if (next.has(block.id)) next.delete(block.id);
-      else next.add(block.id);
-      return next;
-    });
+  const handleSave = async (slots: typeof localStudy.scheduleSlots) => {
+    setSaving(true);
+    try {
+      const next = await updateStudyAvailability(localStudy.id, slots ?? []);
+      setLocalStudy(next);
+      onStudyChange?.(next);
+      showToast({
+        type: "success",
+        title: messages.estudosAvailabilityEditSave,
+      });
+    } catch {
+      showToast({
+        type: "error",
+        title: messages.estudosAvailabilityLoadError,
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -335,12 +402,47 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
             {messages.estudosAvailabilityTimezoneValue}
             <ChevronDownIcon size={20} />
           </span>
-          <span className={styles.metaChip}>
-            {messages.estudosAvailabilityBusinessDays}
+          <button
+            type="button"
+            className={styles.metaChip}
+            onClick={() =>
+              setDayFilter((f) => (f === "business" ? "all" : "business"))
+            }
+          >
+            {dayFilter === "business"
+              ? messages.estudosAvailabilityBusinessDays
+              : messages.estudosAvailabilityNonBusinessDays}
             <ChevronDownIcon size={20} />
-          </span>
+          </button>
+          <Button
+            variant="filled"
+            size="medium"
+            disabled={saving}
+            onClick={() => setEditOpen(true)}
+          >
+            {messages.estudosAvailabilityEdit}
+          </Button>
         </div>
       </div>
+
+      {sessionConflicts.length > 0 ? (
+        <div className={styles.alertWrap}>
+          <AlertCard
+            variant="warning"
+            title={messages.estudosAvailabilityConflictSession}
+          >
+            <Button
+              variant="clear"
+              size="medium"
+              onClick={() => {
+                window.open("https://calendar.google.com", "_blank");
+              }}
+            >
+              {messages.estudosAvailabilityOpenMyCalendar}
+            </Button>
+          </AlertCard>
+        </div>
+      ) : null}
 
       <div className={styles.statsBar}>
         <div className={styles.stats}>
@@ -357,10 +459,10 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
         >
           <span
             className={`${styles.integration}${
-              hasAgenda ? ` ${styles.integrationOn}` : ""
+              calendar.readEnabled ? ` ${styles.integrationOn}` : ""
             }`}
             title={
-              hasAgenda
+              calendar.readEnabled
                 ? messages.estudosAvailabilityGoogleOn
                 : messages.estudosAvailabilityGoogleOff
             }
@@ -369,7 +471,7 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
             <span className={styles.integrationLabel}>
               {messages.estudosAvailabilityGoogleShort}
             </span>
-            {hasAgenda ? (
+            {calendar.readEnabled ? (
               <span className={styles.integrationCheck} aria-hidden>
                 <CheckCircleIcon size={16} />
               </span>
@@ -377,10 +479,10 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
           </span>
           <span
             className={`${styles.integration}${
-              hasAgenda ? ` ${styles.integrationOn}` : ""
+              calendar.readEnabled ? ` ${styles.integrationOn}` : ""
             }`}
             title={
-              hasAgenda
+              calendar.readEnabled
                 ? messages.estudosAvailabilityOutlookOn
                 : messages.estudosAvailabilityOutlookOff
             }
@@ -389,7 +491,7 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
             <span className={styles.integrationLabel}>
               {messages.estudosAvailabilityOutlookShort}
             </span>
-            {hasAgenda ? (
+            {calendar.readEnabled ? (
               <span className={styles.integrationCheck} aria-hidden>
                 <CheckCircleIcon size={16} />
               </span>
@@ -449,55 +551,35 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
                       style={{ top: (h - HOUR_START) * HOUR_PX }}
                     />
                   ))}
-                  {blocks.map((block) => {
-                    const locked =
-                      block.status === "busy" || block.status === "scheduled";
-                    return (
-                      <button
-                        key={block.id}
-                        type="button"
-                        className={[
-                          styles.block,
-                          block.status === "available"
-                            ? styles.blockAvailable
-                            : block.status === "scheduled"
-                              ? styles.blockScheduled
+                  {blocks.map((block) => (
+                    <div
+                      key={block.id}
+                      className={[
+                        styles.block,
+                        block.status === "available"
+                          ? styles.blockAvailable
+                          : block.status === "scheduled"
+                            ? styles.blockScheduled
+                            : block.status === "conflict" ||
+                                block.status === "conflictSession"
+                              ? styles.blockConflict
                               : styles.blockUnavailable,
-                        ].join(" ")}
-                        style={blockStyle(block.startTime, block.endTime)}
-                        disabled={locked}
-                        title={
-                          block.status === "busy"
-                            ? messages.estudosAvailabilityBusyTitle(
-                                block.eventTitle ??
-                                  messages.estudosAvailabilityIndisponivel,
-                              )
-                            : block.status === "scheduled"
-                              ? messages.estudosAvailabilityScheduledLabel
-                              : block.status === "unavailable"
-                                ? messages.estudosAvailabilityToggleOn
-                                : messages.estudosAvailabilityToggleOff
-                        }
-                        aria-pressed={
-                          block.status === "available" ||
-                          block.status === "unavailable"
-                            ? block.status === "available"
-                            : undefined
-                        }
-                        onClick={() => toggleBlock(block)}
-                      >
-                        <span className={styles.blockTime}>
-                          {block.startTime} - {block.endTime}
-                        </span>
-                        <span className={styles.blockLabel}>{block.label}</span>
-                        {block.status === "busy" && block.eventTitle ? (
-                          <span className={styles.blockEvent}>
-                            {block.eventTitle}
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
+                      ].join(" ")}
+                      style={blockStyle(block.startTime, block.endTime)}
+                      title={
+                        block.status === "conflict"
+                          ? messages.estudosAvailabilityConflictAvailable
+                          : block.status === "conflictSession"
+                            ? messages.estudosAvailabilityConflictSession
+                            : block.label
+                      }
+                    >
+                      <span className={styles.blockTime}>
+                        {block.startTime} - {block.endTime}
+                      </span>
+                      <span className={styles.blockLabel}>{block.label}</span>
+                    </div>
+                  ))}
                 </div>
               );
             })}
@@ -505,9 +587,27 @@ export function StudyAvailabilityView({ study }: StudyAvailabilityViewProps) {
         </div>
       )}
 
-      {hasAgenda ? (
-        <p className={styles.hint}>{messages.estudosAvailabilityToggleHint}</p>
-      ) : null}
+      <AvailabilityGridDrawer
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        mode="edit"
+        scheduleStart={localStudy.scheduleStart ?? ""}
+        scheduleEnd={localStudy.scheduleEnd ?? ""}
+        sessionDurationMin={localStudy.sessionDurationMin ?? null}
+        sessionGapMin={localStudy.sessionGapMin ?? null}
+        initialSlots={localStudy.scheduleSlots ?? []}
+        studyName={localStudy.name}
+        sessionFormat={localStudy.sessionFormat ?? ""}
+        calendar={calendar}
+        overrides={overrides}
+        onCalendarChange={setCalendar}
+        onOverridesChange={setOverrides}
+        bookedSessions={bookedSessions}
+        studyForDiff={localStudy}
+        onConfirm={(slots) => {
+          void handleSave(slots);
+        }}
+      />
     </div>
   );
 }

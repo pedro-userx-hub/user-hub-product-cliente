@@ -101,8 +101,8 @@ export type { ChoiceCardsProps, ChoiceCardOption } from "./ChoiceCards";
 export { Checkbox } from "./Checkbox";
 export type { CheckboxProps } from "./Checkbox";
 
-export { Menu } from "./Menu";
-export type { MenuProps, MenuItemConfig } from "./Menu";
+export { Menu, ContextMenu } from "./Menu";
+export type { MenuProps, MenuItemConfig, ContextMenuProps } from "./Menu";
 
 export {
   Table,
@@ -125,6 +125,9 @@ export type { ToolbarProps } from "./Toolbar";
 
 export { PageHeader } from "./PageHeader";
 export type { PageHeaderProps } from "./PageHeader";
+
+export { FooterActionBar } from "./FooterActionBar";
+export type { FooterActionBarProps } from "./FooterActionBar";
 
 export { CreditBalance } from "./CreditBalance";
 export type {

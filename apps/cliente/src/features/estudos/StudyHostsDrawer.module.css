@@ -1,0 +1,78 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.teamStrip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border-subtle, #e5e7eb);
+  border-radius: var(--radius-sm, 4px);
+  box-sizing: border-box;
+}
+
+.teamLabel {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+.inviteBtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-action);
+  font: inherit;
+  font-size: var(--font-sm);
+  font-weight: var(--fw-medium);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.inviteBtn:hover:not(:disabled) {
+  color: var(--color-action-hover);
+}
+
+.inviteBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.inviteBtn:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}

@@ -10,6 +10,8 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   ChevronsUpDownIcon,
+  ContextMenu,
+  DragIndicatorIcon,
   EmptyState,
   EyeIcon,
   EyeOffIcon,
@@ -24,6 +26,7 @@ import {
   TrashIcon,
   TypeIcon,
   UnderlineIcon,
+  UploadIcon,
   UserIcon,
   XCircleIcon,
   type BadgeColor,
@@ -255,6 +258,7 @@ export interface ParticipantsAnswersGridProps {
   }) => void;
   onRequestEditColumn?: (col: CustomColumnDef) => void;
   onRequestDeleteColumn?: (col: CustomColumnDef) => void;
+  onRequestClearColumn?: (col: CustomColumnDef) => void;
   onCellCommit?: (participantId: string, columnId: string, value: string) => void;
   onPasteRequest?: (columnId: string, text: string, rowIds: string[]) => void;
   onPasteSelection?: (
@@ -291,6 +295,7 @@ export function ParticipantsAnswersGrid({
   onRequestAddColumn,
   onRequestEditColumn,
   onRequestDeleteColumn,
+  onRequestClearColumn,
   onCellCommit,
   onPasteRequest,
   onPasteSelection,
@@ -361,6 +366,11 @@ export function ParticipantsAnswersGrid({
   const [sort, setSort] = useState<{
     colId: ColId;
     dir: "asc" | "desc";
+  } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    colId: ColId;
   } | null>(null);
 
   useEffect(() => {
@@ -441,6 +451,28 @@ export function ParticipantsAnswersGrid({
     }
     return [...pinned, ...rest];
   }, [sourceRows, rowChrome, viewAsClient, sort, customTable, customById]);
+
+  const pasteColumnFromClipboard = useCallback(
+    async (colId: string, fromRowIndex = 0) => {
+      if (!onPasteRequest || !isCustomColId(colId)) return;
+      onSelectColumn?.(colId);
+      const rowIds = orderedRows.slice(fromRowIndex).map((row) => row.id);
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          onPasteRequest(colId, text, rowIds);
+          return;
+        }
+      } catch {
+        /* clipboard API bloqueada */
+      }
+      showToast({
+        type: "info",
+        title: messages.participantesPasteHint,
+      });
+    },
+    [onPasteRequest, onSelectColumn, orderedRows, showToast],
+  );
 
   const cycleSort = (colId: ColId) => {
     setSort((prev) => {
@@ -744,6 +776,12 @@ export function ParticipantsAnswersGrid({
       if (target?.closest("input, textarea, select, [contenteditable='true']")) {
         return;
       }
+      if (e.key === "Escape" && (selectedCells.length > 0 || selectedColumnId)) {
+        e.preventDefault();
+        setCellRange(null);
+        onSelectColumn?.(null);
+        return;
+      }
       if ((e.key === "Delete" || e.key === "Backspace") && selectedCells.length > 0) {
         e.preventDefault();
         onClearSelection?.(selectedCells);
@@ -887,7 +925,26 @@ export function ParticipantsAnswersGrid({
       },
     );
     if (custom && canManageColumns) {
+      const empty = columnIsEmpty(
+        customTable,
+        col.id,
+        orderedRows.map((r) => r.id),
+      );
       items.push(
+        {
+          id: "paste",
+          label: messages.participantesCustomPaste,
+          icon: <UploadIcon size={18} />,
+          onSelect: () => void pasteColumnFromClipboard(col.id, 0),
+        },
+        {
+          id: "clear",
+          label: messages.participantesClearColumn,
+          icon: <XCircleIcon size={18} />,
+          disabled: empty,
+          hint: empty ? messages.participantesClearColumnEmpty : undefined,
+          onSelect: () => onRequestClearColumn?.(custom),
+        },
         {
           id: "edit",
           label: messages.participantesColumnEdit,
@@ -898,6 +955,7 @@ export function ParticipantsAnswersGrid({
           id: "delete",
           label: messages.participantesColumnDelete,
           icon: <TrashIcon size={18} />,
+          destructive: true,
           onSelect: () => onRequestDeleteColumn?.(custom),
         },
       );
@@ -984,6 +1042,7 @@ export function ParticipantsAnswersGrid({
       custom &&
       orderedRows.length > 0 &&
       orderedRows.every((p) => selectedCellSet.has(`${p.id}::${col.id}`));
+    const contextHighlight = contextMenu?.colId === col.id;
     const sortActive = sort?.colId === col.id ? sort.dir : null;
     const sortAria =
       sortActive === "asc"
@@ -1008,6 +1067,7 @@ export function ParticipantsAnswersGrid({
           paintClass(col.paint),
           custom ? styles.thCustom : "",
           colFullySelected || selectedColumnId === col.id ? styles.thSelected : "",
+          contextHighlight ? styles.colContextHighlight : "",
           sortActive ? styles.thSorted : "",
         ]
           .filter(Boolean)
@@ -1022,12 +1082,32 @@ export function ParticipantsAnswersGrid({
         onMouseEnter={() => {
           if (custom) extendColumnSelect(col.id);
         }}
+        onContextMenu={(e) => {
+          if (viewAsClient) return;
+          e.preventDefault();
+          e.stopPropagation();
+          onSelectColumn?.(col.id);
+          setContextMenu({ x: e.clientX, y: e.clientY, colId: col.id });
+        }}
+        onKeyDown={(e) => {
+          if (viewAsClient) return;
+          if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+            e.preventDefault();
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            onSelectColumn?.(col.id);
+            setContextMenu({
+              x: rect.left + 8,
+              y: rect.bottom,
+              colId: col.id,
+            });
+          }
+        }}
+        tabIndex={viewAsClient ? undefined : 0}
       >
         <div className={styles.thInner} data-measure>
           <span
             className={styles.thLabel}
             title={col.label}
-            onDoubleClick={() => autofitCol(col.id)}
           >
             {col.label}
           </span>
@@ -1081,7 +1161,11 @@ export function ParticipantsAnswersGrid({
               e.stopPropagation();
               autofitCol(col.id);
             }}
-          />
+          >
+            <span className={styles.resizeIcon} aria-hidden>
+              <DragIndicatorIcon size={14} />
+            </span>
+          </button>
         )}
       </th>
     );
@@ -1245,35 +1329,39 @@ export function ParticipantsAnswersGrid({
         col.id,
         orderedRows.map((row) => row.id),
       );
+      const cellOn = selectedCellSet.has(`${p.id}::${col.id}`);
       return (
         <ParticipantCustomCell
           column={def}
           value={current}
           readOnly={viewAsClient}
           emptyColumn={empty && rowIndex === 0 && !viewAsClient}
-          autoEdit={focusColumnId === col.id && rowIndex === 0}
+          selected={cellOn}
+          selectionCount={selectedCells.length}
           onCommit={(next) => onCellCommit?.(p.id, col.id, next)}
+          onSelect={() => {
+            onSelectColumn?.(col.id);
+            setCellRange({
+              startPid: p.id,
+              startCol: col.id,
+              endPid: p.id,
+              endCol: col.id,
+            });
+          }}
+          onClearSelection={() => {
+            setCellRange(null);
+            onSelectColumn?.(null);
+          }}
+          onMassPaste={(text) => {
+            onPasteRequest?.(
+              col.id,
+              text,
+              orderedRows.slice(rowIndex).map((row) => row.id),
+            );
+          }}
           onPasteShortcut={
             onPasteRequest
-              ? async () => {
-                  onSelectColumn?.(col.id);
-                  try {
-                    const text = await navigator.clipboard.readText();
-                    if (text) {
-                      onPasteRequest(
-                        col.id,
-                        text,
-                        orderedRows.map((row) => row.id),
-                      );
-                    }
-                  } catch {
-                    onSelectColumn?.(col.id);
-                    showToast({
-                      type: "info",
-                      title: messages.participantesPasteHint,
-                    });
-                  }
-                }
+              ? () => void pasteColumnFromClipboard(col.id, rowIndex)
               : undefined
           }
         />
@@ -1357,6 +1445,15 @@ export function ParticipantsAnswersGrid({
                 }))}
                 onApply={applyColumnVisibility}
                 onRestoreDefault={restoreColumnVisibility}
+                onAddColumn={
+                  canManageColumns
+                    ? () =>
+                        onRequestAddColumn?.({
+                          afterId: cols[cols.length - 1]?.id,
+                          anchorId: "end",
+                        })
+                    : undefined
+                }
               />
             </div>
           </div>
@@ -1446,6 +1543,7 @@ export function ParticipantsAnswersGrid({
                       const cellOn =
                         custom &&
                         selectedCellSet.has(`${p.id}::${col.id}`);
+                      const contextHighlight = contextMenu?.colId === col.id;
                       return (
                       <td
                         key={col.id}
@@ -1466,6 +1564,7 @@ export function ParticipantsAnswersGrid({
                           paintClass(col.paint),
                           custom && !viewAsClient ? styles.tdCustom : "",
                           cellOn ? styles.tdSelected : "",
+                          contextHighlight ? styles.colContextHighlight : "",
                         ]
                           .filter(Boolean)
                           .join(" ")}
@@ -1477,6 +1576,26 @@ export function ParticipantsAnswersGrid({
                         }}
                         onMouseEnter={() => {
                           if (custom) extendCellSelect(p.id, col.id);
+                        }}
+                        onContextMenu={(e) => {
+                          if (viewAsClient) return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onSelectColumn?.(col.id);
+                          setContextMenu({
+                            x: e.clientX,
+                            y: e.clientY,
+                            colId: col.id,
+                          });
+                        }}
+                        onDoubleClick={(e) => {
+                          if (!custom || viewAsClient) return;
+                          if (selectedCells.length > 1) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setCellRange(null);
+                            onSelectColumn?.(null);
+                          }
                         }}
                         onClickCapture={(e) => {
                           if (didDragSelectRef.current) {
@@ -1507,6 +1626,22 @@ export function ParticipantsAnswersGrid({
         </div>
       </>
       )}
+      {contextMenu ? (
+        <ContextMenu
+          open
+          x={contextMenu.x}
+          y={contextMenu.y}
+          ariaLabel={
+            cols.find((c) => c.id === contextMenu.colId)?.label ??
+            messages.participantesColunas
+          }
+          items={(() => {
+            const col = cols.find((c) => c.id === contextMenu.colId);
+            return col ? colMenu(col) : [];
+          })()}
+          onClose={() => setContextMenu(null)}
+        />
+      ) : null}
     </div>
   );
 }

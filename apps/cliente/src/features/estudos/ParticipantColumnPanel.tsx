@@ -5,6 +5,7 @@ import {
   Checkbox,
   DragIndicatorIcon,
   LayersIcon,
+  PlusIcon,
   SwapVertIcon,
 } from "@userx/ui";
 import { messages } from "../../lib/messages";
@@ -251,10 +252,12 @@ export function ParticipantColumnsVisibilityMenu({
   columns,
   onApply,
   onRestoreDefault,
+  onAddColumn,
 }: {
   columns: ColumnPanelItem[];
   onApply: (visibleIds: string[]) => void;
   onRestoreDefault: () => void;
+  onAddColumn?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [checked, setChecked] = useState<string[]>(
@@ -297,9 +300,25 @@ export function ParticipantColumnsVisibilityMenu({
               aria-label={messages.participantesColunasTitle}
             >
               <div className={styles.header}>
-                <p className={styles.title}>
-                  {messages.participantesColunasTitle}
-                </p>
+                <div className={styles.titleRow}>
+                  <p className={styles.title}>
+                    {messages.participantesColunasTitle}
+                  </p>
+                  {onAddColumn ? (
+                    <button
+                      type="button"
+                      className={styles.addIconBtn}
+                      aria-label={messages.participantesNewColumn}
+                      title={messages.participantesNewColumn}
+                      onClick={() => {
+                        onAddColumn();
+                        close();
+                      }}
+                    >
+                      <PlusIcon size={18} />
+                    </button>
+                  ) : null}
+                </div>
                 <p className={styles.hint}>
                   {messages.participantesColunasDescription}
                 </p>

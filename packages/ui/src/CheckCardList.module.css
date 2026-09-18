@@ -13,6 +13,18 @@
   color: var(--color-text);
 }
 
+.labelHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .search {
   display: flex;
   align-items: center;
@@ -62,6 +74,11 @@
   overflow-y: auto;
   padding: 1px;
   min-width: 0;
+}
+
+.listUnbounded {
+  max-height: none;
+  overflow: visible;
 }
 
 .card {

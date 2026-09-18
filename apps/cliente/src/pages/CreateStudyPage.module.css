@@ -9,9 +9,8 @@
 }
 
 .topNav {
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  position: relative;
+  z-index: 10;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
@@ -23,27 +22,32 @@
   box-sizing: border-box;
 }
 
-.topNavLeft {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  justify-self: start;
-}
-
 .topNavCenter {
   position: relative;
   justify-self: center;
   min-width: 0;
+  grid-column: 2;
 }
 
 .topNavRight {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-4);
+  gap: var(--space-3);
   min-width: 0;
   justify-self: end;
+  grid-column: 3;
+}
+
+/* Espaço à esquerda do header */
+.topNavLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  justify-self: start;
+  grid-column: 1;
+  flex-wrap: wrap;
 }
 
 .back {
@@ -235,9 +239,14 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: var(--space-6) var(--space-6) var(--space-12);
+  padding: 0;
   /* Evita o browser “reancorar” o scroll quando toggles expandem conteúdo. */
   overflow-anchor: none;
+}
+
+.scrollInner {
+  padding: var(--space-6) var(--space-6) var(--space-12);
+  box-sizing: border-box;
 }
 
 .scrollFlush {
@@ -283,20 +292,16 @@
 @media (max-width: 900px) {
   .topNav {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
     min-height: 0;
     gap: var(--space-3);
     padding: var(--space-4);
   }
 
   .topNavLeft,
-  .topNavCenter,
-  .topNavRight {
+  .topNavCenter {
     justify-self: stretch;
-  }
-
-  .topNavRight {
-    justify-content: flex-end;
+    grid-column: auto;
   }
 
   .stepTrigger {

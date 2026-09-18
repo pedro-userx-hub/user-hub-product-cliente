@@ -859,6 +859,29 @@ export const UNMODERATED_TYPE_DESCRIPTIONS: Record<UnmoderatedStudyType, string>
 /** Canal de contato do responsável (Story 5). */
 export type StudyContactChannel = "email" | "phone" | "slack" | "teams";
 
+/** Procedência do host no estudo. */
+export type StudyHostOrigin = "member" | "guest";
+
+/** Estado do host (pendente = convite ainda não aceito). */
+export type StudyHostStatus = "active" | "pending";
+
+export interface StudyHost {
+  id: string;
+  /** Id do membro do workspace quando origin = member (ou guest após aceite). */
+  memberId?: string;
+  name: string;
+  email: string;
+  status: StudyHostStatus;
+  origin: StudyHostOrigin;
+  /** Flag único: a quem ops recorre primeiro. */
+  isPrincipal: boolean;
+  /** Preferência de canal (perfil / principal). Default e-mail. */
+  contactChannel?: StudyContactChannel | "";
+  contactValue?: string;
+  /** Token do link de convite (host pendente). */
+  inviteToken?: string;
+}
+
 /** Formato das sessões (Passo 2 Story 3). */
 export type StudySessionFormat = "in_person" | "remote" | "hybrid";
 
@@ -1007,6 +1030,11 @@ export interface TeamStudy {
   ownerId?: string;
   contactChannel?: StudyContactChannel | "";
   contactValue?: string;
+  /**
+   * Hosts do estudo (colaboração). Principal = ponto de contato de ops.
+   * Quando presente, substitui o modelo legado de responsável único.
+   */
+  hosts?: StudyHost[];
   /** Responsável de CX/ops (distinct do responsável do estudo no Passo 1). */
   cxOwnerId?: string;
   cxOwnerName?: string;
@@ -1064,7 +1092,14 @@ export interface TeamStudy {
   wizardMaxStep?: number;
 }
 
-export type StudyWeekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
+export type StudyWeekday =
+  | "mon"
+  | "tue"
+  | "wed"
+  | "thu"
+  | "fri"
+  | "sat"
+  | "sun";
 
 export const STUDY_WEEKDAYS: StudyWeekday[] = [
   "mon",
@@ -1073,12 +1108,30 @@ export const STUDY_WEEKDAYS: StudyWeekday[] = [
   "thu",
   "fri",
   "sat",
+  "sun",
 ];
+
+export const STUDY_BUSINESS_WEEKDAYS: StudyWeekday[] = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+];
+
+export const STUDY_WEEKEND_WEEKDAYS: StudyWeekday[] = ["sat", "sun"];
 
 export interface StudyScheduleSlot {
   id: string;
-  /** Dia da semana (Seg–Sáb). Ausente = legado sem dia. */
+  /** Dia da semana (Seg–Dom). Ausente = legado sem dia. */
   weekday?: StudyWeekday;
+  /**
+   * Data concreta YYYY-MM-DD. Quando presente, a faixa vale só nesse dia.
+   * Sem `date` (legado): aplica a todos os dias da janela com o `weekday`.
+   */
+  date?: string;
+  /** Rótulo opcional do bloco (ex.: "Horário disponível"). */
+  title?: string;
   /** HH:mm */
   startTime: string;
   /** HH:mm */
@@ -1579,6 +1632,7 @@ export async function createStudyDraft(input: {
     ownerId: "",
     contactChannel: "",
     contactValue: "",
+    hosts: [],
     cxOwnerId: "",
     cxOwnerName: "",
     briefingEnabled: false,
@@ -1658,6 +1712,7 @@ export interface UpdateStudyDraftInput {
   owners?: string[];
   contactChannel?: StudyContactChannel | "";
   contactValue?: string;
+  hosts?: StudyHost[];
   briefingEnabled?: boolean;
   briefingFile?: StudyConsentFile | null;
   briefingLink?: string;
@@ -1778,6 +1833,9 @@ export async function updateStudyDraft(
       : {}),
     ...(patch.contactValue !== undefined
       ? { contactValue: patch.contactValue }
+      : {}),
+    ...(patch.hosts !== undefined
+      ? { hosts: patch.hosts.map((h) => ({ ...h })) }
       : {}),
     ...(patch.briefingEnabled !== undefined
       ? { briefingEnabled: patch.briefingEnabled }
@@ -1900,6 +1958,47 @@ export async function updateStudyDraft(
     ...(patch.wizardMaxStep !== undefined
       ? { wizardMaxStep: patch.wizardMaxStep }
       : {}),
+  };
+  mockStudies[idx] = next;
+  return {
+    ...next,
+    owners: [...next.owners],
+    screener: next.screener ? cloneScreener(next.screener) : null,
+  };
+}
+
+/**
+ * Pós-lançamento — atualiza apenas a disponibilidade (faixas) do estudo.
+ * Observador não edita; Dono/Admin/Editor dos times do estudo podem.
+ */
+export async function updateStudyAvailability(
+  studyId: string,
+  scheduleSlots: StudyScheduleSlot[],
+): Promise<TeamStudy> {
+  await delay(200);
+  const actor = await fetchSessionUser();
+  if (
+    actor.role !== "Dono do Workspace" &&
+    actor.role !== "Administrador" &&
+    actor.role !== "Editor"
+  ) {
+    throw new ForbiddenError(
+      "Você não tem permissão para editar a disponibilidade deste estudo.",
+    );
+  }
+
+  const idx = mockStudies.findIndex((s) => s.id === studyId);
+  if (idx < 0) {
+    throw new NotFoundError("Este estudo não existe mais.");
+  }
+  const current = mockStudies[idx];
+  if (!actor.teamIds.includes(current.teamId)) {
+    throw new ForbiddenError();
+  }
+
+  const next: TeamStudy = {
+    ...current,
+    scheduleSlots: scheduleSlots.map((s) => ({ ...s })),
   };
   mockStudies[idx] = next;
   return {

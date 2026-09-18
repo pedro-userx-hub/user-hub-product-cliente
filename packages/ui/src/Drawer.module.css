@@ -39,6 +39,10 @@
   width: 560px;
 }
 
+.xl {
+  width: min(1080px, 100vw);
+}
+
 .nested {
   /* empilhado sobre o drawer base */
 }

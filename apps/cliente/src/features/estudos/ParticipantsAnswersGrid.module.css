@@ -51,8 +51,27 @@
   outline-offset: -2px;
 }
 
+.colContextHighlight {
+  background: var(--color-surface-subtle, #f9fafb) !important;
+}
+
+.th.colContextHighlight {
+  background: var(--color-muted-surface, #f3f4f6) !important;
+}
+
+.td.colContextHighlight {
+  background: var(--color-surface-subtle, #f9fafb) !important;
+}
+
+.tr:hover .td.colContextHighlight,
+.tr:hover .stickyCol.colContextHighlight,
+.stickyCol.colContextHighlight,
+thead .stickyCol.colContextHighlight {
+  background: var(--color-muted-surface, #f3f4f6) !important;
+}
+
 .tdCustom {
-  cursor: text;
+  cursor: cell;
   overflow: hidden;
 }
 
@@ -255,8 +274,8 @@
 .resizeHandle {
   position: absolute;
   top: 0;
-  right: 0;
-  width: 8px;
+  right: -4px;
+  width: 12px;
   height: 100%;
   appearance: none;
   border: 0;
@@ -265,11 +284,45 @@
   cursor: col-resize;
   background: transparent;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.resizeHandle:hover,
-.resizeHandle:focus-visible {
-  background: var(--color-action-subtle);
+.resizeHandle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: transparent;
+  border-radius: 1px;
+  transition: background 120ms ease;
+}
+
+.resizeHandle:hover::before,
+.resizeHandle:focus-visible::before {
+  background: var(--color-action);
+}
+
+.resizeIcon {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-action);
+  opacity: 0;
+  transform: rotate(90deg);
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.resizeHandle:hover .resizeIcon,
+.resizeHandle:focus-visible .resizeIcon {
+  opacity: 1;
 }
 
 .thInner {

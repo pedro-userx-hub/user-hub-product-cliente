@@ -463,6 +463,7 @@ export function StudyDetailPage() {
             addressLabel={addressLabel}
             initialSection={dadosSection}
             onSectionChange={setDadosSection}
+            onStudyChange={setStudy}
           />
         )}
 

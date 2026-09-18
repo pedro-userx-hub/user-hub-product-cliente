@@ -4,7 +4,7 @@ import { ChevronLeftIcon, XIcon } from "./icons";
 import styles from "./Drawer.module.css";
 
 export type DrawerSide = "right" | "left";
-export type DrawerSize = "default" | "wide";
+export type DrawerSize = "default" | "wide" | "xl";
 
 export interface DrawerProps {
   open: boolean;
@@ -105,7 +105,7 @@ export function Drawer({
         className={[
           styles.drawer,
           styles[side],
-          size === "wide" ? styles.wide : "",
+          size === "wide" ? styles.wide : size === "xl" ? styles.xl : "",
           nested ? styles.nested : "",
         ]
           .filter(Boolean)

@@ -1,0 +1,186 @@
+/**
+ * Avatar stack — referência: MUI AvatarGroup / Fluent Facepile
+ * - flex-direction: row-reverse
+ * - overlap suave: margin-left -8px (spacing "medium")
+ * - anel 2px na cor da superfície com box-sizing: content-box
+ */
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: flex-end;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  /* MUI medium spacing */
+  margin-left: -8px;
+}
+
+.item:last-child {
+  /* Último no DOM = mais à esquerda visualmente */
+  margin-left: 0;
+}
+
+.item:hover,
+.item:focus-within {
+  z-index: 100 !important;
+}
+
+.avatarWrap {
+  position: relative;
+  display: inline-flex;
+  border-radius: 999px;
+  cursor: default;
+}
+
+/*
+ * Anel de separação no próprio avatar (MUI):
+ * content-box faz a borda ficar FORA do círculo, sem “comer” o miolo.
+ */
+.face {
+  box-sizing: content-box !important;
+  border: 2px solid var(--color-surface, #fff) !important;
+  background-clip: padding-box;
+}
+
+.size_sm {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: var(--font-xs) !important;
+  line-height: var(--lh-xs) !important;
+}
+
+.size_md {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: var(--font-sm) !important;
+  line-height: var(--lh-sm) !important;
+}
+
+.size_lg {
+  width: 40px !important;
+  height: 40px !important;
+  font-size: var(--font-sm) !important;
+  line-height: var(--lh-sm) !important;
+}
+
+.overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-muted-surface, #eef0f3);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-semibold);
+  box-sizing: content-box;
+  border: 2px solid var(--color-surface, #fff);
+  cursor: default;
+}
+
+.pendingRing {
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--color-border);
+  pointer-events: none;
+}
+
+.online {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  border-radius: 999px;
+  background: #22c55e;
+  border: 2px solid var(--color-surface, #fff);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.principalMark {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  border-radius: 999px;
+  background: var(--color-action);
+  border: 2px solid var(--color-surface, #fff);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.dot_sm {
+  width: 8px;
+  height: 8px;
+}
+
+.dot_md {
+  width: 9px;
+  height: 9px;
+}
+
+.dot_lg {
+  width: 10px;
+  height: 10px;
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text-muted);
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.addBtn.size_sm {
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+}
+
+.addBtn.size_md {
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+}
+
+.addBtn.size_lg {
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+}
+
+.addBtn:hover:not(:disabled) {
+  border-color: var(--color-action);
+  color: var(--color-action);
+}
+
+.addBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.addBtn:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}

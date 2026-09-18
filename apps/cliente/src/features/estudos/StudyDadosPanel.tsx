@@ -28,6 +28,7 @@ export interface StudyDadosPanelProps {
   addressLabel?: string;
   initialSection?: StudyDadosSectionId;
   onSectionChange?: (section: StudyDadosSectionId) => void;
+  onStudyChange?: (study: TeamStudy) => void;
 }
 
 function sectionIcon(id: StudyDadosSectionId) {
@@ -56,6 +57,7 @@ export function StudyDadosPanel({
   study,
   initialSection = "dados",
   onSectionChange,
+  onStudyChange,
 }: StudyDadosPanelProps) {
   const [activeSection, setActiveSection] =
     useState<StudyDadosSectionId>(initialSection);
@@ -169,7 +171,11 @@ export function StudyDadosPanel({
           )}
 
           {displaySection === "disponibilidade" && (
-            <StudyAvailabilityView key={`${study.id}-agenda`} study={study} />
+            <StudyAvailabilityView
+              key={`${study.id}-agenda`}
+              study={study}
+              onStudyChange={onStudyChange}
+            />
           )}
 
           {displaySection === "configuracoes" && (

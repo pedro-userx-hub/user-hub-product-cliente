@@ -5,6 +5,7 @@ import {
   CheckboxIcon,
   ChevronRightIcon,
   FileIcon,
+  FooterActionBar,
   LayersIcon,
   ListChecksIcon,
   MoreVerticalIcon,
@@ -172,43 +173,36 @@ export function QuestionnaireBuilderStep({
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <ol className={styles.breadcrumb} aria-label="Navegação">
-            <li>{studyTitle}</li>
-            <li className={styles.breadcrumbSep} aria-hidden>
-              <ChevronRightIcon size={16} />
-            </li>
-            <li className={styles.breadcrumbCurrent}>
-              {messages.estudosQuestionnaireBuilderBreadcrumb}
-            </li>
-          </ol>
-          <div className={styles.titleRow}>
-            <button
-              type="button"
-              className={styles.back}
-              aria-label={messages.estudosCreatePrev}
-              disabled={disabled}
-              onClick={handleBack}
-            >
-              <ArrowLeftIcon size={20} />
-            </button>
-            <h1 className={styles.title}>
-              {messages.estudosQuestionnaireBuilderLabel}
-            </h1>
+      <div className={styles.scroll}>
+        <header className={styles.header}>
+          <div className={styles.headerLeft}>
+            <ol className={styles.breadcrumb} aria-label="Navegação">
+              <li>{studyTitle}</li>
+              <li className={styles.breadcrumbSep} aria-hidden>
+                <ChevronRightIcon size={16} />
+              </li>
+              <li className={styles.breadcrumbCurrent}>
+                {messages.estudosQuestionnaireBuilderBreadcrumb}
+              </li>
+            </ol>
+            <div className={styles.titleRow}>
+              <button
+                type="button"
+                className={styles.back}
+                aria-label={messages.estudosCreatePrev}
+                disabled={disabled}
+                onClick={handleBack}
+              >
+                <ArrowLeftIcon size={20} />
+              </button>
+              <h1 className={styles.title}>
+                {messages.estudosQuestionnaireBuilderLabel}
+              </h1>
+            </div>
           </div>
-        </div>
-        <Button
-          variant="filled"
-          size="medium"
-          disabled={disabled}
-          onClick={handleSave}
-        >
-          {messages.estudosQuestionnaireBuilderSave}
-        </Button>
-      </header>
+        </header>
 
-      <div className={styles.workspace}>
+        <div className={styles.workspace}>
         <div className={styles.main}>
           <div className={styles.tabBar}>
             <div className={styles.tabs} role="tablist">
@@ -347,7 +341,19 @@ export function QuestionnaireBuilderStep({
             </aside>
           </div>
         </div>
+        </div>
       </div>
+
+      <FooterActionBar aria-label={messages.estudosCreateFooterActionsAria}>
+        <Button
+          variant="filled"
+          size="medium"
+          disabled={disabled}
+          onClick={handleSave}
+        >
+          {messages.estudosQuestionnaireBuilderSave}
+        </Button>
+      </FooterActionBar>
     </div>
   );
 }

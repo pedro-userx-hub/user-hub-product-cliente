@@ -93,6 +93,7 @@ export function StudyParticipantsPanel({
     edit?: CustomColumnDef;
   } | null>(null);
   const [deleteColumn, setDeleteColumn] = useState<CustomColumnDef | null>(null);
+  const [clearColumn, setClearColumn] = useState<CustomColumnDef | null>(null);
   const [undo, setUndo] = useState<{
     cells: Record<string, Record<string, string>>;
     count: number;
@@ -111,6 +112,7 @@ export function StudyParticipantsPanel({
     okCount: number;
     badCount: number;
     overwriteCount: number;
+    columnName?: string;
   } | null>(null);
 
   const isAgendados = filter === "agendados";
@@ -349,35 +351,56 @@ export function StudyParticipantsPanel({
     updates: Record<string, Record<string, string>>,
     leftover: number,
     _shortfall: number,
+    opts?: { columnName?: string; kind?: "paste" | "clear" },
   ) => {
     const snap = snapshotCellPatch(customTable, updates);
-    const count = Object.keys(updates).length;
-    const next = await setCustomCells(study.id, updates);
-    setCustomTable(next);
-    const undoState = { cells: snap, count };
-    setUndo(undoState);
-    undoRef.current = undoState;
-    setMassConfirm(null);
-    setClearConfirm(null);
-    showToast({
-      type: "success",
-      title:
-        leftover > 0
-          ? messages.participantesPasteMismatch(count, leftover)
-          : messages.participantesMassUpdated(count),
-      action: {
-        label: messages.participantesUndo,
-        onSelect: () => {
-          const u = undoRef.current;
-          if (!u) return;
-          void setCustomCells(study.id, u.cells).then((saved) => {
-            setCustomTable(saved);
-            setUndo(null);
-            undoRef.current = null;
-          });
+    const count = Object.values(updates).reduce(
+      (n, row) => n + Object.keys(row).length,
+      0,
+    );
+    try {
+      const next = await setCustomCells(study.id, updates);
+      setCustomTable(next);
+      const undoState = { cells: snap, count };
+      setUndo(undoState);
+      undoRef.current = undoState;
+      setMassConfirm(null);
+      setClearConfirm(null);
+      setClearColumn(null);
+      const columnName = opts?.columnName ?? "";
+      const title =
+        opts?.kind === "clear"
+          ? messages.participantesClearColumnSuccess(columnName)
+          : leftover > 0
+            ? messages.participantesPastePartial(count, leftover)
+            : columnName
+              ? messages.participantesPasteSuccess(count, columnName)
+              : messages.participantesMassUpdated(count);
+      showToast({
+        type: "success",
+        title,
+        action: {
+          label: messages.participantesUndo,
+          onSelect: () => {
+            const u = undoRef.current;
+            if (!u) return;
+            void setCustomCells(study.id, u.cells).then((saved) => {
+              setCustomTable(saved);
+              setUndo(null);
+              undoRef.current = null;
+            });
+          },
         },
-      },
-    });
+      });
+    } catch {
+      showToast({
+        type: "error",
+        title:
+          opts?.kind === "clear"
+            ? messages.participantesClearColumnError
+            : messages.participantesPasteInvalid,
+      });
+    }
   };
 
   const queueMass = (
@@ -388,9 +411,18 @@ export function StudyParticipantsPanel({
       okCount: number;
       badCount: number;
       overwriteCount: number;
+      rejected?: boolean;
+      columnName?: string;
     },
     skipIncompatible = false,
   ) => {
+    if (payload.rejected) {
+      showToast({
+        type: "error",
+        title: messages.participantesPasteInvalid,
+      });
+      return;
+    }
     if (payload.okCount === 0 && payload.badCount > 0) {
       setMassConfirm({ type: "incompatible", ...payload });
       return;
@@ -403,7 +435,10 @@ export function StudyParticipantsPanel({
       setMassConfirm({ type: "overwrite", ...payload });
       return;
     }
-    void commitMass(payload.updates, payload.leftover, payload.shortfall);
+    void commitMass(payload.updates, payload.leftover, payload.shortfall, {
+      columnName: payload.columnName,
+      kind: "paste",
+    });
   };
 
   const handleVisionConfirm = async (next: {
@@ -457,7 +492,7 @@ export function StudyParticipantsPanel({
       return;
     }
     const prepared = prepareColumnPaste(customTable, col, text, rowIds);
-    queueMass(prepared);
+    queueMass({ ...prepared, columnName: col.name });
   };
 
   const handlePasteSelection = (
@@ -466,7 +501,8 @@ export function StudyParticipantsPanel({
   ) => {
     const byId = new Map(customTable.columns.map((c) => [c.id, c]));
     const prepared = preparePasteIntoCells(customTable, cells, text, byId);
-    queueMass(prepared);
+    const firstCol = cells[0] ? byId.get(cells[0].columnId) : undefined;
+    queueMass({ ...prepared, columnName: firstCol?.name });
   };
 
   const handleClearSelection = (
@@ -485,6 +521,22 @@ export function StudyParticipantsPanel({
     }
     if (filled === 0) return;
     setClearConfirm(updates);
+  };
+
+  const handleClearColumn = (col: CustomColumnDef) => {
+    setClearColumn(col);
+  };
+
+  const confirmClearColumn = () => {
+    if (!clearColumn) return;
+    const updates: Record<string, Record<string, string>> = {};
+    for (const p of list) {
+      updates[p.id] = { [clearColumn.id]: "" };
+    }
+    void commitMass(updates, 0, 0, {
+      columnName: clearColumn.name,
+      kind: "clear",
+    });
   };
 
   const handleCreateColumn = async (input: {
@@ -620,6 +672,7 @@ export function StudyParticipantsPanel({
                 })
               }
               onRequestDeleteColumn={setDeleteColumn}
+              onRequestClearColumn={handleClearColumn}
               onCellCommit={(participantId, columnId, value) => {
                 void setCustomCells(study.id, {
                   [participantId]: { [columnId]: value },
@@ -853,6 +906,18 @@ export function StudyParticipantsPanel({
           />
 
           <ConfirmDialog
+            open={clearColumn != null}
+            title={messages.participantesClearColumnTitle(
+              clearColumn?.name ?? "",
+            )}
+            message={messages.participantesClearColumnBody}
+            confirmLabel={messages.participantesClearColumnConfirm}
+            destructive
+            onClose={() => setClearColumn(null)}
+            onConfirm={confirmClearColumn}
+          />
+
+          <ConfirmDialog
             open={clearConfirm != null}
             title={messages.participantesClearCellsTitle}
             message={messages.participantesClearCellsBody(
@@ -868,7 +933,7 @@ export function StudyParticipantsPanel({
             onClose={() => setClearConfirm(null)}
             onConfirm={() => {
               if (!clearConfirm) return;
-              void commitMass(clearConfirm, 0, 0);
+              void commitMass(clearConfirm, 0, 0, { kind: "clear" });
             }}
           />
 
@@ -919,6 +984,10 @@ export function StudyParticipantsPanel({
                 massConfirm.updates,
                 massConfirm.leftover,
                 massConfirm.shortfall,
+                {
+                  columnName: massConfirm.columnName,
+                  kind: "paste",
+                },
               );
             }}
           />

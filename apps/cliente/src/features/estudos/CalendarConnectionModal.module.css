@@ -1,0 +1,130 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.lead {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.connecting {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.providerChoices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.providerChoice {
+  appearance: none;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font: inherit;
+}
+
+.providerChoice:hover:not(:disabled) {
+  border-color: var(--color-action);
+}
+
+.providerChoice:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.providerChoiceTitle {
+  font-size: var(--font-base);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.providerChoiceHint {
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.accountSummary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.providerTag {
+  margin: 0;
+  font-size: var(--font-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-action);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.accountEmail {
+  margin: 0;
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.calList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.prefCard {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-background);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.footerEnd {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}

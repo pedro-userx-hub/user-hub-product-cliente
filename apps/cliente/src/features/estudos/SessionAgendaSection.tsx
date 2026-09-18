@@ -42,6 +42,7 @@ const DAY_LABEL: Record<StudyWeekday, string> = {
   thu: messages.estudosAgendaDayThu,
   fri: messages.estudosAgendaDayFri,
   sat: messages.estudosAgendaDaySat,
+  sun: messages.estudosAgendaDaySun,
 };
 
 function issueMessage(issue: ScheduleSlotIssue): string {

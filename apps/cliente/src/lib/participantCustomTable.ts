@@ -238,6 +238,24 @@ export function normalizePastedLines(text: string): string[] {
     .filter((line, i, arr) => !(i === arr.length - 1 && line === ""));
 }
 
+/**
+ * Rejeita colagens multi-coluna (várias células tab-separated na mesma linha).
+ * Uma coluna do Excel (tabs só como delimitador vazio) continua válida.
+ */
+export function isPasteDistributable(text: string): boolean {
+  const raw = text.replace(/^\uFEFF/, "");
+  if (!raw.trim()) return false;
+  const lines = raw.split(/\r\n|\n|\r/);
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const parts = line.split("\t");
+    if (parts.length > 1 && parts.slice(1).some((p) => p.trim() !== "")) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /** Screener questions usam o mesmo mapa extra em systemClientVisible. */
 export function getClientVisibleFlag(
   table: ParticipantCustomTable,
@@ -373,7 +391,19 @@ export function prepareColumnPaste(
   okCount: number;
   badCount: number;
   overwriteCount: number;
+  rejected: boolean;
 } {
+  if (!isPasteDistributable(text)) {
+    return {
+      updates: {},
+      leftover: 0,
+      shortfall: 0,
+      okCount: 0,
+      badCount: 0,
+      overwriteCount: 0,
+      rejected: true,
+    };
+  }
   const lines = normalizePastedLines(text);
   const applied = Math.min(lines.length, rowIds.length);
   const leftover = Math.max(0, lines.length - rowIds.length);
@@ -397,7 +427,15 @@ export function prepareColumnPaste(
     if (cellValue(table, pid, column.id).trim()) overwriteCount += 1;
     updates[pid] = { [column.id]: coerced.value };
   }
-  return { updates, leftover, shortfall, okCount, badCount, overwriteCount };
+  return {
+    updates,
+    leftover,
+    shortfall,
+    okCount,
+    badCount,
+    overwriteCount,
+    rejected: false,
+  };
 }
 
 export function preparePasteIntoCells(
@@ -412,11 +450,33 @@ export function preparePasteIntoCells(
   okCount: number;
   badCount: number;
   overwriteCount: number;
+  rejected: boolean;
 } {
+  if (!isPasteDistributable(text)) {
+    return {
+      updates: {},
+      leftover: 0,
+      shortfall: 0,
+      okCount: 0,
+      badCount: 0,
+      overwriteCount: 0,
+      rejected: true,
+    };
+  }
   const lines = normalizePastedLines(text);
-  const applied = Math.min(lines.length, targets.length);
-  const leftover = Math.max(0, lines.length - targets.length);
-  const shortfall = Math.max(0, targets.length - lines.length);
+  const values =
+    lines.length === 1 && targets.length > 1
+      ? targets.map(() => lines[0]!)
+      : lines;
+  const applied = Math.min(values.length, targets.length);
+  const leftover =
+    lines.length === 1 && targets.length > 1
+      ? 0
+      : Math.max(0, lines.length - targets.length);
+  const shortfall =
+    lines.length === 1 && targets.length > 1
+      ? 0
+      : Math.max(0, targets.length - lines.length);
   const updates: Record<string, Record<string, string>> = {};
   let okCount = 0;
   let badCount = 0;
@@ -430,7 +490,7 @@ export function preparePasteIntoCells(
     }
     const coerced = coerceCustomValue(
       col.type,
-      lines[i] ?? "",
+      values[i] ?? "",
       col.options,
     );
     if (!coerced.ok) {
@@ -446,7 +506,15 @@ export function preparePasteIntoCells(
       [target.columnId]: coerced.value,
     };
   }
-  return { updates, leftover, shortfall, okCount, badCount, overwriteCount };
+  return {
+    updates,
+    leftover,
+    shortfall,
+    okCount,
+    badCount,
+    overwriteCount,
+    rejected: false,
+  };
 }
 
 export function countOverwrites(

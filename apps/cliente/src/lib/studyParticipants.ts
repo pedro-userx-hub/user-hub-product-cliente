@@ -252,6 +252,7 @@ export function buildAnswersAndAdherence(
 }
 
 const WEEKDAY_JS: Record<NonNullable<StudyScheduleSlot["weekday"]>, number> = {
+  sun: 0,
   mon: 1,
   tue: 2,
   wed: 3,
@@ -329,8 +330,13 @@ export function listAvailableSessionSlots(
     const wd = jsWeekday(cursor);
     if (wd != null) {
       for (const band of slots) {
-        if (!band.weekday) continue;
-        if (WEEKDAY_JS[band.weekday] !== wd) continue;
+        // Date-specific: só neste dia. Legado (sem date): todos os weekdays iguais.
+        if (band.date) {
+          if (band.date !== cursor) continue;
+        } else {
+          if (!band.weekday) continue;
+          if (WEEKDAY_JS[band.weekday] !== wd) continue;
+        }
         const from = parseTimeToMinutes(band.startTime);
         const to = parseTimeToMinutes(band.endTime);
         if (from == null || to == null || to <= from) continue;

@@ -28,6 +28,11 @@ export interface ToastInput {
   message?: string;
   /** Ação no próprio toast (ex.: Desfazer). */
   action?: ToastAction;
+  /**
+   * Se true, o toast não some sozinho (padrão para `error`).
+   * Sucesso/info/warning auto-dismissem.
+   */
+  persist?: boolean;
 }
 
 interface ToastItem extends ToastInput {
@@ -47,27 +52,39 @@ const ICONS: Record<ToastVariant, ReactNode> = {
   info: <InfoIcon />,
 };
 
+const MAX_STACK = 3;
+/** Janela de Desfazer / ação no toast (Open Question #4 — 8s). */
+const ACTION_MS = 8000;
+const SUCCESS_MS = 5000;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const idRef = useRef(0);
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutsRef = useRef<Map<number, number>>(new Map());
 
   const remove = useCallback((id: number) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    const t = timeoutsRef.current.get(id);
+    if (t != null) {
+      window.clearTimeout(t);
+      timeoutsRef.current.delete(id);
+    }
+    setToasts((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
   const showToast = useCallback(
     (t: ToastInput) => {
-      if (timeoutRef.current != null) {
-        window.clearTimeout(timeoutRef.current);
-      }
       idRef.current += 1;
       const id = idRef.current;
-      setToasts([{ ...t, id }]);
-      timeoutRef.current = window.setTimeout(
-        () => remove(id),
-        t.action ? 8000 : 5000,
-      );
+      const persist = t.persist ?? t.type === "error";
+      setToasts((prev) => {
+        const next = [...prev, { ...t, id, persist }];
+        return next.slice(-MAX_STACK);
+      });
+      if (!persist) {
+        const ms = t.action ? ACTION_MS : SUCCESS_MS;
+        const handle = window.setTimeout(() => remove(id), ms);
+        timeoutsRef.current.set(id, handle);
+      }
     },
     [remove],
   );
@@ -82,7 +99,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             className={[styles.toast, styles[t.type]].join(" ")}
-            role="status"
+            role={t.type === "error" ? "alert" : "status"}
           >
             <span className={styles.icon}>{ICONS[t.type]}</span>
             <div className={styles.content}>

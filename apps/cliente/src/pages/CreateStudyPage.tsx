@@ -7,6 +7,7 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  FooterActionBar,
   Modal,
   Skeleton,
   useToast,
@@ -42,6 +43,8 @@ import {
   LaunchingStudyScreen,
   type LaunchScreenStatus,
 } from "../features/estudos/LaunchingStudyScreen";
+import { StudyHostsAvatarStack } from "../features/estudos/StudyHostsAvatarStack";
+import { StudyHostsDrawer } from "../features/estudos/StudyHostsDrawer";
 import {
   delay,
   LAUNCH_CLIENT_TIMEOUT_MS,
@@ -217,6 +220,7 @@ export function CreateStudyPage() {
   const launchPatchRef = useRef<UpdateStudyDraftInput>({});
   const [stepMenuOpen, setStepMenuOpen] = useState(false);
   const stepMenuRef = useRef<HTMLDivElement>(null);
+  const [hostsDrawerOpen, setHostsDrawerOpen] = useState(false);
 
 
   const load = useCallback(async () => {
@@ -754,157 +758,139 @@ export function CreateStudyPage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.topNav}>
-        <div className={styles.topNavLeft}>
-          <button
-            type="button"
-            className={styles.back}
-            aria-label={messages.estudosCreateBackAria}
-            disabled={saving}
-            onClick={() => {
-              if (currentStep === 1 && step1Ref.current) {
-                void persistFields(step1Ref.current.getPatch());
-              }
-              goListing();
-            }}
-          >
-            <ArrowLeftIcon size={20} />
-          </button>
-          <div className={styles.titleBlock}>
-            <h1 className={styles.title} title={title}>
-              {title}
-            </h1>
-            {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
-          </div>
-        </div>
-
-        <div className={styles.topNavCenter} ref={stepMenuRef}>
-          <button
-            type="button"
-            className={styles.stepTrigger}
-            aria-label={messages.estudosCreateStepMenuAria}
-            aria-haspopup="listbox"
-            aria-expanded={stepMenuOpen}
-            disabled={saving}
-            onClick={() => setStepMenuOpen((v) => !v)}
-          >
-            <span className={styles.stepPrefix}>
-              {messages.estudosCreateStepPrefix(displayStep)}
-            </span>
-            <span className={styles.stepPill}>
-              <span className={styles.stepPillLabel}>{currentStepLabel}</span>
-              <span className={styles.stepCheck} aria-hidden>
-                <CheckIcon size={12} />
-              </span>
-            </span>
-            <ChevronDownIcon size={20} />
-          </button>
-          {stepMenuOpen && (
-            <ul className={styles.stepMenu} role="listbox">
-              {stepMenuIds.map((displayId) => {
-                const targetWizardStep = displayIndexToWizardStep(
-                  displayId,
-                  study,
-                );
-                const disabled = displayId > displayMaxStep || saving;
-                const active = targetWizardStep === currentStep;
-                return (
-                  <li key={displayId} role="option" aria-selected={active}>
-                    <button
-                      type="button"
-                      className={[
-                        styles.stepMenuItem,
-                        active ? styles.stepMenuItemActive : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      disabled={disabled}
-                      onClick={() => {
-                        setStepMenuOpen(false);
-                        void handleStepSelect(displayId);
-                      }}
-                    >
-                      <span className={styles.stepMenuPrefix}>
-                        {messages.estudosCreateStepPrefix(displayId)}
-                      </span>
-                      {wizardStepLabel(targetWizardStep, study)}
-                    </button>
-                  </li>
-                );
-              })}
-              <li className={styles.stepMenuDivider} aria-hidden />
-              <li>
-                <button
-                  type="button"
-                  className={[styles.stepMenuItem, styles.stepMenuDestructive]
-                    .filter(Boolean)
-                    .join(" ")}
-                  disabled={saving}
-                  onClick={() => {
-                    setStepMenuOpen(false);
-                    setDiscardOpen(true);
-                  }}
-                >
-                  {messages.estudosCreateDiscard}
-                </button>
-              </li>
-            </ul>
-          )}
-        </div>
-
-        <div className={styles.topNavRight}>
-          {displayStep > 1 && (
-            <Button
-              variant="clear"
-              size="medium"
+      <div className={styles.scroll}>
+        <header className={styles.topNav}>
+          <div className={styles.topNavLeft}>
+            <button
+              type="button"
+              className={styles.back}
+              aria-label={messages.estudosCreateBackAria}
               disabled={saving}
-              iconLeft={<ChevronLeftIcon size={20} />}
-              onClick={() => void handlePrev()}
+              onClick={() => {
+                if (currentStep === 1 && step1Ref.current) {
+                  void persistFields(step1Ref.current.getPatch());
+                }
+                goListing();
+              }}
             >
-              {messages.estudosCreatePrev}
-            </Button>
-          )}
-          {showPrimaryCta && (
-          <Button
-            variant="filled"
-            size="medium"
-            loading={saving}
-            iconRight={
-              isLastWizardStep ? undefined : <ChevronRightIcon size={20} />
-            }
-            onClick={() => void handleNext()}
-          >
-            {isLastWizardStep
-              ? messages.estudosLaunchCta
-              : messages.estudosCreateNext}
-          </Button>
-          )}
-        </div>
-      </header>
+              <ArrowLeftIcon size={20} />
+            </button>
+            <div className={styles.titleBlock}>
+              <h1 className={styles.title} title={title}>
+                {title}
+              </h1>
+              {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+            </div>
+          </div>
 
-      <div
-        className={[
-          styles.scroll,
-          currentStep === 4 ? styles.scrollFlush : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <section
+          <div className={styles.topNavCenter} ref={stepMenuRef}>
+            <button
+              type="button"
+              className={styles.stepTrigger}
+              aria-label={messages.estudosCreateStepMenuAria}
+              aria-haspopup="listbox"
+              aria-expanded={stepMenuOpen}
+              disabled={saving}
+              onClick={() => setStepMenuOpen((v) => !v)}
+            >
+              <span className={styles.stepPrefix}>
+                {messages.estudosCreateStepPrefix(displayStep)}
+              </span>
+              <span className={styles.stepPill}>
+                <span className={styles.stepPillLabel}>{currentStepLabel}</span>
+                <span className={styles.stepCheck} aria-hidden>
+                  <CheckIcon size={12} />
+                </span>
+              </span>
+              <ChevronDownIcon size={20} />
+            </button>
+            {stepMenuOpen && (
+              <ul className={styles.stepMenu} role="listbox">
+                {stepMenuIds.map((displayId) => {
+                  const targetWizardStep = displayIndexToWizardStep(
+                    displayId,
+                    study,
+                  );
+                  const disabled = displayId > displayMaxStep || saving;
+                  const active = targetWizardStep === currentStep;
+                  return (
+                    <li key={displayId} role="option" aria-selected={active}>
+                      <button
+                        type="button"
+                        className={[
+                          styles.stepMenuItem,
+                          active ? styles.stepMenuItemActive : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        disabled={disabled}
+                        onClick={() => {
+                          setStepMenuOpen(false);
+                          void handleStepSelect(displayId);
+                        }}
+                      >
+                        <span className={styles.stepMenuPrefix}>
+                          {messages.estudosCreateStepPrefix(displayId)}
+                        </span>
+                        {wizardStepLabel(targetWizardStep, study)}
+                      </button>
+                    </li>
+                  );
+                })}
+                <li className={styles.stepMenuDivider} aria-hidden />
+                <li>
+                  <button
+                    type="button"
+                    className={[styles.stepMenuItem, styles.stepMenuDestructive]
+                      .filter(Boolean)
+                      .join(" ")}
+                    disabled={saving}
+                    onClick={() => {
+                      setStepMenuOpen(false);
+                      setDiscardOpen(true);
+                    }}
+                  >
+                    {messages.estudosCreateDiscard}
+                  </button>
+                </li>
+              </ul>
+            )}
+          </div>
+
+          <div className={styles.topNavRight}>
+            {(study.hosts?.length ?? 0) > 0 ? (
+              <StudyHostsAvatarStack
+                hosts={study.hosts ?? []}
+                disabled={saving}
+                onAdd={() => setHostsDrawerOpen(true)}
+              />
+            ) : null}
+          </div>
+        </header>
+
+        <div
           className={[
-            styles.body,
-            currentStep === 1 ||
-            currentStep === 2 ||
-            currentStep === 3 ||
-            currentStep === 4 ||
-            currentStep === ONLINE_SURVEY_WIZARD_STEP
-              ? styles.bodyBare
-              : "",
+            styles.scrollInner,
+            currentStep === 4 ? styles.scrollFlush : "",
           ]
             .filter(Boolean)
             .join(" ")}
-          aria-labelledby={`step-${currentStep}`}
         >
+          <section
+            className={[
+              styles.body,
+              currentStep === 1 ||
+              currentStep === 2 ||
+              currentStep === 3 ||
+              currentStep === 4 ||
+              currentStep === ONLINE_SURVEY_WIZARD_STEP
+                ? styles.bodyBare
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-labelledby={`step-${currentStep}`}
+          >
           {currentStep === 1 ? (
             <StudyStep1Form
               ref={step1Ref}
@@ -959,8 +945,49 @@ export function CreateStudyPage() {
               onPersist={(patch) => void persistFields(patch)}
             />
           )}
-        </section>
+          </section>
+        </div>
       </div>
+
+      <FooterActionBar aria-label={messages.estudosCreateFooterActionsAria}>
+        {displayStep > 1 && (
+          <Button
+            variant="clear"
+            size="medium"
+            disabled={saving}
+            iconLeft={<ChevronLeftIcon size={20} />}
+            onClick={() => void handlePrev()}
+          >
+            {messages.estudosCreatePrev}
+          </Button>
+        )}
+        {showPrimaryCta && (
+          <Button
+            variant="filled"
+            size="medium"
+            loading={saving}
+            disabled={saving}
+            iconRight={
+              isLastWizardStep ? undefined : <ChevronRightIcon size={20} />
+            }
+            onClick={() => void handleNext()}
+          >
+            {isLastWizardStep
+              ? messages.estudosLaunchCta
+              : messages.estudosCreateNext}
+          </Button>
+        )}
+      </FooterActionBar>
+
+      <StudyHostsDrawer
+        open={hostsDrawerOpen}
+        onClose={() => setHostsDrawerOpen(false)}
+        hosts={study.hosts ?? []}
+        onApply={(next, patch) => {
+          applyLocalPatch(patch);
+          void persistFields(patch);
+        }}
+      />
 
       <Modal
         open={discardOpen}

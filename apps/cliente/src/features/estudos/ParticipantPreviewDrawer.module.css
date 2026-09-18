@@ -1,0 +1,224 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.tzNote {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.slotsPane {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  min-height: 180px;
+  max-height: 320px;
+  overflow: auto;
+  min-width: 0;
+}
+
+.calendar {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  min-width: 0;
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.monthLabel {
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.navBtn {
+  appearance: none;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.navBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.weekHead {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  margin-bottom: var(--space-1);
+}
+
+.weekHeadCell {
+  text-align: center;
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  padding: var(--space-1);
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.dayEmpty {
+  min-height: 36px;
+}
+
+.dayCell {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  min-height: 36px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.dayOut {
+  opacity: 0.35;
+}
+
+.dayHas {
+  background: color-mix(in srgb, var(--color-action) 12%, white);
+  color: var(--color-action);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.dayHas:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-action) 20%, white);
+}
+
+.daySelected {
+  background: var(--color-action);
+  color: var(--color-action-on, #fff);
+}
+
+.dayCell:disabled {
+  cursor: not-allowed;
+}
+
+.dayTitle {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.slotGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.slot {
+  appearance: none;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.slot:hover {
+  border-color: var(--color-action);
+}
+
+.slotActive {
+  border-color: var(--color-action);
+  background: color-mix(in srgb, var(--color-action) 12%, white);
+  color: var(--color-action);
+  font-weight: var(--fw-semibold);
+}
+
+.footerRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.thanks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.thanksTitle {
+  margin: 0;
+  font-size: var(--font-base);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.meta {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.metaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metaRow dt {
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}
+
+.metaRow dd {
+  margin: 0;
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}

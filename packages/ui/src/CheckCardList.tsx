@@ -28,6 +28,13 @@ export interface CheckCardListProps {
   disabled?: boolean;
   className?: string;
   "aria-label"?: string;
+  /** Oculta o rótulo visual (mantém acessível via aria). */
+  hideLabel?: boolean;
+  /**
+   * Quando false, a lista cresce sem scroll interno (útil dentro de Drawer).
+   * Default: true.
+   */
+  scrollableList?: boolean;
 }
 
 /**
@@ -49,6 +56,8 @@ export function CheckCardList({
   disabled,
   className,
   "aria-label": ariaLabel,
+  hideLabel = false,
+  scrollableList = true,
 }: CheckCardListProps) {
   const listId = useId();
   const searchId = `${listId}-search`;
@@ -63,13 +72,20 @@ export function CheckCardList({
     }
   };
 
+  const labelId = `${listId}-label`;
+
   return (
     <div
       className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
       role="group"
       aria-label={ariaLabel ?? label}
     >
-      <span className={styles.label} id={`${listId}-label`}>
+      <span
+        className={[styles.label, hideLabel ? styles.labelHidden : ""]
+          .filter(Boolean)
+          .join(" ")}
+        id={labelId}
+      >
         {label}
       </span>
 
@@ -92,10 +108,16 @@ export function CheckCardList({
       )}
 
       <div
-        className={styles.list}
+        className={[
+          styles.list,
+          scrollableList ? "" : styles.listUnbounded,
+        ]
+          .filter(Boolean)
+          .join(" ")}
         role="listbox"
         aria-multiselectable
-        aria-labelledby={`${listId}-label`}
+        aria-labelledby={hideLabel ? undefined : labelId}
+        aria-label={hideLabel ? (ariaLabel ?? label) : undefined}
       >
         {listState === "loading" && (
           <div className={styles.status} aria-busy="true">

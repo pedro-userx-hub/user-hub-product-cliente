@@ -21,6 +21,8 @@ export interface MenuItemConfig {
   disabled?: boolean;
   destructive?: boolean;
   icon?: ReactNode;
+  /** Tooltip / title nativo (ex.: motivo de disabled). */
+  hint?: string;
   /** Itens em submenu lateral (abre no hover). */
   children?: MenuItemConfig[];
 }
@@ -184,6 +186,111 @@ function SubmenuItem({
   );
 }
 
+export interface ContextMenuProps {
+  open: boolean;
+  x: number;
+  y: number;
+  items: MenuItemConfig[];
+  ariaLabel: string;
+  onClose: () => void;
+}
+
+/** Menu posicionado em coordenadas de tela (ex.: clique direito). */
+export function ContextMenu({
+  open,
+  x,
+  y,
+  items,
+  ariaLabel,
+  onClose,
+}: ContextMenuProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    document.dispatchEvent(
+      new CustomEvent(MENU_OPEN_EVENT, { detail: menuId }),
+    );
+    const onOtherOpen = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (id !== menuId) onClose();
+    };
+    document.addEventListener(MENU_OPEN_EVENT, onOtherOpen);
+    return () => document.removeEventListener(MENU_OPEN_EVENT, onOtherOpen);
+  }, [open, menuId, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (panelRef.current?.contains(target)) return;
+      if (
+        target instanceof Element &&
+        target.closest(`.${styles.panel}`)
+      ) {
+        return;
+      }
+      onClose();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
+  useLayoutEffect(() => {
+    if (!open || !panelRef.current) return;
+    const fake = new DOMRect(x, y, 0, 0);
+    placePanel(panelRef.current, fake);
+  }, [open, x, y, items.length]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      ref={panelRef}
+      id={menuId}
+      className={styles.panel}
+      role="menu"
+      aria-label={ariaLabel}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      {items.map((item, index) =>
+        item.children && item.children.length > 0 ? (
+          <SubmenuItem
+            key={item.id ?? `${item.label}-${index}`}
+            item={item}
+            onPick={onClose}
+          />
+        ) : (
+                <MenuItem
+                  key={item.id ?? `${item.label}-${index}`}
+                  role="menuitem"
+                  state={item.disabled ? "disabled" : "default"}
+                  className={item.destructive ? styles.destructive : undefined}
+                  icon={item.icon}
+                  title={item.hint ?? item.label}
+                  onClick={() => {
+                    if (item.disabled) return;
+                    onClose();
+                    item.onSelect?.();
+                  }}
+                >
+                  {item.label}
+                </MenuItem>
+        ),
+      )}
+    </div>,
+    document.body,
+  );
+}
+
 export function Menu({
   items,
   ariaLabel,
@@ -320,7 +427,7 @@ export function Menu({
                   state={item.disabled ? "disabled" : "default"}
                   className={item.destructive ? styles.destructive : undefined}
                   icon={item.icon}
-                  title={item.label}
+                  title={item.hint ?? item.label}
                   onClick={() => {
                     if (item.disabled) return;
                     close();

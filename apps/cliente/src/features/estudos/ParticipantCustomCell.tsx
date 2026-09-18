@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { Button, DateField, Input, Select } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import {
   formatCustomDisplay,
+  normalizePastedLines,
   validateCustomValue,
   type CustomColumnDef,
 } from "../../lib/participantCustomTable";
@@ -13,17 +14,28 @@ export function ParticipantCustomCell({
   value,
   readOnly,
   emptyColumn,
-  autoEdit,
+  selected,
+  selectionCount = 0,
   onCommit,
   onPasteShortcut,
+  onMassPaste,
+  onSelect,
+  onClearSelection,
 }: {
   column: CustomColumnDef;
   value: string;
   readOnly?: boolean;
   emptyColumn?: boolean;
-  autoEdit?: boolean;
+  selected?: boolean;
+  selectionCount?: number;
   onCommit: (next: string) => Promise<void> | void;
   onPasteShortcut?: () => void;
+  /** Colagem em massa a partir desta célula (lista multilinha). */
+  onMassPaste?: (text: string) => void;
+  /** Clique simples — só seleção (não edita). */
+  onSelect?: () => void;
+  /** Duplo clique desfaz a seleção. */
+  onClearSelection?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -35,12 +47,6 @@ export function ParticipantCustomCell({
   useEffect(() => {
     if (!editing) setDraft(value);
   }, [value, editing]);
-
-  useEffect(() => {
-    if (autoEdit && !readOnly && !column.locked) {
-      setEditing(true);
-    }
-  }, [autoEdit, readOnly, column.locked]);
 
   useEffect(() => {
     if (editing) {
@@ -67,17 +73,49 @@ export function ParticipantCustomCell({
     setSaving(true);
     try {
       await onCommit(next.trim());
-      setEditing(false);
-      return true;
     } finally {
       setSaving(false);
+      setEditing(false);
     }
+    return true;
   };
 
   const cancel = () => {
     setDraft(value);
     setError(undefined);
     setEditing(false);
+  };
+
+  const startEdit = () => {
+    if (locked) return;
+    setDraft(value);
+    setEditing(true);
+  };
+
+  const handleDoubleClick = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (selected && selectionCount > 1) {
+      onClearSelection?.();
+      return;
+    }
+    if (selected) {
+      onClearSelection?.();
+    }
+    // Célula única: limpa destaque e entra em edição.
+    if (selectionCount <= 1) startEdit();
+  };
+
+  const handlePaste = (e: ClipboardEvent) => {
+    if (!onMassPaste) return;
+    const text = e.clipboardData.getData("text/plain");
+    if (!text) return;
+    const lines = normalizePastedLines(text);
+    if (lines.length <= 1 && !/\r\n|\n|\r/.test(text)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setEditing(false);
+    onMassPaste(text);
   };
 
   if (locked) {
@@ -99,11 +137,23 @@ export function ParticipantCustomCell({
   if (!editing) {
     if (emptyColumn && !value) {
       return (
-        <div className={styles.empty} data-measure>
+        <div
+          className={styles.empty}
+          data-measure
+          onClick={() => onSelect?.()}
+          onDoubleClick={handleDoubleClick}
+        >
           <p className={styles.emptyCopy}>{messages.participantesCustomEmpty}</p>
           <div className={styles.emptyActions}>
             {onPasteShortcut && (
-              <Button variant="clear" size="medium" onClick={onPasteShortcut}>
+              <Button
+                variant="clear"
+                size="medium"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPasteShortcut();
+                }}
+              >
                 {messages.participantesCustomPaste}
               </Button>
             )}
@@ -117,11 +167,12 @@ export function ParticipantCustomCell({
         className={styles.display}
         data-measure
         data-custom-cell
-        title={display || undefined}
-        onClick={() => {
-          setDraft(value);
-          setEditing(true);
+        title={display || messages.participantesPasteEditTooltip}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect?.();
         }}
+        onDoubleClick={handleDoubleClick}
       >
         {display || <span className={styles.placeholder}>—</span>}
       </button>
@@ -146,6 +197,8 @@ export function ParticipantCustomCell({
         .filter(Boolean)
         .join(" ")}
       onKeyDown={onKeyDown}
+      onPaste={handlePaste}
+      title={messages.participantesPasteEditTooltip}
     >
       {column.type === "date" ? (
         <DateField
@@ -182,10 +235,12 @@ export function ParticipantCustomCell({
           value={draft}
           error={error}
           inputMode={column.type === "number" ? "decimal" : "text"}
+          title={messages.participantesPasteEditTooltip}
           onChange={(e) => {
             setDraft(e.target.value);
             setError(undefined);
           }}
+          onPaste={handlePaste}
           onBlur={() => {
             if (skipBlur.current) {
               skipBlur.current = false;

@@ -220,6 +220,7 @@ export const messages = {
   estudosUntitled: "Estudo sem título",
   estudosDraftBadge: "Rascunho",
   estudosCreateBackAria: "Voltar para estudos",
+  estudosCreateFooterActionsAria: "Ações do passo",
   estudosCreatePrev: "Anterior",
   estudosCreateNext: "Próximo",
   estudosCreateMenuAria: "Mais ações do estudo",
@@ -623,13 +624,100 @@ export const messages = {
   estudosAgendaDayThu: "Qui",
   estudosAgendaDayFri: "Sex",
   estudosAgendaDaySat: "Sáb",
+  estudosAgendaDaySun: "Dom",
   estudosAgendaDayMonFull: "Segunda-feira",
   estudosAgendaDayTueFull: "Terça-feira",
   estudosAgendaDayWedFull: "Quarta-feira",
   estudosAgendaDayThuFull: "Quinta-feira",
   estudosAgendaDayFriFull: "Sexta-feira",
   estudosAgendaDaySatFull: "Sábado",
+  estudosAgendaDaySunFull: "Domingo",
   estudosAvailabilityViewTitle: "Disponibilidade de horários",
+  estudosAvailabilityBlockDesc:
+    "Defina os horários disponíveis para as sessões. A equipe do estudo pode alterar ao longo do estudo.",
+  estudosAvailabilityDefine: "Definir disponibilidade",
+  estudosAvailabilityEdit: "Editar disponibilidade",
+  estudosAvailabilityEditTitle: "Editar disponibilidade",
+  estudosAvailabilityEditHint:
+    "Ajuste horários livres. Sessões já agendadas ficam protegidas.",
+  estudosAvailabilityEditSave: "Salvar alterações",
+  estudosAvailabilityProtectedLabel: "Protegida",
+  estudosAvailabilityProtectedBlock:
+    "Sessões já agendadas não podem ser removidas por aqui. Para desmarcar, use o fluxo de cancelar/remarcar.",
+  estudosAvailabilityConflictAvailable:
+    "Você tem um compromisso neste horário. Remova a disponibilidade ou mantenha mesmo assim.",
+  estudosAvailabilityConflictSession:
+    "Você tem um compromisso no horário de uma sessão agendada. A sessão foi mantida — resolva na sua agenda.",
+  estudosAvailabilityOpenMyCalendar: "Abrir na minha agenda",
+  estudosAvailabilitySaveSummaryTitle: "Revise as mudanças",
+  estudosAvailabilitySaveSummary: (
+    added: number,
+    removed: number,
+    conflicts: number,
+    sessions: number,
+  ) =>
+    `Revise as mudanças: +${added} horários · ${removed} removidos · ${conflicts} conflitos resolvidos · ${sessions} sessões mantidas.`,
+  estudosAvailabilitySaveConfirm: "Confirmar e salvar",
+  estudosAvailabilitySaveConcurrency:
+    "Este estudo foi alterado enquanto você editava. Revise antes de salvar para não sobrescrever mudanças.",
+  estudosAvailabilityZeroFreeWarn:
+    "Você está removendo toda a disponibilidade livre restante. Confirmar?",
+  estudosAvailabilityStatusConflict: "Conflito",
+  estudosAvailabilityHorarioDisponivel: "Horário disponível",
+  estudosAvailabilityIndisponivelAgenda: "Indisponível",
+  estudosAvailabilityLoadError:
+    "Não foi possível carregar a disponibilidade. Tente novamente.",
+  estudosAvailabilityRetry: "Tentar novamente",
+  estudosAvailabilityNeedDurationGap:
+    "Defina a duração e o intervalo das sessões para liberar a disponibilidade.",
+  estudosAvailabilityNeedDates:
+    "Defina as datas de início e término do estudo para montar a agenda.",
+  estudosAvailabilitySelectTitle: "Selecione os horários disponíveis",
+  estudosAvailabilitySelectHint:
+    "Selecione os horários que você tem disponível para realizar as sessões do estudo.",
+  estudosAvailabilityDrawerTitle: "Selecione os horários disponíveis",
+  estudosAvailabilityDrawerHint:
+    "Selecione os horários que você tem disponível para realizar as sessões do estudo.",
+  estudosAvailabilityEmptyGrid:
+    "Arraste na grade para marcar quando você está disponível.",
+  estudosAvailabilityBlocksCount: (n: number) =>
+    n === 1 ? "1 bloco de horários definido" : `${n} blocos de horários definidos`,
+  estudosAvailabilityConfirm: "Definir disponibilidade",
+  estudosAvailabilityClose: "Fechar",
+  estudosAvailabilityClear: "Limpar horários",
+  estudosAvailabilityClearTitle: "Remover todos os horários?",
+  estudosAvailabilityClearBody:
+    "Remover todos os horários definidos? Essa ação apaga a disponibilidade desta grade.",
+  estudosAvailabilityClearConfirm: "Limpar horários",
+  estudosAvailabilityBlockLabel: (n: number) => {
+    const romans = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+    return `Horário disponível ${romans[n - 1] ?? String(n)}`;
+  },
+  estudosAvailabilitySetupRecruitment: "Setup e Recrutamento",
+  estudosAvailabilityPresetCommercial: "Comercial (9h–18h)",
+  estudosAvailabilityPresetMorning: "Só manhãs (8h–12h)",
+  estudosAvailabilityPresetAfternoon: "Só tardes (13h–18h)",
+  estudosAvailabilityCopyWeekdays: "Copiar para dias úteis",
+  estudosAvailabilityPresetsAria: "Presets de horário",
+  estudosAvailabilityTimezone: "Timezone: Brasil",
+  estudosAvailabilityNoSlotsGenerated:
+    "Nenhum horário foi gerado: os blocos são menores que a duração da sessão. Ajuste a duração ou amplie a disponibilidade.",
+  estudosAvailabilityPartialSkipped: (n: number) =>
+    n === 1
+      ? "Uma janela não gerou horário por não comportar uma sessão completa."
+      : `${n} janelas não geraram horário por não comportar uma sessão completa.`,
+  estudosAvailabilitySummaryTotal: (n: number) =>
+    n === 1 ? "1 horário disponível" : `${n} horários disponíveis`,
+  estudosAvailabilitySummaryRule: (duration: number, gap: number) =>
+    `Sessões de ${duration} min · intervalo de ${gap} min`,
+  estudosAvailabilityDayHours: (n: number) =>
+    n === 1 ? "1 Horário" : `${n} Horários`,
+  estudosAvailabilityDurationCard: "Duração das sessões",
+  estudosAvailabilityGapCard: "Intervalo entre sessões",
+  estudosAvailabilityParamsChanged:
+    "Duração ou intervalo mudaram — reabra e confirme para regenerar os horários.",
+  estudosAvailabilityOutsideWindow:
+    "Alguns horários ficaram fora da nova janela do estudo e foram removidos.",
   estudosAvailabilityIntegrationsAria: "Integrações de agenda",
   estudosAvailabilityGoogle: "Integração com o Google Agenda",
   estudosAvailabilityOutlook: "Integração com o Outlook",
@@ -659,12 +747,110 @@ export const messages = {
   estudosAvailabilityNextWeek: "Próxima semana",
   estudosAvailabilityNoSlotsDay: "Sem horários",
   estudosAvailabilityViewWeek: "Semana",
+  estudosAvailabilityViewMonth: "Mês",
+  estudosAvailabilityViewDay: "Dia",
+  estudosAvailabilityViewLabel: "Visualização",
   estudosAvailabilityTimezoneLabel: "Timezone",
   estudosAvailabilityTimezoneValue: "Brasil",
   estudosAvailabilityBusinessDays: "Dias úteis",
+  estudosAvailabilityNonBusinessDays: "Dias não úteis",
+  estudosAvailabilityDayFilterLabel: "Dias",
+  estudosAvailabilityRepeatWeekRange: (start: string, end: string) =>
+    `${start} A ${end}`,
+  estudosAvailabilityRepeatChipMon: "S",
+  estudosAvailabilityRepeatChipTue: "T",
+  estudosAvailabilityRepeatChipWed: "Q",
+  estudosAvailabilityRepeatChipThu: "Q",
+  estudosAvailabilityRepeatChipFri: "S",
+  estudosAvailabilityRepeatCollapseAria: "Dias da semana para repetir",
+  estudosAvailabilityPrevMonth: "Mês anterior",
+  estudosAvailabilityNextMonth: "Próximo mês",
+  estudosAvailabilityPrevDay: "Dia anterior",
+  estudosAvailabilityNextDay: "Próximo dia",
+  estudosAvailabilityPopoverTitle: "Horário disponível",
+  estudosAvailabilityPopoverTitleField: "Título",
+  estudosAvailabilityPopoverTitlePlaceholder: "Horário disponível",
+  estudosAvailabilityPopoverRepeat:
+    "Repetir este bloco de disponibilidade aos demais dias da semana",
+  estudosAvailabilityPopoverCancel: "Cancelar",
+  estudosAvailabilityPopoverSave: "Salvar",
+  estudosAvailabilityPopoverDeleteAria: "Excluir horário",
+  estudosAvailabilityPopoverCloseAria: "Fechar",
+  estudosAvailabilityPopoverTimeInvalid:
+    "Informe um horário de término posterior ao de início.",
   estudosAvailabilityHoursLabel: "Horários",
   estudosAvailabilityGoogleShort: "Google Agenda",
-  estudosAvailabilityOutlookShort: "Outlook",
+  estudosAvailabilityOutlookShort: "Outlook Calendar",
+  estudosAvailabilityCalendarConnectAria: "Integração de agenda",
+  estudosAvailabilityCalendarIntegrate: "Integrar",
+  estudosAvailabilityCalendarIntegrateTitle: "Integrar agenda",
+  estudosAvailabilityCalendarPermissionsTitle: "Permissões da agenda",
+  estudosAvailabilityCalendarChooseProvider:
+    "Escolha qual agenda conectar. A conexão é simulada nesta versão.",
+  estudosAvailabilityCalendarGoogleHint: "Trazer horários ocupados do Google",
+  estudosAvailabilityCalendarOutlookHint: "Trazer horários ocupados do Outlook",
+  estudosAvailabilityCalendarBack: "Voltar",
+  estudosAvailabilityCalendarSettingsTitle: "Conexão de agenda",
+  estudosAvailabilityCalendarConnecting: "Conectando…",
+  estudosAvailabilityCalendarConnectFail:
+    "Não foi possível conectar sua agenda. Tente novamente.",
+  estudosAvailabilityCalendarRetry: "Tentar novamente",
+  estudosAvailabilityCalendarChooseSource: "Escolher agenda",
+  estudosAvailabilityCalendarSourceHint:
+    "Selecione uma agenda para bloquear seus horários ocupados.",
+  estudosAvailabilityCalendarSelectTitle:
+    "Escolha quais agendas refletem na sua disponibilidade",
+  estudosAvailabilityCalendarAccountsEmpty:
+    "Nenhuma conta conectada. Use Integrar para começar.",
+  estudosAvailabilityCalendarReadTitle: "Leitura",
+  estudosAvailabilityCalendarReadDesc:
+    "Bloquear automaticamente horários em que eu estiver ocupado.",
+  estudosAvailabilityCalendarWriteTitle: "Escrita",
+  estudosAvailabilityCalendarWriteDesc:
+    "Criar a sessão na minha agenda quando alguém agendar.",
+  estudosAvailabilityCalendarPrivacy:
+    "Usamos apenas seus horários livres/ocupados. O nome e os detalhes dos seus eventos nunca são lidos, exibidos ou armazenados.",
+  estudosAvailabilityCalendarApply: "Aplicar",
+  estudosAvailabilityCalendarDisconnect: "Desconectar",
+  estudosAvailabilityCalendarDisconnectTitle: "Desconectar esta conta?",
+  estudosAvailabilityCalendarDisconnectBody:
+    "Desconectar esta conta? Os horários bloqueados por ela deixam de aparecer; sua disponibilidade marcada continua.",
+  estudosAvailabilityCalendarDisconnectConfirm: "Desconectar",
+  estudosAvailabilityOverrideTitle: "Horário ocupado na agenda",
+  estudosAvailabilityOverrideConfirm:
+    "Esse horário tem um compromisso na sua agenda. Marcar disponibilidade mesmo assim?",
+  estudosAvailabilityOverrideConfirmCta: "Marcar mesmo assim",
+  estudosAvailabilityOverrideBadge: "Sobreposto",
+  estudosAvailabilityBusyNoSlots:
+    "Nenhum horário foi gerado: os horários pintados estão ocupados ou não há disponibilidade marcada. Ajuste a disponibilidade ou sobreponha um horário.",
+  estudosAvailabilityBusySkipped: (n: number) =>
+    n === 1
+      ? "Uma janela não gerou horário por estar ocupada na agenda."
+      : `${n} janelas não geraram horário por estarem ocupadas na agenda.`,
+  estudosAvailabilityAlreadyConnected: "Esta conta já está conectada.",
+  estudosAvailabilityNoMoreAccounts:
+    "Todas as contas de demonstração deste provedor já estão conectadas.",
+  estudosPreviewAsParticipant: "Visualizar como participante",
+  estudosPreviewAsParticipantHint:
+    "Defina a disponibilidade para pré-visualizar como o participante.",
+  estudosPreviewTitle: "Pré-visualização — participante",
+  estudosPreviewOriginAlert:
+    "Estes horários refletem a disponibilidade que você definiu para o estudo.",
+  estudosPreviewEmpty:
+    "Ainda não há horários para pré-visualizar. Defina sua disponibilidade primeiro.",
+  estudosPreviewDayEmpty: "Sem horários disponíveis neste dia.",
+  estudosPreviewPickDay: "Selecione um dia com disponibilidade",
+  estudosPreviewConfirm: "Confirmar horário",
+  estudosPreviewBackToCalendar: "Voltar ao calendário",
+  estudosPreviewThanksTitle: "Obrigado! Seu horário está reservado.",
+  estudosPreviewThanksNote:
+    "Esta é uma pré-visualização. Nenhum agendamento foi criado.",
+  estudosPreviewStudyLabel: "Estudo",
+  estudosPreviewWhenLabel: "Data e horário",
+  estudosPreviewDurationLabel: "Duração",
+  estudosPreviewFormatLabel: "Formato",
+  estudosPreviewTimezoneNote: "Horários no fuso do estudo (Brasil).",
+  estudosPreviewClose: "Fechar pré-visualização",
   estudosAvailabilityScheduledLabel: "Sessão agendada",
   estudosAvailabilityScheduledCount: (n: number) =>
     n === 1 ? "1 Sessão agendada" : `${n} Sessões agendadas`,
@@ -880,7 +1066,64 @@ export const messages = {
   estudosBriefingDiscardBody:
     "O arquivo e o link informados serão descartados. Deseja continuar?",
   estudosBriefingDiscardConfirm: "Remover",
-  estudosStep1ContactTitle: "Responsável e contato",
+  estudosStep1ContactTitle: "Equipe do estudo",
+  estudosHostsIntro:
+    "A equipe acompanha todas as sessões do estudo e recebe as atualizações.",
+  estudosHostsLearnMore: "Saiba mais",
+  estudosHostsColHost: "Equipe",
+  estudosHostsColRole: "Função",
+  estudosHostsColContact: "Canal de contato",
+  estudosHostsRolePrincipal: "Responsável principal",
+  estudosHostsRoleHost: "Host",
+  estudosHostsRolePending: "Aguardando aceite",
+  estudosHostsRoleGuest: "Convidado",
+  estudosHostsPrincipalTooltip:
+    "Quem nossa equipe procura primeiro quando algo precisa de alinhamento.",
+  estudosHostsMakePrincipal: "Tornar responsável principal",
+  estudosHostsDelete: "Deletar",
+  estudosHostsRowMenuAria: (name: string) => `Ações de ${name || "membro"}`,
+  estudosHostsPendingCannotBePrincipal:
+    "Esta pessoa precisa aceitar o convite antes de poder ser a principal.",
+  estudosHostsRemoveAria: (name: string) =>
+    `Remover ${name || "membro"} da lista`,
+  estudosHostsRemovePrincipalBlock:
+    "Defina outra pessoa como principal antes de remover esta.",
+  estudosHostsInStudyTitle: "Já no estudo",
+  estudosHostsAddFromWorkspace: "Adicionar do workspace",
+  estudosHostsWhatsAppLabel: "Número do WhatsApp",
+  estudosHostsWhatsAppPlaceholder: "+55 11 99999-9999",
+  estudosHostsAdd: "Adicionar membros",
+  estudosHostsEmptyHint: "Adicione outras pessoas para colaborar no estudo.",
+  estudosHostsAddTitle: "Adicionar membros",
+  estudosHostsAddSearch: "Buscar por nome ou e-mail",
+  estudosHostsAddEmpty:
+    "Ninguém encontrado com esse nome ou e-mail. Convide por link para trazer alguém de fora.",
+  estudosHostsAllInTeamTitle:
+    "Todos os membros do seu workspace já estão na equipe",
+  estudosHostsAllInTeamDesc: "Convide mais membros:",
+  estudosHostsInviteByLink: "Convidar por link",
+  estudosHostsInviteLinkLabel: "Link de convite",
+  estudosHostsInviteCopy: "Copiar link",
+  estudosHostsInviteCopied:
+    "Link copiado. Envie para a pessoa que você quer convidar.",
+  estudosHostsInviteFail:
+    "Não foi possível gerar o link de convite. Tente novamente.",
+  estudosHostsAddFail:
+    "Não foi possível adicionar essa pessoa agora. Tente de novo.",
+  estudosHostsAlreadyAdded: "Já adicionado",
+  estudosHostsPendingLabel: "Aguardando aceite",
+  estudosHostsGuestBadge: "Convidado",
+  estudosHostsChannelToggle: "Definir canal de contato",
+  estudosHostsChannelHelper: "Por padrão, falamos por e-mail.",
+  estudosHostsChannelReadonly: "Canal de contato",
+  estudosHostsChannelEmailDefault: "E-mail",
+  estudosHostsInTeam: (n: number) => `Na equipe (${n})`,
+  estudosHostsAddConfirm: "Adicionar",
+  estudosHostsAddConfirmCount: (n: number) => `Adicionar (${n})`,
+  estudosHostsAddCancel: "Cancelar",
+  estudosHostsPendingName: "Convite pendente",
+  estudosHostsOverflowTooltip: (n: number) =>
+    n === 1 ? "Mais 1 pessoa" : `Mais ${n} pessoas`,
   estudosOwnerLabel: "Pessoa responsável pelo estudo",
   estudosOwnerHelper:
     "Pessoa que toma as decisões e faz os alinhamentos durante o estudo.",
@@ -1545,13 +1788,14 @@ export const messages = {
   participantesScheduledSession: "Sessão agendada",
   /** Spec — tabela customizável */
   participantesAddColumn: "Adicionar coluna",
+  participantesNewColumn: "Nova coluna",
   participantesAddColumnLeft: "Adicionar coluna à esquerda",
   participantesAddColumnRight: "Adicionar coluna à direita",
   participantesColumnNameLabel: "Nome",
   participantesColumnNamePlaceholder: "Ex.: ID interno",
   participantesColumnNameRequired: "Dê um nome à coluna para continuar.",
   participantesColumnNameDuplicate:
-    "Já existe uma coluna com esse nome nesta lista.",
+    "Já existe uma coluna com esse nome. Escolha outro.",
   participantesColumnTypeLabel: "Tipo",
   participantesColumnTypeText: "Texto",
   participantesColumnTypeNumber: "Número",
@@ -1571,16 +1815,26 @@ export const messages = {
     "Os valores preenchidos serão removidos. As demais colunas não mudam.",
   participantesColumnLockedHint: "Esta coluna está travada e não pode ser editada.",
   participantesCustomEmpty:
-    "Coluna vazia. Cole uma coluna do Excel com Ctrl+V.",
+    "Selecione as células e cole (Ctrl+V). Duplo clique desfaz a seleção.",
   participantesCustomPaste: "Colar",
-  participantesPasteHint: "Coluna selecionada. Cole com Ctrl+V.",
+  participantesPasteHint:
+    "Selecione as células e cole com Ctrl+V — um valor por linha.",
+  participantesPasteEditTooltip:
+    "Selecione as células e cole — um valor por linha. Duplo clique desfaz a seleção.",
   participantesApplyConfirm: "Aplicar",
   participantesPasteSystemBlocked:
     "Esta coluna não pode ser editada. Só é possível colar em colunas customizáveis.",
+  participantesPasteSuccess: (n: number, columnName: string) =>
+    `${n} ${n === 1 ? "valor colado" : "valores colados"} na coluna ${columnName}.`,
+  participantesPastePartial: (n: number, ignored: number) =>
+    `${n} valores colados · ${ignored} linhas ignoradas por excederem os participantes da tabela.`,
+  participantesPasteInvalid:
+    "Não foi possível colar. Cole um valor por linha e tente de novo.",
+  /** @deprecated use participantesPasteSuccess / Partial */
   participantesPasteMismatch: (applied: number, leftover: number) =>
     leftover > 0
-      ? `Aplicados ${applied} valores. ${leftover} ficaram de fora (não criamos linhas).`
-      : `Aplicados ${applied} valores. As demais linhas não foram alteradas.`,
+      ? `${applied} valores colados · ${leftover} linhas ignoradas por excederem os participantes da tabela.`
+      : `${applied} valores colados.`,
   participantesPasteIncompatibleTitle: "Valores incompatíveis",
   participantesPasteIncompatibleBody: (ok: number, bad: number) =>
     `${bad} de ${ok + bad} valores não são compatíveis com o tipo desta coluna. Aplicar só os compatíveis?`,
@@ -1590,6 +1844,17 @@ export const messages = {
     `Isso vai substituir os valores existentes de ${n} ${n === 1 ? "célula" : "células"}. Continuar?`,
   participantesMassUpdated: (n: number) =>
     `${n} linhas atualizadas.`,
+  participantesClearColumn: "Limpar dados",
+  participantesClearColumnTitle: (name: string) =>
+    `Limpar dados da coluna ${name}?`,
+  participantesClearColumnBody:
+    "Isso apaga todos os valores desta coluna, mas mantém a coluna na tabela. Não remove a coluna.",
+  participantesClearColumnConfirm: "Limpar dados",
+  participantesClearColumnSuccess: (name: string) =>
+    `Dados da coluna ${name} apagados.`,
+  participantesClearColumnError:
+    "Não foi possível limpar os dados. Nada foi alterado — tente de novo.",
+  participantesClearColumnEmpty: "Nada para limpar.",
   participantesUndo: "Desfazer",
   participantesClientVision: "Visão do cliente",
   participantesClientVisionDescription:
@@ -1641,7 +1906,8 @@ export const messages = {
   participantesClearCellsBody: (n: number) =>
     `Isso vai apagar os valores de ${n} ${n === 1 ? "célula" : "células"}. Continuar?`,
   participantesClearConfirm: "Apagar",
-  participantesClientVisionEmpty: "Nenhuma coluna nesta lista ainda.",
+  participantesClientVisionEmpty:
+    "Nenhuma coluna visível ao cliente. Ative ao menos uma para o cliente ver algo.",
   participantesExposeEmptyTitle: "Tornar coluna visível?",
   participantesExposeEmptyBody: (n: number) =>
     `${n} participantes aprovados estão sem valor nesta coluna. Tornar visível mesmo assim?`,

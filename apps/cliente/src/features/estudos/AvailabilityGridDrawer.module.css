@@ -1,0 +1,433 @@
+.toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.toolbarLeft,
+.toolbarRight {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.toolbarRight {
+  flex-shrink: 0;
+}
+
+.selectSlot {
+  width: 148px;
+  flex-shrink: 0;
+}
+
+.sourceWarn {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.busyBlock {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  z-index: 1;
+  box-sizing: border-box;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: repeating-linear-gradient(
+    -45deg,
+    #f3f4f6,
+    #f3f4f6 6px,
+    #e5e7eb 6px,
+    #e5e7eb 12px
+  );
+  pointer-events: none;
+  overflow: hidden;
+  padding: var(--space-1) var(--space-2);
+}
+
+.busyLabel {
+  font-size: var(--font-xs);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+}
+
+.availOverridden {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-action) 40%, white);
+}
+
+.overrideBadge {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: var(--fw-semibold);
+  color: var(--color-action);
+}
+
+.protectedBlock {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  z-index: 3;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-text, #1b365d) 82%, white);
+  color: #fff;
+  padding: 2px 4px;
+  pointer-events: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.protectedLabel {
+  display: block;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: var(--fw-semibold);
+}
+
+.protectedBadge {
+  display: block;
+  font-size: 9px;
+  opacity: 0.85;
+  line-height: 1.2;
+}
+
+.navBtn {
+  appearance: none;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.navBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.periodChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  white-space: nowrap;
+}
+
+.gridWrap {
+  min-height: 0;
+  overflow: auto;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.gridHead {
+  display: grid;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.timeGutter {
+  border-right: 1px solid var(--color-border);
+}
+
+.dayHead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-3) var(--space-2);
+  border-left: 1px solid var(--color-border);
+  color: var(--color-action);
+}
+
+.dayNum {
+  font-size: var(--font-base);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+}
+
+.dayName {
+  font-size: var(--font-xs);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.gridBody {
+  display: grid;
+  position: relative;
+}
+
+.timeCol {
+  border-right: 1px solid var(--color-border);
+}
+
+.hourLabel {
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2) 0;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.dayCol {
+  border-left: 1px solid var(--color-border);
+  min-width: 0;
+}
+
+.dayTrack {
+  position: relative;
+  width: 100%;
+}
+
+.hourLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid var(--color-border);
+  pointer-events: none;
+}
+
+.halfLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--color-border-subtle);
+  pointer-events: none;
+}
+
+.setupBlock {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    -45deg,
+    #eef0f3,
+    #eef0f3 6px,
+    #e5e7eb 6px,
+    #e5e7eb 12px
+  );
+  border: 1px solid var(--color-border);
+  pointer-events: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: var(--space-2);
+}
+
+.setupLabel {
+  font-size: var(--font-xs);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+}
+
+.availBlock {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  z-index: 2;
+  box-sizing: border-box;
+  border: 1.5px solid var(--color-action);
+  border-radius: var(--radius-sm);
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--color-action) 18%, white),
+    color-mix(in srgb, var(--color-action) 18%, white) 6px,
+    color-mix(in srgb, var(--color-action) 28%, white) 6px,
+    color-mix(in srgb, var(--color-action) 28%, white) 12px
+  );
+  pointer-events: none;
+  overflow: hidden;
+  padding: var(--space-1) var(--space-2);
+}
+
+.availLabel {
+  font-size: var(--font-xs);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-action);
+}
+
+.hitCell {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: cell;
+}
+
+.hitCell:disabled {
+  cursor: not-allowed;
+}
+
+.hitCell:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-action) 8%, transparent);
+}
+
+.footerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  width: 100%;
+  flex: 1;
+}
+
+.counter {
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.linkBtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-action);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.linkBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.monthWrap {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.monthHead {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background);
+}
+
+.monthHeadCell {
+  padding: var(--space-2);
+  text-align: center;
+  font-size: var(--font-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-action);
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.monthCellEmpty {
+  min-height: 72px;
+  border-right: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-background);
+}
+
+.monthCell {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  min-height: 72px;
+  padding: var(--space-2);
+  box-sizing: border-box;
+  border-right: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+}
+
+.monthCell:disabled {
+  cursor: not-allowed;
+}
+
+.monthOut {
+  background: var(--color-background);
+  opacity: 0.55;
+}
+
+.monthSetup {
+  background: repeating-linear-gradient(
+    -45deg,
+    #eef0f3,
+    #eef0f3 6px,
+    #e5e7eb 6px,
+    #e5e7eb 12px
+  );
+}
+
+.monthHas {
+  box-shadow: inset 0 0 0 1.5px var(--color-action);
+}
+
+.monthDayNum {
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.monthSetupTag {
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+}
+
+.monthDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-action);
+  margin-top: auto;
+}

@@ -21,10 +21,7 @@ import type {
   TeamStudy,
   UpdateStudyDraftInput,
 } from "../../lib/teamApi";
-import {
-  SessionAgendaSection,
-  type SessionAgendaSectionHandle,
-} from "./SessionAgendaSection";
+import { AvailabilitySummaryBlock } from "./AvailabilitySummaryBlock";
 import {
   SessionFormatSection,
   type SessionFormatSectionHandle,
@@ -61,7 +58,7 @@ const gapOptions = SESSION_GAPS.map((n) => ({
 }));
 
 /**
- * Passo 2 — Cronograma (Story 1) + duração/limite das sessões (Story 2).
+ * Passo 2 — Cronograma + duração/intervalo + disponibilidade (grade) + formato.
  */
 export const StudyStep2Form = forwardRef<
   StudyStep2FormHandle,
@@ -83,7 +80,7 @@ export const StudyStep2Form = forwardRef<
   const gapWrapRef = useRef<HTMLDivElement>(null);
   const maxSessionsRef = useRef<HTMLInputElement>(null);
   const formatRef = useRef<SessionFormatSectionHandle>(null);
-  const agendaRef = useRef<SessionAgendaSectionHandle>(null);
+  const availabilityRef = useRef<HTMLDivElement>(null);
 
   const [start, setStart] = useState(study.scheduleStart ?? "");
   const [end, setEnd] = useState(study.scheduleEnd ?? "");
@@ -104,6 +101,7 @@ export const StudyStep2Form = forwardRef<
   const [durationError, setDurationError] = useState<string | undefined>();
   const [gapError, setGapError] = useState<string | undefined>();
   const [maxError, setMaxError] = useState<string | undefined>();
+  const [agendaError, setAgendaError] = useState<string | undefined>();
 
   const [sessionFormat, setSessionFormat] = useState<StudySessionFormat | "">(
     study.sessionFormat ?? "",
@@ -169,6 +167,7 @@ export const StudyStep2Form = forwardRef<
       max: string;
       scheduleStart: string;
       scheduleEnd: string;
+      scheduleSlots: StudyScheduleSlot[];
     }> = {},
   ): UpdateStudyDraftInput => {
     const duration = overrides.duration ?? sessionDuration;
@@ -189,9 +188,8 @@ export const StudyStep2Form = forwardRef<
       addressId,
       remotePlatform,
       remoteLink,
-      scheduleSlots,
+      scheduleSlots: overrides.scheduleSlots ?? scheduleSlots,
       ...(formatRef.current?.getPatch() ?? {}),
-      ...(agendaRef.current?.getPatch() ?? {}),
     };
   };
 
@@ -267,11 +265,20 @@ export const StudyStep2Form = forwardRef<
           setMaxError(undefined);
         }
 
+        if (showAgenda && scheduleSlots.length === 0) {
+          setAgendaError(messages.estudosAgendaRequired);
+          ok = false;
+          if (!first) {
+            first =
+              availabilityRef.current?.querySelector("button") ??
+              availabilityRef.current;
+          }
+        } else {
+          setAgendaError(undefined);
+        }
+
         const formatOk = formatRef.current?.validate() ?? true;
         if (!formatOk) ok = false;
-
-        const agendaOk = agendaRef.current?.validate() ?? true;
-        if (!agendaOk) ok = false;
 
         if (!ok && first) {
           first.focus();
@@ -294,6 +301,7 @@ export const StudyStep2Form = forwardRef<
       remotePlatform,
       remoteLink,
       scheduleSlots,
+      showAgenda,
     ],
   );
 
@@ -423,9 +431,7 @@ export const StudyStep2Form = forwardRef<
                   } else {
                     setMaxError(undefined);
                   }
-                  onStudyChange(
-                    sessionPatch({ max: next, limit: true }),
-                  );
+                  onStudyChange(sessionPatch({ max: next, limit: true }));
                 }}
                 onBlur={() => {
                   const n = Number.parseInt(maxPerDay, 10);
@@ -441,6 +447,35 @@ export const StudyStep2Form = forwardRef<
           </div>
         </div>
       </section>
+
+      {showAgenda ? (
+        <div className={styles.card}>
+          <div ref={availabilityRef}>
+            <AvailabilitySummaryBlock
+              studyName={study.name}
+              sessionFormat={sessionFormat}
+              scheduleStart={start}
+              scheduleEnd={end}
+              sessionDurationMin={
+                sessionDuration ? Number(sessionDuration) : null
+              }
+              sessionGapMin={sessionGap ? Number(sessionGap) : null}
+              slots={scheduleSlots}
+              disabled={disabled || readOnly}
+              onConfirm={(next) => {
+                setScheduleSlots(next);
+                setAgendaError(undefined);
+                persist(sessionPatch({ scheduleSlots: next }));
+              }}
+            />
+            {agendaError ? (
+              <p className={styles.agendaError} role="alert">
+                {agendaError}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <SessionFormatSection
         ref={formatRef}
@@ -466,26 +501,6 @@ export const StudyStep2Form = forwardRef<
         }}
         onPersist={onPersist}
       />
-
-      {showAgenda ? (
-        <div className={styles.card}>
-          <SessionAgendaSection
-            ref={agendaRef}
-            slots={scheduleSlots}
-            scheduleStart={start}
-            scheduleEnd={end}
-            sessionDurationMin={
-              sessionDuration ? Number(sessionDuration) : null
-            }
-            disabled={disabled}
-            onChange={(patch) => {
-              if (patch.scheduleSlots) setScheduleSlots(patch.scheduleSlots);
-              onStudyChange(patch);
-            }}
-            onPersist={onPersist}
-          />
-        </div>
-      ) : null}
     </div>
   );
 });
