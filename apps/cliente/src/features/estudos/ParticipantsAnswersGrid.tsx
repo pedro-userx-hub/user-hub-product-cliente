@@ -413,7 +413,7 @@ export function ParticipantsAnswersGrid({
       customTable.clientColumnOrder ?? [],
       restIds,
     )
-      .map((id) => byId.get(id))
+      .map((id) => byId.get(id as ColId))
       .filter((c): c is ColState => c != null);
     return [...systemVisible, ...orderedRest];
   }, [cols, customTable]);
