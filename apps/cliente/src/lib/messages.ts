@@ -445,9 +445,9 @@ export const messages = {
     "Configure identificação e responsáveis neste passo (em breve).",
   estudosStep2Placeholder: "Cronograma e agenda — em breve.",
   estudosStep2ScheduleTitle: "Cronograma do estudo",
-  estudosSchedulePeriodLabel: "Período do estudo",
-  estudosSchedulePeriodHelper:
-    "Os primeiros dias do estudo são reservados para recrutamento. Escolha as datas pensando em quando quer que as sessões comecem.",
+  estudosSchedulePeriodLabel: "Período das sessões",
+  estudosSchedulePeriodHelper: (launchDayMonth: string) =>
+    `Escolha quando as sessões devem acontecer, com no mínimo 3 dias úteis entre o lançamento e o início. Estamos considerando o lançamento para hoje (${launchDayMonth}). Lançar depois pode exigir ajuste.`,
   estudosScheduleStartLabel: "Início",
   estudosScheduleEndLabel: "Término",
   estudosScheduleDatePlaceholder: "dd/mm/aaaa",
@@ -455,15 +455,28 @@ export const messages = {
   estudosScheduleEndBeforeStart:
     "A data de término deve ser posterior ao início.",
   estudosScheduleInsufficient:
-    "O intervalo é insuficiente para setup e recrutamento. Amplie a janela de datas.",
+    "O intervalo é insuficiente. Amplie a janela de datas.",
   estudosScheduleStartRequired: "Informe a data de início.",
   estudosScheduleEndRequired: "Informe a data de término.",
   estudosScheduleStartPast:
     "A data de início já passou. Revise a janela antes de continuar.",
-  estudosMilestoneStart: "Início do estudo",
+  estudosScheduleStartWeekend:
+    "O início das sessões não pode ser em um fim de semana.",
+  estudosScheduleMinLead:
+    "Escolha uma data com pelo menos 3 dias úteis de antecedência ao início das sessões.",
+  estudosLaunchScheduleReviewTitle: "Revise o período das sessões",
+  estudosLaunchScheduleReviewBody:
+    "As datas das sessões deste rascunho já não são válidas para lançar agora. Ajuste o período abaixo e continue.",
+  estudosLaunchScheduleReviewCta: "Atualizar e lançar",
+  estudosLaunchScheduleReviewCancel: "Voltar",
+  estudosMilestonePeriod: "Período das sessões",
+  estudosMilestoneStart: "Período das sessões",
   estudosMilestoneSetup: "Setup e recrutamento",
-  estudosMilestoneRecruitment: "Início do recrutamento",
-  estudosMilestoneEnd: "Término do estudo",
+  estudosMilestoneRecruitment: "Início das sessões",
+  estudosMilestoneSessionsStart: "Início das sessões",
+  estudosMilestoneSessionsEnd: "Término das sessões",
+  estudosMilestoneEnd: "Término das sessões",
+  estudosMilestoneTimelineTitle: "Timeline do estudo",
   estudosSessionDurationLabel: "Duração das sessões",
   estudosSessionGapLabel: "Intervalo entre sessões",
   estudosSessionDurationPlaceholder: "Selecione…",
@@ -671,13 +684,13 @@ export const messages = {
   estudosAvailabilityNeedDurationGap:
     "Defina a duração e o intervalo das sessões para liberar a disponibilidade.",
   estudosAvailabilityNeedDates:
-    "Defina as datas de início e término do estudo para montar a agenda.",
+    "Defina o período das sessões para montar a agenda.",
   estudosAvailabilitySelectTitle: "Selecione os horários disponíveis",
   estudosAvailabilitySelectHint:
-    "Selecione os horários que você tem disponível para realizar as sessões do estudo.",
+    "Marque quando você pode conduzir as sessões. Dias de setup/recrutamento só ficam travados se o início estiver a menos de 3 dias úteis da solicitação.",
   estudosAvailabilityDrawerTitle: "Selecione os horários disponíveis",
   estudosAvailabilityDrawerHint:
-    "Selecione os horários que você tem disponível para realizar as sessões do estudo.",
+    "Marque quando você pode conduzir as sessões. Com folga de 3+ dias úteis até o início, a grade libera a data escolhida sem buffer extra.",
   estudosAvailabilityEmptyGrid:
     "Arraste na grade para marcar quando você está disponível.",
   estudosAvailabilityBlocksCount: (n: number) =>
@@ -1773,7 +1786,6 @@ export const messages = {
   participantesColPaintClear: "Remover destaque",
   participantesRowPin: "Fixar linha",
   participantesRowUnpin: "Desafixar linha",
-  participantesRowHide: "Ocultar linha",
   participantesRowUnderline: "Sublinhar linha",
   participantesRowPaint: "Destacar linha",
   participantesRowPaintClear: "Remover destaque da linha",
@@ -1859,6 +1871,10 @@ export const messages = {
   participantesClientVision: "Visão do cliente",
   participantesClientVisionDescription:
     "Defina os dados e as perguntas visíveis para o cliente.",
+  participantesClientVisionPreview: "Pré-visualizar",
+  participantesClientVisionPreviewTitle: "Pré-visualização — visão do cliente",
+  participantesClientVisionPreviewHint:
+    "Assim a tabela aparece para o cliente com a configuração atual (ainda não salva).",
   participantesConfigureConfirm: "Salvar configuração",
   participantesConfigureSaved: "Configuração salva",
   participantesConfigureSavedBody:

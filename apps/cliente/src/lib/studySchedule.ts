@@ -33,6 +33,47 @@ export function formatISODateDisplay(iso: string): string {
   return `${String(p.day).padStart(2, "0")}/${String(p.month).padStart(2, "0")}/${p.year}`;
 }
 
+/** Ex.: "22/09" */
+export function formatISODateDayMonth(iso: string): string {
+  const p = parseISODate(iso);
+  if (!p) return "";
+  return `${String(p.day).padStart(2, "0")}/${String(p.month).padStart(2, "0")}`;
+}
+
+const MONTH_SHORT_PT = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+] as const;
+
+/** Ex.: "28 de Set" */
+export function formatISODateShort(iso: string): string {
+  const p = parseISODate(iso);
+  if (!p) return "";
+  return `${p.day} de ${MONTH_SHORT_PT[p.month - 1]}`;
+}
+
+/** Ex.: "22 a 30 de Set" ou "28 de Set a 2 de Out" */
+export function formatISODateShortRange(start: string, end: string): string {
+  const a = parseISODate(start);
+  const b = parseISODate(end);
+  if (!a || !b) return "";
+  if (start === end) return formatISODateShort(start);
+  if (a.month === b.month && a.year === b.year) {
+    return `${a.day} a ${b.day} de ${MONTH_SHORT_PT[a.month - 1]}`;
+  }
+  return `${formatISODateShort(start)} a ${formatISODateShort(end)}`;
+}
+
 /** Diferença em dias civis (end - start). */
 export function daysBetweenISO(start: string, end: string): number | null {
   const a = parseISODate(start);
@@ -50,17 +91,149 @@ export function addDaysISO(iso: string, days: number): string | null {
   return toISODate(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
 }
 
+/** Janela fixa de setup/recrutamento a partir da data de envio/chegada (dias corridos). */
+export const SETUP_RECRUITMENT_CALENDAR_DAYS = 3;
+
+/** Início e fim inclusivos do setup/recrutamento (ex.: envio 22 → 22 a 24). */
+export function deriveSetupRecruitmentWindow(
+  requestISO: string = todayISODate(),
+): { setupStart: string; setupEnd: string } | null {
+  if (!parseISODate(requestISO)) return null;
+  const setupEnd = addDaysISO(
+    requestISO,
+    SETUP_RECRUITMENT_CALENDAR_DAYS - 1,
+  );
+  if (!setupEnd) return null;
+  return { setupStart: requestISO, setupEnd };
+}
+
+/** Ex.: "22 a 24 de Set" a partir da data de envio. */
+export function formatSetupRecruitmentWindow(requestISO: string): string {
+  const w = deriveSetupRecruitmentWindow(requestISO);
+  if (!w) return "";
+  return formatISODateShortRange(w.setupStart, w.setupEnd);
+}
+
 /**
  * Placeholder OQ#1: setup em ~1/3 e recrutamento em ~2/3 da janela.
  * Exige pelo menos 2 dias de intervalo (fim > início + 1).
+ * @deprecated Preferir deriveSessionPeriodMilestones + hasMinimumSessionLead.
  */
 export const SCHEDULE_MIN_SPAN_DAYS = 2;
+
+/** Antecedência mínima (dias úteis) entre a solicitação e o início das sessões. */
+export const MIN_SESSION_LEAD_BUSINESS_DAYS = 3;
+
+export function isWeekendISO(iso: string): boolean {
+  const p = parseISODate(iso);
+  if (!p) return false;
+  const day = new Date(p.year, p.month - 1, p.day).getDay();
+  return day === 0 || day === 6;
+}
+
+/**
+ * Conta dias úteis em (from, to] — exclusive `from`, inclusive `to`.
+ * Ex.: terça→quarta = 1; terça→sexta da mesma semana = 3.
+ */
+export function countBusinessDaysAfter(
+  fromISO: string,
+  toISO: string,
+): number | null {
+  if (!parseISODate(fromISO) || !parseISODate(toISO)) return null;
+  if (toISO <= fromISO) return 0;
+  let count = 0;
+  let cursor = addDaysISO(fromISO, 1);
+  while (cursor && cursor <= toISO) {
+    if (!isWeekendISO(cursor)) count += 1;
+    cursor = addDaysISO(cursor, 1);
+  }
+  return count;
+}
+
+/** Início elegível: não é fim de semana e tem ≥ 3 dias úteis de folga desde a solicitação. */
+export function hasMinimumSessionLead(
+  startISO: string,
+  requestISO: string = todayISODate(),
+): boolean {
+  if (isWeekendISO(startISO)) return false;
+  const lead = countBusinessDaysAfter(requestISO, startISO);
+  return lead != null && lead >= MIN_SESSION_LEAD_BUSINESS_DAYS;
+}
+
+export type SessionStartIssue = "weekend" | "min_lead" | null;
+
+export function getSessionStartIssue(
+  startISO: string,
+  requestISO: string = todayISODate(),
+): SessionStartIssue {
+  if (!startISO) return null;
+  if (isWeekendISO(startISO)) return "weekend";
+  const lead = countBusinessDaysAfter(requestISO, startISO);
+  if (lead == null || lead < MIN_SESSION_LEAD_BUSINESS_DAYS) return "min_lead";
+  return null;
+}
 
 export interface DerivedMilestones {
   setup: string;
   recruitment: string;
 }
 
+/**
+ * Marcos do período de sessões (as-built PBI antecedência).
+ * Setup/recrutamento = 3 dias corridos a partir da data de envio,
+ * independente do início das sessões.
+ */
+export interface SessionPeriodMilestones {
+  /** Início do período selecionado */
+  periodStart: string;
+  /** Término do período selecionado */
+  periodEnd: string;
+  /** Primeiro dia de setup/recrutamento (= data de envio) */
+  setupStart: string;
+  /** Último dia de setup/recrutamento (envio + 2 dias corridos) */
+  setupEnd: string;
+  /** Início das sessões (= periodStart quando há folga suficiente) */
+  sessionsStart: string;
+  /** Término das sessões */
+  sessionsEnd: string;
+}
+
+export function deriveSessionPeriodMilestones(
+  start: string,
+  end: string,
+  requestISO: string = todayISODate(),
+): SessionPeriodMilestones | null {
+  const span = daysBetweenISO(start, end);
+  if (span == null || span < 0) return null;
+  if (getSessionStartIssue(start, requestISO) != null) return null;
+  const setup = deriveSetupRecruitmentWindow(requestISO);
+  if (!setup) return null;
+  return {
+    periodStart: start,
+    periodEnd: end,
+    setupStart: setup.setupStart,
+    setupEnd: setup.setupEnd,
+    sessionsStart: start,
+    sessionsEnd: end,
+  };
+}
+
+/**
+ * True quando o período de sessões está inválido para lançar agora
+ * (data já passou ou não respeita a antecedência mínima).
+ */
+export function isScheduleStaleForLaunch(
+  scheduleStart: string | undefined | null,
+  requestISO: string = todayISODate(),
+): boolean {
+  if (!scheduleStart) return true;
+  if (scheduleStart < requestISO) return true;
+  return getSessionStartIssue(scheduleStart, requestISO) != null;
+}
+
+/**
+ * @deprecated Use deriveSessionPeriodMilestones. Mantido para compatibilidade.
+ */
 export function deriveScheduleMilestones(
   start: string,
   end: string,
@@ -89,8 +262,9 @@ export function deriveScheduleMilestones(
 export function isScheduleWindowSufficient(
   start: string,
   end: string,
+  requestISO: string = todayISODate(),
 ): boolean {
-  return deriveScheduleMilestones(start, end) != null;
+  return deriveSessionPeriodMilestones(start, end, requestISO) != null;
 }
 
 /** "HH:mm" → minutos desde meia-noite. */

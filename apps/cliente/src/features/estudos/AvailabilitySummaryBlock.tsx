@@ -231,6 +231,7 @@ export function AvailabilitySummaryBlock({
           <Button
             variant="clear"
             size="medium"
+            className={styles.defineBtn}
             iconLeft={<CalendarIcon size={18} />}
             disabled={!canOpen}
             title={!canOpen && hint ? hint : undefined}

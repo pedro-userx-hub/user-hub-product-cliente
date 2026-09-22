@@ -296,6 +296,42 @@ export function setClientVisibleFlag(
   };
 }
 
+/** Aplica o rascunho da drawer “Visão do cliente” sem persistir. */
+export function applyClientVisionDraft(
+  table: ParticipantCustomTable,
+  draft: {
+    nameReveal: boolean;
+    emailReveal: boolean;
+    phoneReveal: boolean;
+    visibleIds: string[];
+    questionOrder: string[];
+  },
+): ParticipantCustomTable {
+  const visible = new Set(draft.visibleIds);
+  const systemClientVisible = { ...table.systemClientVisible };
+  for (const id of draft.questionOrder) {
+    if (!isCustomColId(id)) {
+      systemClientVisible[id] = visible.has(id);
+    }
+  }
+  return {
+    ...table,
+    clientDisplayConfigured: true,
+    clientColumnOrder: draft.questionOrder,
+    personalReveal: {
+      ...table.personalReveal,
+      name: draft.nameReveal,
+      email: draft.emailReveal,
+      phone: draft.phoneReveal,
+    },
+    systemClientVisible,
+    columns: table.columns.map((col) => ({
+      ...col,
+      clientVisible: visible.has(col.id),
+    })),
+  };
+}
+
 export function cellValue(
   table: ParticipantCustomTable,
   participantId: string,

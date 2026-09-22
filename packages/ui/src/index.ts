@@ -266,6 +266,8 @@ export {
   MailIcon,
   PhoneIcon,
   SettingsIcon,
+  WrenchIcon,
+  VideoIcon,
   LinkIcon,
   CodeIcon,
   QrCodeIcon,

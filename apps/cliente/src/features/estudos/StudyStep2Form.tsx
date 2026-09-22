@@ -10,8 +10,13 @@ import { DateRangeField, Input, Select, Toggle } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import {
   daysBetweenISO,
-  deriveScheduleMilestones,
+  deriveSessionPeriodMilestones,
+  formatISODateShort,
+  formatISODateShortRange,
+  formatSetupRecruitmentWindow,
+  getSessionStartIssue,
   todayISODate,
+  formatISODateDayMonth,
 } from "../../lib/studySchedule";
 import type {
   StudyInPersonLocationType,
@@ -26,6 +31,10 @@ import {
   SessionFormatSection,
   type SessionFormatSectionHandle,
 } from "./SessionFormatSection";
+import {
+  StudyMilestoneTimeline,
+  type StudyMilestone,
+} from "./StudyMilestoneTimeline";
 import styles from "./StudyStep2Form.module.css";
 
 export interface StudyStep2FormHandle {
@@ -143,8 +152,8 @@ export const StudyStep2Form = forwardRef<
     if (!start || !end) return null;
     const span = daysBetweenISO(start, end);
     if (span == null || span <= 0) return null;
-    return deriveScheduleMilestones(start, end);
-  }, [start, end]);
+    return deriveSessionPeriodMilestones(start, end, today);
+  }, [start, end, today]);
 
   const endBeforeStart = useMemo(() => {
     if (!start || !end) return false;
@@ -152,7 +161,64 @@ export const StudyStep2Form = forwardRef<
     return span != null && span <= 0;
   }, [start, end]);
 
-  const insufficient = Boolean(start && end && !endBeforeStart && !derived);
+  const startIssue = useMemo(
+    () => (start ? getSessionStartIssue(start, today) : null),
+    [start, today],
+  );
+
+  const insufficient = Boolean(
+    start && end && !endBeforeStart && !startIssue && !derived,
+  );
+
+  const milestones: StudyMilestone[] = useMemo(() => {
+    return [
+      {
+        id: "period",
+        label: messages.estudosMilestonePeriod,
+        dateText:
+          start && end
+            ? formatISODateShortRange(start, end)
+            : undefined,
+        pending: !start || !end,
+      },
+      {
+        id: "setup",
+        label: messages.estudosMilestoneSetup,
+        dateText:
+          start && end ? formatSetupRecruitmentWindow(today) : undefined,
+        derived: Boolean(start && end),
+        pending: !start || !end,
+      },
+      {
+        id: "sessions-start",
+        label: messages.estudosMilestoneSessionsStart,
+        dateText:
+          derived?.sessionsStart || start
+            ? formatISODateShort(derived?.sessionsStart ?? start)
+            : undefined,
+        pending: !start || Boolean(startIssue),
+      },
+      {
+        id: "sessions-end",
+        label: messages.estudosMilestoneSessionsEnd,
+        dateText:
+          derived?.sessionsEnd || end
+            ? formatISODateShort(derived?.sessionsEnd ?? end)
+            : undefined,
+        pending: !end,
+      },
+    ];
+  }, [start, end, derived, startIssue, today]);
+
+  const periodErrorMessage = useMemo(() => {
+    if (readOnly) return undefined;
+    if (periodError) return periodError;
+    if (endBeforeStart) return messages.estudosScheduleEndBeforeStart;
+    if (startIssue === "weekend") return messages.estudosScheduleStartWeekend;
+    if (startIssue === "min_lead") return messages.estudosScheduleMinLead;
+    if (insufficient) return messages.estudosScheduleInsufficient;
+    return undefined;
+  }, [readOnly, periodError, endBeforeStart, startIssue, insufficient]);
 
   const persist = (patch: UpdateStudyDraftInput) => {
     onStudyChange(patch);
@@ -215,11 +281,20 @@ export const StudyStep2Form = forwardRef<
           first = periodWrapRef.current?.querySelector("button") ?? null;
         } else {
           const span = daysBetweenISO(start, end);
+          const issue = getSessionStartIssue(start, today);
           if (span != null && span <= 0) {
             setPeriodError(messages.estudosScheduleEndBeforeStart);
             ok = false;
             first = periodWrapRef.current?.querySelector("button") ?? null;
-          } else if (!deriveScheduleMilestones(start, end)) {
+          } else if (issue === "weekend") {
+            setPeriodError(messages.estudosScheduleStartWeekend);
+            ok = false;
+            first = periodWrapRef.current?.querySelector("button") ?? null;
+          } else if (issue === "min_lead") {
+            setPeriodError(messages.estudosScheduleMinLead);
+            ok = false;
+            first = periodWrapRef.current?.querySelector("button") ?? null;
+          } else if (!deriveSessionPeriodMilestones(start, end, today)) {
             setPeriodError(messages.estudosScheduleInsufficient);
             ok = false;
             first = periodWrapRef.current?.querySelector("button") ?? null;
@@ -316,30 +391,40 @@ export const StudyStep2Form = forwardRef<
           <div className={styles.period} ref={periodWrapRef}>
             <DateRangeField
               label={messages.estudosSchedulePeriodLabel}
-              helperText={messages.estudosSchedulePeriodHelper}
+              helperText={messages.estudosSchedulePeriodHelper(
+                formatISODateDayMonth(today),
+              )}
               placeholder={messages.estudosScheduleRangePlaceholder}
               start={start}
               end={end}
               minDate={disabled || readOnly ? undefined : today}
-              error={
-                readOnly
-                  ? undefined
-                  : periodError ||
-                    (endBeforeStart
-                      ? messages.estudosScheduleEndBeforeStart
-                      : insufficient
-                        ? messages.estudosScheduleInsufficient
-                        : undefined)
-              }
+              error={periodErrorMessage}
               disabled={disabled}
+              keepOpenOnSelect
+              panelFooter={
+                !periodErrorMessage && derived ? (
+                  <StudyMilestoneTimeline
+                    layout="dropdown"
+                    title={messages.estudosMilestoneTimelineTitle}
+                    milestones={milestones}
+                  />
+                ) : null
+              }
               onChange={({ start: nextStart, end: nextEnd }) => {
                 setStart(nextStart);
                 setEnd(nextEnd);
                 setPeriodError(undefined);
                 const span = daysBetweenISO(nextStart, nextEnd);
+                const issue = getSessionStartIssue(nextStart, today);
                 if (span != null && span <= 0) {
                   setPeriodError(messages.estudosScheduleEndBeforeStart);
-                } else if (!deriveScheduleMilestones(nextStart, nextEnd)) {
+                } else if (issue === "weekend") {
+                  setPeriodError(messages.estudosScheduleStartWeekend);
+                } else if (issue === "min_lead") {
+                  setPeriodError(messages.estudosScheduleMinLead);
+                } else if (
+                  !deriveSessionPeriodMilestones(nextStart, nextEnd, today)
+                ) {
                   setPeriodError(messages.estudosScheduleInsufficient);
                 }
                 persist({

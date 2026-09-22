@@ -1,8 +1,10 @@
 import { EmptyState } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import {
-  deriveScheduleMilestones,
+  deriveSessionPeriodMilestones,
   formatISODateDisplay,
+  formatSetupRecruitmentWindow,
+  todayISODate,
 } from "../../lib/studySchedule";
 import type { StudyWeekday, TeamStudy } from "../../lib/teamApi";
 import {
@@ -55,34 +57,40 @@ export function StudyAgendaPanel({ study, sub }: StudyAgendaPanelProps) {
 
   const start = study.scheduleStart?.trim() ?? "";
   const end = study.scheduleEnd?.trim() ?? "";
+  const requestISO = study.sentAt
+    ? study.sentAt.slice(0, 10)
+    : todayISODate();
   const derived =
-    start && end ? deriveScheduleMilestones(start, end) : null;
+    start && end ? deriveSessionPeriodMilestones(start, end, requestISO) : null;
 
   const milestones: StudyMilestone[] = [
     {
-      id: "start",
-      label: messages.estudosDetailScheduleStart,
-      date: start || undefined,
-      pending: !start,
+      id: "period",
+      label: messages.estudosMilestonePeriod,
+      dateText:
+        start && end
+          ? `${formatISODateDisplay(start)} – ${formatISODateDisplay(end)}`
+          : undefined,
+      pending: !start || !end,
     },
     {
       id: "setup",
       label: messages.estudosMilestoneSetup,
-      date: derived?.setup,
-      derived: Boolean(derived),
-      pending: !derived?.setup,
+      dateText:
+        start && end ? formatSetupRecruitmentWindow(requestISO) : undefined,
+      derived: Boolean(start && end),
+      pending: !start || !end,
     },
     {
-      id: "recruitment",
-      label: messages.estudosMilestoneRecruitment,
-      date: derived?.recruitment,
-      derived: Boolean(derived),
-      pending: !derived?.recruitment,
+      id: "sessions-start",
+      label: messages.estudosMilestoneSessionsStart,
+      date: derived?.sessionsStart ?? (start || undefined),
+      pending: !start,
     },
     {
-      id: "end",
-      label: messages.estudosDetailScheduleEnd,
-      date: end || undefined,
+      id: "sessions-end",
+      label: messages.estudosMilestoneSessionsEnd,
+      date: derived?.sessionsEnd ?? (end || undefined),
       pending: !end,
     },
   ];

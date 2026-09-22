@@ -6,6 +6,7 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  EditIcon,
   GoogleCalendarIcon,
   OutlookIcon,
   useToast,
@@ -415,8 +416,9 @@ export function StudyAvailabilityView({
             <ChevronDownIcon size={20} />
           </button>
           <Button
-            variant="filled"
+            variant="clear"
             size="medium"
+            iconLeft={<EditIcon size={18} />}
             disabled={saving}
             onClick={() => setEditOpen(true)}
           >

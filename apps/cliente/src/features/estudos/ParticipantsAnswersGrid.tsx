@@ -90,7 +90,6 @@ interface ColState {
 }
 
 interface RowChrome {
-  hidden: boolean;
   pinned: boolean;
   underlined: boolean;
   paint: PaintTone | null;
@@ -399,9 +398,25 @@ export function ParticipantsAnswersGrid({
   }, [knownCols, customTable.columnOrder]);
 
   const operationalVisible = cols.filter((c) => !c.hidden);
-  const clientVisibleCols = cols.filter((c) =>
-    getClientVisibleFlag(customTable, c.id),
-  );
+  const clientVisibleCols = useMemo(() => {
+    const visible = cols.filter((c) => getClientVisibleFlag(customTable, c.id));
+    if (!customTable.clientDisplayConfigured) return visible;
+    const byId = new Map(visible.map((c) => [c.id, c]));
+    const systemIds = new Set(FIXED_COLS.map((c) => c.id));
+    const systemVisible = FIXED_COLS.map((c) => byId.get(c.id)).filter(
+      (c): c is ColState => c != null,
+    );
+    const restIds = visible
+      .filter((c) => !systemIds.has(c.id as FixedColId))
+      .map((c) => c.id);
+    const orderedRest = mergeColumnOrder(
+      customTable.clientColumnOrder ?? [],
+      restIds,
+    )
+      .map((id) => byId.get(id))
+      .filter((c): c is ColState => c != null);
+    return [...systemVisible, ...orderedRest];
+  }, [cols, customTable]);
   const visibleCols = viewAsClient ? clientVisibleCols : operationalVisible;
   const pinnedCols = viewAsClient ? [] : visibleCols.filter((c) => c.pinned);
   const scrollCols = viewAsClient
@@ -428,7 +443,7 @@ export function ParticipantsAnswersGrid({
 
   const orderedRows = useMemo(() => {
     if (viewAsClient) return sourceRows;
-    let rows = sourceRows.filter((p) => !rowChrome[p.id]?.hidden);
+    let rows = sourceRows;
     if (sort) {
       const customType = isCustomColId(sort.colId)
         ? customById.get(sort.colId)?.type
@@ -619,7 +634,6 @@ export function ParticipantsAnswersGrid({
   const patchRow = (id: string, patch: Partial<RowChrome>) => {
     setRowChrome((prev) => {
       const current: RowChrome = prev[id] ?? {
-        hidden: false,
         pinned: false,
         underlined: false,
         paint: null,
@@ -672,6 +686,7 @@ export function ParticipantsAnswersGrid({
   }, []);
 
   useEffect(() => {
+    if (viewAsClient) return;
     const scroller = scrollerRef.current;
     const bar = hScrollBarRef.current;
     const inner = hScrollInnerRef.current;
@@ -965,7 +980,6 @@ export function ParticipantsAnswersGrid({
 
   const rowMenu = (p: StudyParticipant): MenuItemConfig[] => {
     const chrome = rowChrome[p.id] ?? {
-      hidden: false,
       pinned: false,
       underlined: false,
       paint: null,
@@ -984,12 +998,6 @@ export function ParticipantsAnswersGrid({
           : messages.participantesRowPin,
         icon: <PinIcon size={18} />,
         onSelect: () => patchRow(p.id, { pinned: !chrome.pinned }),
-      },
-      {
-        id: "hide",
-        label: messages.participantesRowHide,
-        icon: <EyeOffIcon size={18} />,
-        onSelect: () => patchRow(p.id, { hidden: true }),
       },
       {
         id: "underline",
@@ -1617,13 +1625,15 @@ export function ParticipantsAnswersGrid({
             </tbody>
           </table>
         </div>
-        <div
-          className={styles.hScrollBar}
-          ref={hScrollBarRef}
-          aria-hidden
-        >
-          <div className={styles.hScrollBarInner} ref={hScrollInnerRef} />
-        </div>
+        {!viewAsClient ? (
+          <div
+            className={styles.hScrollBar}
+            ref={hScrollBarRef}
+            aria-hidden
+          >
+            <div className={styles.hScrollBarInner} ref={hScrollInnerRef} />
+          </div>
+        ) : null}
       </>
       )}
       {contextMenu ? (

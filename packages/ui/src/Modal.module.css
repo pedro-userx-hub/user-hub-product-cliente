@@ -38,6 +38,18 @@
   max-width: 720px;
 }
 
+.xlarge {
+  width: calc(100vw - var(--space-12));
+  max-width: 1280px;
+  max-height: min(72vh, 720px);
+}
+
+.xlarge .body {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .header {
   display: flex;
   align-items: flex-start;

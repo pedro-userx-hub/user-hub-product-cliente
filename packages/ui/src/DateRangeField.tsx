@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import { CalendarIcon, ChevronDownIcon } from "./icons";
@@ -26,13 +27,23 @@ export interface DateRangeFieldProps {
   onChange?: (range: DateRangeValue) => void;
   minDate?: string;
   maxDate?: string;
+  /**
+   * Desabilita candidatos a data de **início** (1º clique).
+   * O término (2º clique) só respeita min/max e ordem do intervalo.
+   */
+  isStartDateDisabled?: (iso: string) => boolean;
+  /** Conteúdo abaixo do calendário (ex.: timeline do estudo). */
+  panelFooter?: ReactNode;
+  /** Mantém o painel aberto após concluir o intervalo (útil com footer dinâmico). */
+  keepOpenOnSelect?: boolean;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
   "aria-label"?: string;
 }
 
-const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
+/** Segunda → domingo (calendário BR). */
+const WEEKDAYS = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"];
 
 function parseISO(iso: string): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
@@ -73,6 +84,42 @@ function cmpISO(a: string, b: string): number {
   return a.localeCompare(b);
 }
 
+function monthCells(view: Date): { iso: string; day: number; inMonth: boolean }[] {
+  const year = view.getFullYear();
+  const month = view.getMonth();
+  const first = new Date(year, month, 1);
+  // Monday-first: Sun(0) → 6, Mon(1) → 0, …
+  const startPad = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const items: { iso: string; day: number; inMonth: boolean }[] = [];
+
+  for (let i = 0; i < startPad; i++) {
+    const d = new Date(year, month, -startPad + i + 1);
+    items.push({ iso: toISO(d), day: d.getDate(), inMonth: false });
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(year, month, day);
+    items.push({ iso: toISO(d), day, inMonth: true });
+  }
+  while (items.length % 7 !== 0) {
+    const last = parseISO(items[items.length - 1].iso)!;
+    const d = new Date(
+      last.getFullYear(),
+      last.getMonth(),
+      last.getDate() + 1,
+    );
+    items.push({ iso: toISO(d), day: d.getDate(), inMonth: false });
+  }
+  return items;
+}
+
+function monthLabelOf(d: Date): string {
+  return d.toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
 /**
  * Campo de período (início–término) com calendário de seleção em dois cliques.
  */
@@ -85,6 +132,9 @@ export function DateRangeField({
   onChange,
   minDate,
   maxDate,
+  isStartDateDisabled,
+  panelFooter,
+  keepOpenOnSelect = false,
   placeholder = "dd/mm/aaaa – dd/mm/aaaa",
   disabled,
   className,
@@ -93,6 +143,7 @@ export function DateRangeField({
   const fieldId = useId();
   const helperId = helperText || error ? `${fieldId}-helper` : undefined;
   const hasError = Boolean(error);
+  const hasFooter = panelFooter != null;
   const [open, setOpen] = useState(false);
   const [draftStart, setDraftStart] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -137,48 +188,41 @@ export function DateRangeField({
 
   useEffect(() => {
     if (!open || !panelRef.current || !wrapRef.current) return;
-    const rect = wrapRef.current.getBoundingClientRect();
-    const panel = panelRef.current;
-    panel.style.top = `${rect.bottom + 4}px`;
-    panel.style.left = `${rect.left}px`;
-  }, [open, view]);
 
-  const monthLabel = view.toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric",
-  });
+    const place = () => {
+      const wrap = wrapRef.current;
+      const panel = panelRef.current;
+      if (!wrap || !panel) return;
+      const rect = wrap.getBoundingClientRect();
+      const panelWidth = panel.offsetWidth || 640;
+      const maxLeft = Math.max(8, window.innerWidth - panelWidth - 8);
+      panel.style.top = `${rect.bottom + 4}px`;
+      panel.style.left = `${Math.min(rect.left, maxLeft)}px`;
+    };
 
-  const cells = useMemo(() => {
-    const year = view.getFullYear();
-    const month = view.getMonth();
-    const first = new Date(year, month, 1);
-    const startPad = first.getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const items: { iso: string; day: number; inMonth: boolean }[] = [];
+    place();
+    window.addEventListener("resize", place);
+    // capture: acompanha scroll de containers internos (ex.: CreateStudyPage .scroll)
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, view, panelFooter]);
 
-    for (let i = 0; i < startPad; i++) {
-      const d = new Date(year, month, -startPad + i + 1);
-      items.push({ iso: toISO(d), day: d.getDate(), inMonth: false });
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      const d = new Date(year, month, day);
-      items.push({ iso: toISO(d), day, inMonth: true });
-    }
-    while (items.length % 7 !== 0) {
-      const last = parseISO(items[items.length - 1].iso)!;
-      const d = new Date(
-        last.getFullYear(),
-        last.getMonth(),
-        last.getDate() + 1,
-      );
-      items.push({ iso: toISO(d), day: d.getDate(), inMonth: false });
-    }
-    return items;
-  }, [view]);
+  const viewNext = useMemo(
+    () => new Date(view.getFullYear(), view.getMonth() + 1, 1),
+    [view],
+  );
+
+  const cellsLeft = useMemo(() => monthCells(view), [view]);
+  const cellsRight = useMemo(() => monthCells(viewNext), [viewNext]);
 
   const isDisabledDate = (iso: string) => {
     if (minDate && cmpISO(iso, minDate) < 0) return true;
     if (maxDate && cmpISO(iso, maxDate) > 0) return true;
+    // Regras extras (fim de semana, antecedência) só no 1º clique (início)
+    if (!draftStart && isStartDateDisabled?.(iso)) return true;
     return false;
   };
 
@@ -199,7 +243,8 @@ export function DateRangeField({
     }
     onChange?.({ start: nextStart, end: nextEnd });
     setDraftStart(null);
-    setOpen(false);
+    // Mantém aberto com footer visível ou quando o consumidor pede (footer pode surgir após sucesso).
+    if (!hasFooter && !keepOpenOnSelect) setOpen(false);
   };
 
   const shiftMonth = (delta: number) => {
@@ -207,6 +252,55 @@ export function DateRangeField({
   };
 
   const display = formatRange(start, end);
+
+  const renderMonth = (
+    cells: { iso: string; day: number; inMonth: boolean }[],
+    label: string,
+  ) => (
+    <div className={styles.monthBlock}>
+      <div className={styles.monthBar}>
+        <span className={styles.monthLabel}>{label}</span>
+      </div>
+      <div className={styles.weekdays} aria-hidden>
+        {WEEKDAYS.map((w) => (
+          <span key={w} className={styles.weekday}>
+            {w}
+          </span>
+        ))}
+      </div>
+      <div className={styles.grid}>
+        {cells.map((cell) => {
+          const disabledDay = isDisabledDate(cell.iso);
+          const isStart = rangeStart !== "" && cell.iso === rangeStart;
+          const isEnd = rangeEnd !== "" && cell.iso === rangeEnd;
+          const inRange =
+            rangeStart !== "" &&
+            rangeEnd !== "" &&
+            cmpISO(cell.iso, rangeStart) > 0 &&
+            cmpISO(cell.iso, rangeEnd) < 0;
+          return (
+            <button
+              key={cell.iso + String(cell.inMonth)}
+              type="button"
+              className={[
+                styles.day,
+                !cell.inMonth ? styles.dayOutside : "",
+                inRange ? styles.dayInRange : "",
+                isStart || isEnd ? styles.daySelected : "",
+                disabledDay ? styles.dayDisabled : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              disabled={disabledDay}
+              onClick={() => pickDay(cell.iso)}
+            >
+              {cell.day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <div
@@ -270,7 +364,7 @@ export function DateRangeField({
         createPortal(
           <div
             ref={panelRef}
-            className={styles.panel}
+            className={[styles.panel, styles.panelWide].join(" ")}
             role="dialog"
             aria-label={label ?? "Calendário"}
           >
@@ -279,70 +373,39 @@ export function DateRangeField({
                 ? "Selecione a data de término"
                 : "Selecione a data de início"}
             </p>
-            <div className={styles.monthBar}>
-              <button
-                type="button"
-                className={styles.navBtn}
-                aria-label="Mês anterior"
-                onClick={() => shiftMonth(-1)}
-              >
-                <ChevronDownIcon
-                  size={18}
-                  style={{ transform: "rotate(90deg)" }}
-                />
-              </button>
-              <span className={styles.monthLabel}>{monthLabel}</span>
-              <button
-                type="button"
-                className={styles.navBtn}
-                aria-label="Próximo mês"
-                onClick={() => shiftMonth(1)}
-              >
-                <ChevronDownIcon
-                  size={18}
-                  style={{ transform: "rotate(-90deg)" }}
-                />
-              </button>
+            <div className={styles.monthsRow}>
+              <div className={styles.monthsNav}>
+                <button
+                  type="button"
+                  className={styles.navBtn}
+                  aria-label="Mês anterior"
+                  onClick={() => shiftMonth(-1)}
+                >
+                  <ChevronDownIcon
+                    size={18}
+                    style={{ transform: "rotate(90deg)" }}
+                  />
+                </button>
+              </div>
+              {renderMonth(cellsLeft, monthLabelOf(view))}
+              {renderMonth(cellsRight, monthLabelOf(viewNext))}
+              <div className={styles.monthsNav}>
+                <button
+                  type="button"
+                  className={styles.navBtn}
+                  aria-label="Próximo mês"
+                  onClick={() => shiftMonth(1)}
+                >
+                  <ChevronDownIcon
+                    size={18}
+                    style={{ transform: "rotate(-90deg)" }}
+                  />
+                </button>
+              </div>
             </div>
-            <div className={styles.weekdays} aria-hidden>
-              {WEEKDAYS.map((w, i) => (
-                <span key={`${w}-${i}`} className={styles.weekday}>
-                  {w}
-                </span>
-              ))}
-            </div>
-            <div className={styles.grid}>
-              {cells.map((cell) => {
-                const disabledDay = isDisabledDate(cell.iso);
-                const isStart =
-                  rangeStart !== "" && cell.iso === rangeStart;
-                const isEnd = rangeEnd !== "" && cell.iso === rangeEnd;
-                const inRange =
-                  rangeStart !== "" &&
-                  rangeEnd !== "" &&
-                  cmpISO(cell.iso, rangeStart) > 0 &&
-                  cmpISO(cell.iso, rangeEnd) < 0;
-                return (
-                  <button
-                    key={cell.iso + String(cell.inMonth)}
-                    type="button"
-                    className={[
-                      styles.day,
-                      !cell.inMonth ? styles.dayOutside : "",
-                      inRange ? styles.dayInRange : "",
-                      isStart || isEnd ? styles.daySelected : "",
-                      disabledDay ? styles.dayDisabled : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    disabled={disabledDay}
-                    onClick={() => pickDay(cell.iso)}
-                  >
-                    {cell.day}
-                  </button>
-                );
-              })}
-            </div>
+            {hasFooter ? (
+              <div className={styles.panelFooter}>{panelFooter}</div>
+            ) : null}
           </div>,
           document.body,
         )}

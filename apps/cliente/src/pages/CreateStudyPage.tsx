@@ -43,6 +43,7 @@ import {
   LaunchingStudyScreen,
   type LaunchScreenStatus,
 } from "../features/estudos/LaunchingStudyScreen";
+import { LaunchScheduleReviewModal } from "../features/estudos/LaunchScheduleReviewModal";
 import { StudyHostsAvatarStack } from "../features/estudos/StudyHostsAvatarStack";
 import { StudyHostsDrawer } from "../features/estudos/StudyHostsDrawer";
 import {
@@ -54,6 +55,7 @@ import {
 } from "../features/estudos/launchTiming";
 import { messages } from "../lib/messages";
 import { canCreateStudy } from "../lib/permissions";
+import { isScheduleStaleForLaunch } from "../lib/studySchedule";
 import { useTeamContext } from "../lib/TeamContext";
 import {
   discardStudyDraft,
@@ -221,6 +223,10 @@ export function CreateStudyPage() {
   const [stepMenuOpen, setStepMenuOpen] = useState(false);
   const stepMenuRef = useRef<HTMLDivElement>(null);
   const [hostsDrawerOpen, setHostsDrawerOpen] = useState(false);
+  const [scheduleReviewOpen, setScheduleReviewOpen] = useState(false);
+  const pendingLaunchPatchRef = useRef<UpdateStudyDraftInput | undefined>(
+    undefined,
+  );
 
 
   const load = useCallback(async () => {
@@ -468,6 +474,25 @@ export function CreateStudyPage() {
     }
   };
 
+  const requestLaunch = (patchOverride?: UpdateStudyDraftInput) => {
+    if (!study) return;
+    const ctx = getWizardContext(study);
+    const patch = patchOverride ?? {};
+    const nextStart =
+      (typeof patch.scheduleStart === "string"
+        ? patch.scheduleStart
+        : undefined) ??
+      study.scheduleStart ??
+      "";
+    // Estudos moderados: bloquear lançamento se o período de sessões estiver vencido.
+    if (!ctx.isUnmoderated && isScheduleStaleForLaunch(nextStart)) {
+      pendingLaunchPatchRef.current = patchOverride;
+      setScheduleReviewOpen(true);
+      return;
+    }
+    void runLaunch(patchOverride);
+  };
+
   const handleNext = async () => {
     if (!study) return;
     const ctx = getWizardContext(study);
@@ -492,7 +517,7 @@ export function CreateStudyPage() {
           await persistStep(ONLINE_SURVEY_WIZARD_STEP, patch);
           return;
         }
-        await runLaunch(patch);
+        requestLaunch(patch);
         return;
       }
       await persistStep(nextWizardStep(3, study), patch);
@@ -502,7 +527,7 @@ export function CreateStudyPage() {
       const ctx = getWizardContext(study);
       if (ctx.isUnmoderatedTest) {
         if (!unmoderatedTestRef.current?.validateForLaunch()) return;
-        await runLaunch(unmoderatedTestRef.current.getPatch());
+        requestLaunch(unmoderatedTestRef.current.getPatch());
         return;
       }
       const patch = onlineSurveyRef.current?.getPatch() ?? {};
@@ -522,12 +547,12 @@ export function CreateStudyPage() {
         return;
       }
       if (!onlineSurveyRef.current?.validateForLaunch()) return;
-      await runLaunch(patch);
+      requestLaunch(patch);
       return;
     }
     if (currentStep === 4) {
       if (!step4Ref.current?.validateForNext()) return;
-      await runLaunch();
+      requestLaunch();
     }
   };
 
@@ -986,6 +1011,27 @@ export function CreateStudyPage() {
         onApply={(_next, patch) => {
           applyLocalPatch(patch);
           void persistFields(patch);
+        }}
+      />
+
+      <LaunchScheduleReviewModal
+        open={scheduleReviewOpen}
+        initialStart={study.scheduleStart ?? ""}
+        initialEnd={study.scheduleEnd ?? ""}
+        onCancel={() => {
+          setScheduleReviewOpen(false);
+          pendingLaunchPatchRef.current = undefined;
+        }}
+        onConfirm={({ start, end }) => {
+          setScheduleReviewOpen(false);
+          const base = pendingLaunchPatchRef.current ?? {};
+          pendingLaunchPatchRef.current = undefined;
+          applyLocalPatch({ scheduleStart: start, scheduleEnd: end });
+          void runLaunch({
+            ...base,
+            scheduleStart: start,
+            scheduleEnd: end,
+          });
         }}
       />
 

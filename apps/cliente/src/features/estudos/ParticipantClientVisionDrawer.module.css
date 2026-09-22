@@ -120,3 +120,45 @@
 .cardDragging .drag {
   cursor: grabbing;
 }
+
+.previewCta {
+  margin-right: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.previewModal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.previewHint {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: var(--font-sm);
+  line-height: var(--lh-sm);
+  color: var(--color-text-muted);
+}
+
+.previewTable {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.previewTable :global([class*="scroller"]) {
+  margin-inline: 0;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 0;
+  overflow: visible;
+  background: transparent;
+}

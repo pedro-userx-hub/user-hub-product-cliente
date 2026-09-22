@@ -137,10 +137,23 @@ export function DateField({
 
   useEffect(() => {
     if (!open || !panelRef.current || !wrapRef.current) return;
-    const rect = wrapRef.current.getBoundingClientRect();
-    const panel = panelRef.current;
-    panel.style.top = `${rect.bottom + 4}px`;
-    panel.style.left = `${rect.left}px`;
+
+    const place = () => {
+      const wrap = wrapRef.current;
+      const panel = panelRef.current;
+      if (!wrap || !panel) return;
+      const rect = wrap.getBoundingClientRect();
+      panel.style.top = `${rect.bottom + 4}px`;
+      panel.style.left = `${rect.left}px`;
+    };
+
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
   }, [open, view]);
 
   const monthLabel = view.toLocaleDateString("pt-BR", {

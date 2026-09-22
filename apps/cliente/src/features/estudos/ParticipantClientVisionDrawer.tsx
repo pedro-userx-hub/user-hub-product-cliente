@@ -5,17 +5,23 @@ import {
   Checkbox,
   DragIndicatorIcon,
   Drawer,
+  EyeIcon,
   Input,
+  Modal,
   Toggle,
 } from "@userx/ui";
 import { messages } from "../../lib/messages";
 import {
+  applyClientVisionDraft,
   getClientVisibleFlag,
   getPersonalReveal,
   mergeColumnOrder,
   moveIdInOrder,
   type ParticipantCustomTable,
 } from "../../lib/participantCustomTable";
+import type { StudyScreener } from "../../lib/screenerModel";
+import type { StudyParticipant } from "../../lib/studyParticipants";
+import { ParticipantsAnswersGrid } from "./ParticipantsAnswersGrid";
 import styles from "./ParticipantClientVisionDrawer.module.css";
 
 export interface VisionColumnItem {
@@ -46,6 +52,8 @@ export function ParticipantClientVisionDrawer({
   open,
   table,
   columns,
+  participants,
+  screener,
   canRevealPersonal = false,
   onClose,
   onConfirm,
@@ -53,6 +61,8 @@ export function ParticipantClientVisionDrawer({
   open: boolean;
   table: ParticipantCustomTable;
   columns: VisionColumnItem[];
+  participants: StudyParticipant[];
+  screener: StudyScreener | null | undefined;
   canRevealPersonal?: boolean;
   onClose: () => void;
   onConfirm: (next: {
@@ -79,6 +89,7 @@ export function ParticipantClientVisionDrawer({
   const [query, setQuery] = useState("");
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const dragIdRef = useRef<string | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
@@ -114,7 +125,10 @@ export function ParticipantClientVisionDrawer({
   };
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setPreviewOpen(false);
+      return;
+    }
     const ids = questions.map((q) => q.id);
     const configured = table.clientDisplayConfigured === true;
     setNameReveal(
@@ -166,6 +180,26 @@ export function ParticipantClientVisionDrawer({
     return ordered.filter((item) => item.label.toLowerCase().includes(q));
   }, [order, questions, query]);
 
+  const previewTable = useMemo(
+    () =>
+      applyClientVisionDraft(table, {
+        nameReveal: canRevealPersonal ? nameReveal : false,
+        emailReveal: canRevealPersonal ? emailReveal : false,
+        phoneReveal: canRevealPersonal ? phoneReveal : false,
+        visibleIds: checked,
+        questionOrder: order,
+      }),
+    [
+      table,
+      canRevealPersonal,
+      nameReveal,
+      emailReveal,
+      phoneReveal,
+      checked,
+      order,
+    ],
+  );
+
   const toggle = (id: string, next: boolean) => {
     setChecked((prev) => {
       if (next) return prev.includes(id) ? prev : [...prev, id];
@@ -188,170 +222,216 @@ export function ParticipantClientVisionDrawer({
     setter(next);
   };
 
-  return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      title={messages.participantesClientVision}
-      description={messages.participantesClientVisionDescription}
-      footer={
-        <>
-          <Button variant="clear" size="medium" onClick={onClose}>
-            {messages.inviteCancel}
-          </Button>
-          <Button
-            variant="filled"
-            size="medium"
-            onClick={() =>
-              onConfirm({
-                nameReveal: canRevealPersonal ? nameReveal : false,
-                emailReveal: canRevealPersonal ? emailReveal : false,
-                phoneReveal: canRevealPersonal ? phoneReveal : false,
-                visibleIds: checked,
-                questionOrder: order,
-              })
-            }
-          >
-            {messages.participantesConfigureConfirm}
-          </Button>
-        </>
-      }
-    >
-      <div className={styles.body}>
-        <section className={styles.section}>
-          <div className={styles.headingBlock}>
-            <h3 className={styles.heading}>
-              {messages.participantesPersonalDisplay}
-            </h3>
-            <p className={styles.lede}>
-              {messages.participantesPersonalDisplayDescription}
-            </p>
-            {!canRevealPersonal ? (
-              <p className={styles.locked}>
-                {messages.participantesPersonalRevealLocked}
-              </p>
-            ) : null}
-          </div>
-          <div className={styles.piiList}>
-            <Toggle
-              label={messages.participantesColName}
-              checked={nameReveal}
-              disabled={!canRevealPersonal}
-              onChange={(next) => setReveal(setNameReveal, next)}
-            />
-            <Toggle
-              label={messages.participantesColPhone}
-              checked={phoneReveal}
-              disabled={!canRevealPersonal}
-              onChange={(next) => setReveal(setPhoneReveal, next)}
-            />
-            <Toggle
-              label={messages.participantesColEmail}
-              checked={emailReveal}
-              disabled={!canRevealPersonal}
-              onChange={(next) => setReveal(setEmailReveal, next)}
-            />
-          </div>
-        </section>
+  const draftPayload = () => ({
+    nameReveal: canRevealPersonal ? nameReveal : false,
+    emailReveal: canRevealPersonal ? emailReveal : false,
+    phoneReveal: canRevealPersonal ? phoneReveal : false,
+    visibleIds: checked,
+    questionOrder: order,
+  });
 
-        <section className={styles.section}>
-          <div className={styles.headingBlock}>
-            <h3 className={styles.heading}>
-              {messages.participantesQuestionsLabel}
-            </h3>
-            <p className={styles.lede}>
-              {messages.participantesQuestionsDescription}
-            </p>
-          </div>
-          <Input
-            aria-label={messages.participantesQuestionsSearch}
-            placeholder={messages.participantesQuestionsSearch}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          {questions.length === 0 ? (
-            <p className={styles.empty}>{messages.participantesQuestionsEmpty}</p>
-          ) : visibleQuestions.length === 0 ? (
-            <p className={styles.empty}>
-              {messages.participantesQuestionsNoneFound}
-            </p>
-          ) : (
-            <ul ref={listRef} className={styles.list}>
-              {visibleQuestions.map((item) => {
-                const on = checked.includes(item.id);
-                const dragging = dragId === item.id;
-                return (
-                  <li
-                    key={item.id}
-                    className={[
-                      styles.item,
-                      dragging ? styles.itemDragging : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    <Card
+  return (
+    <>
+      <Drawer
+        open={open}
+        onClose={onClose}
+        size="wide"
+        title={messages.participantesClientVision}
+        description={messages.participantesClientVisionDescription}
+        footer={
+          <>
+            <Button
+              variant="clear"
+              size="medium"
+              iconLeft={<EyeIcon size={18} />}
+              className={styles.previewCta}
+              onClick={() => setPreviewOpen(true)}
+            >
+              {messages.participantesClientVisionPreview}
+            </Button>
+            <Button variant="clear" size="medium" onClick={onClose}>
+              {messages.inviteCancel}
+            </Button>
+            <Button
+              variant="filled"
+              size="medium"
+              onClick={() => onConfirm(draftPayload())}
+            >
+              {messages.participantesConfigureConfirm}
+            </Button>
+          </>
+        }
+      >
+        <div className={styles.body}>
+          <section className={styles.section}>
+            <div className={styles.headingBlock}>
+              <h3 className={styles.heading}>
+                {messages.participantesPersonalDisplay}
+              </h3>
+              <p className={styles.lede}>
+                {messages.participantesPersonalDisplayDescription}
+              </p>
+              {!canRevealPersonal ? (
+                <p className={styles.locked}>
+                  {messages.participantesPersonalRevealLocked}
+                </p>
+              ) : null}
+            </div>
+            <div className={styles.piiList}>
+              <Toggle
+                label={messages.participantesColName}
+                checked={nameReveal}
+                disabled={!canRevealPersonal}
+                onChange={(next) => setReveal(setNameReveal, next)}
+              />
+              <Toggle
+                label={messages.participantesColPhone}
+                checked={phoneReveal}
+                disabled={!canRevealPersonal}
+                onChange={(next) => setReveal(setPhoneReveal, next)}
+              />
+              <Toggle
+                label={messages.participantesColEmail}
+                checked={emailReveal}
+                disabled={!canRevealPersonal}
+                onChange={(next) => setReveal(setEmailReveal, next)}
+              />
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <div className={styles.headingBlock}>
+              <h3 className={styles.heading}>
+                {messages.participantesQuestionsLabel}
+              </h3>
+              <p className={styles.lede}>
+                {messages.participantesQuestionsDescription}
+              </p>
+            </div>
+            <Input
+              aria-label={messages.participantesQuestionsSearch}
+              placeholder={messages.participantesQuestionsSearch}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            {questions.length === 0 ? (
+              <p className={styles.empty}>
+                {messages.participantesQuestionsEmpty}
+              </p>
+            ) : visibleQuestions.length === 0 ? (
+              <p className={styles.empty}>
+                {messages.participantesQuestionsNoneFound}
+              </p>
+            ) : (
+              <ul ref={listRef} className={styles.list}>
+                {visibleQuestions.map((item) => {
+                  const on = checked.includes(item.id);
+                  const dragging = dragId === item.id;
+                  return (
+                    <li
+                      key={item.id}
                       className={[
-                        styles.card,
-                        dragging ? styles.cardDragging : "",
-                        overId === item.id && !dragging ? styles.cardOver : "",
+                        styles.item,
+                        dragging ? styles.itemDragging : "",
                       ]
                         .filter(Boolean)
                         .join(" ")}
-                      title={item.label}
-                      onDragOver={(e) => {
-                        const from = dragIdRef.current;
-                        if (!from) return;
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = "move";
-                        if (from === item.id) return;
-                        setOverId(item.id);
-                        setOrder((prev) => moveIdInOrder(prev, from, item.id));
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        endDrag();
-                      }}
                     >
-                      <span
-                        className={styles.drag}
-                        draggable
-                        onDragStart={(e) => {
-                          dragIdRef.current = item.id;
-                          setDragId(item.id);
-                          scrollParentRef.current = findScrollParent(
-                            listRef.current,
+                      <Card
+                        className={[
+                          styles.card,
+                          dragging ? styles.cardDragging : "",
+                          overId === item.id && !dragging
+                            ? styles.cardOver
+                            : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        title={item.label}
+                        onDragOver={(e) => {
+                          const from = dragIdRef.current;
+                          if (!from) return;
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = "move";
+                          if (from === item.id) return;
+                          setOverId(item.id);
+                          setOrder((prev) =>
+                            moveIdInOrder(prev, from, item.id),
                           );
-                          pointerYRef.current = e.clientY;
-                          e.dataTransfer.effectAllowed = "move";
-                          e.dataTransfer.setData("text/plain", item.id);
-                          const ghost = document.createElement("div");
-                          ghost.style.width = "1px";
-                          ghost.style.height = "1px";
-                          ghost.style.opacity = "0";
-                          document.body.appendChild(ghost);
-                          e.dataTransfer.setDragImage(ghost, 0, 0);
-                          window.requestAnimationFrame(() => ghost.remove());
                         }}
-                        onDragEnd={endDrag}
-                        aria-label={messages.participantesReorderHint}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          endDrag();
+                        }}
                       >
-                        <DragIndicatorIcon size={18} />
-                      </span>
-                      <Checkbox
-                        className={styles.check}
-                        label={item.label}
-                        checked={on}
-                        onChange={(next) => toggle(item.id, next)}
-                      />
-                    </Card>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-      </div>
-    </Drawer>
+                        <span
+                          className={styles.drag}
+                          draggable
+                          onDragStart={(e) => {
+                            dragIdRef.current = item.id;
+                            setDragId(item.id);
+                            scrollParentRef.current = findScrollParent(
+                              listRef.current,
+                            );
+                            pointerYRef.current = e.clientY;
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", item.id);
+                            const ghost = document.createElement("div");
+                            ghost.style.width = "1px";
+                            ghost.style.height = "1px";
+                            ghost.style.opacity = "0";
+                            document.body.appendChild(ghost);
+                            e.dataTransfer.setDragImage(ghost, 0, 0);
+                            window.requestAnimationFrame(() => ghost.remove());
+                          }}
+                          onDragEnd={endDrag}
+                          aria-label={messages.participantesReorderHint}
+                        >
+                          <DragIndicatorIcon size={18} />
+                        </span>
+                        <Checkbox
+                          className={styles.check}
+                          label={item.label}
+                          checked={on}
+                          onChange={(next) => toggle(item.id, next)}
+                        />
+                      </Card>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </div>
+      </Drawer>
+
+      <Modal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={messages.participantesClientVisionPreviewTitle}
+        size="xlarge"
+      >
+        <div className={styles.previewModal}>
+          <p className={styles.previewHint}>
+            {messages.participantesClientVisionPreviewHint}
+          </p>
+          <div className={styles.previewTable}>
+            <ParticipantsAnswersGrid
+              participants={participants}
+              screener={screener ?? null}
+              selected={new Set()}
+              onToggle={() => {}}
+              onToggleAll={() => {}}
+              onOpen={() => {}}
+              onStatusChange={() => {}}
+              busy={false}
+              customTable={previewTable}
+              viewAsClient
+              canManageColumns={false}
+            />
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }

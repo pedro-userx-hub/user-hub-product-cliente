@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { XIcon } from "./icons";
 import styles from "./Modal.module.css";
 
-export type ModalSize = "xsmall" | "small" | "medium" | "large";
+export type ModalSize = "xsmall" | "small" | "medium" | "large" | "xlarge";
 
 export interface ModalProps {
   open: boolean;

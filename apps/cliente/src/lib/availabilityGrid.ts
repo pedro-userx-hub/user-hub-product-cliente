@@ -15,6 +15,7 @@ import {
   parseISODate,
   parseTimeToMinutes,
   slotDurationMinutes,
+  todayISODate,
 } from "./studySchedule";
 import {
   STUDY_WEEKDAYS,
@@ -142,19 +143,28 @@ export function monthGridDates(monthStartISO: string): (string | null)[] {
   return cells;
 }
 
-/** Primeiros N dias corridos da janela = Setup e Recrutamento (não pintáveis). */
+/** Dias úteis mínimos de antecedência para não travar setup na grade. */
+export const SETUP_RECRUITMENT_BUSINESS_DAYS = 3;
+
+/** @deprecated Preferir SETUP_RECRUITMENT_BUSINESS_DAYS + folga relativa. */
 export const SETUP_RECRUITMENT_DAY_COUNT = 3;
 
-/** Datas em setup/recrutamento — apenas os 3 primeiros dias da janela do estudo. */
+/**
+ * Datas em setup/recrutamento na grade de disponibilidade.
+ * Setup = 3 dias corridos a partir da data de envio (ex.: 22 → 22, 23, 24),
+ * independente do início das sessões. Fora da janela de sessões continua bloqueado.
+ */
 export function isSetupRecruitmentDate(
   iso: string,
   scheduleStart: string,
   scheduleEnd: string,
+  requestDate: string = todayISODate(),
 ): boolean {
   if (!isDateInStudyWindow(iso, scheduleStart, scheduleEnd)) return true;
-  const lastBlocked = addDaysISO(scheduleStart, SETUP_RECRUITMENT_DAY_COUNT - 1);
-  if (!lastBlocked) return false;
-  return iso <= lastBlocked;
+
+  const setupEnd = addDaysISO(requestDate, SETUP_RECRUITMENT_DAY_COUNT - 1);
+  if (!setupEnd) return false;
+  return iso >= requestDate && iso <= setupEnd;
 }
 
 export function isDateInStudyWindow(

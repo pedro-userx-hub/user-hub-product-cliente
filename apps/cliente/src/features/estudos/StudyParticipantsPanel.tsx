@@ -26,6 +26,7 @@ import { fetchSessionUser, type TeamStudy } from "../../lib/teamApi";
 import { canExposeParticipantContact } from "../../lib/permissions";
 import {
   addCustomColumn,
+  applyClientVisionDraft,
   countOverwrites,
   deleteCustomColumn,
   emptyCustomTable,
@@ -448,28 +449,7 @@ export function StudyParticipantsPanel({
     visibleIds: string[];
     questionOrder: string[];
   }) => {
-    const visible = new Set(next.visibleIds);
-    const systemClientVisible = { ...customTable.systemClientVisible };
-    for (const id of next.questionOrder) {
-      if (!isCustomColId(id)) {
-        systemClientVisible[id] = visible.has(id);
-      }
-    }
-    await persistTable({
-      ...customTable,
-      clientDisplayConfigured: true,
-      clientColumnOrder: next.questionOrder,
-      personalReveal: {
-        name: next.nameReveal,
-        email: next.emailReveal,
-        phone: next.phoneReveal,
-      },
-      systemClientVisible,
-      columns: customTable.columns.map((col) => ({
-        ...col,
-        clientVisible: visible.has(col.id),
-      })),
-    });
+    await persistTable(applyClientVisionDraft(customTable, next));
     showToast({
       type: "success",
       title: messages.participantesConfigureSaved,
@@ -887,6 +867,8 @@ export function StudyParticipantsPanel({
             open={visionOpen}
             table={customTable}
             columns={visionColumns}
+            participants={filtered}
+            screener={study.screener}
             canRevealPersonal={canRevealPersonal}
             onClose={() => setVisionOpen(false)}
             onConfirm={(next) => void handleVisionConfirm(next)}
